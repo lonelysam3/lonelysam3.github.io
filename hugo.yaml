@@ -10,7 +10,7 @@ DefaultContentLanguage: en
 
 # Set hasCJKLanguage to true if DefaultContentLanguage is in [zh-cn ja ko]
 # This will make .Summary and .WordCount behave correctly for CJK languages.
-hasCJKLanguage: false
+hasCJKLanguage: true
 
 languages:
     en:
@@ -27,14 +27,6 @@ languages:
         params:
             sidebar:
                 subtitle: 演示说明
-    ar:
-        languageName: عربي
-        languagedirection: rtl
-        title: موقع تجريبي
-        weight: 3
-        params:
-            sidebar:
-                subtitle: وصف تجريبي
 
 services:
     # Change it to your Disqus shortname before using
