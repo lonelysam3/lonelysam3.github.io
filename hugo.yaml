@@ -131,8 +131,8 @@ params:
 
   # 主页 - 信息模式（默认）
   homeInfoParams:
-    Title: "Hi there ⛳"
-    Content: Welcome to my blog
+    Title: "lonelysam3 的博客"
+    Content: "这是 lonelysam3 的个人博客，记录学习和生活中的点滴。希望你能喜欢这里的内容！"
   #  主页 - 信息模式 图标展示
   socialIcons:
     - name: x
