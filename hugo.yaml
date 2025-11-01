@@ -183,8 +183,8 @@ params:
     reactionsEnabled: "1"
     emitMetadata: "0"
     inputPosition: "bottom"
-#    lightTheme: "light"
-    darkTheme: "dark"
+    lightTheme: "light"
+#    darkTheme: "dark"
     lang: "zh-CN"
     crossorigin: "anonymous"
 #pygmentsUseClasses: true
