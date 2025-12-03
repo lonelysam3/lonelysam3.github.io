@@ -111,7 +111,7 @@ params:
     # 网站 Logo 图片（/static 下面的文件名称）
     icon: "r-c.jpg"
     # 图标高度
-    iconHeight: 1080
+    iconHeight: 48
 
   # 主页展示模式
   # 个人信息模式
