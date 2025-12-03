@@ -50,8 +50,8 @@ languages:
           weight: 21
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
-  title: ExampleSite
-  description: "ExampleSite description"
+  title: "lonelysam3's Blog"
+  description: "lonelysam3's personal blog."
   keywords: [Blog, Portfolio, PaperMod]
   author: Me
   # author: ["Me", "You"] # multiple authors
@@ -111,7 +111,7 @@ params:
     # 网站 Logo 图片（/static 下面的文件名称）
     icon: "r-c.jpg"
     # 图标高度
-    iconHeight: 45
+    iconHeight: 1080
 
   # 主页展示模式
   # 个人信息模式
@@ -136,11 +136,11 @@ params:
   #  主页 - 信息模式 图标展示
   socialIcons:
     - name: x
-      url: "https://x.com/"
+      url: "https://x.com/LonelySam8L"
     - name: stackoverflow
       url: "https://stackoverflow.com"
     - name: github
-      url: "https://github.com/"
+      url: "https://github.com/lonelysam3"
 
   analytics:
     google:
