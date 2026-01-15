@@ -1,11 +1,10 @@
 ---
 title: "Todo List"
-date: 2023-01-01
 layout: "todo"
 comments: false
 description: "我的待办事项列表"
 ---
 
-# 我的待办事项列表
+# Todo List
 
-欢迎使用您的个人任务管理器！在这里添加、管理和跟踪您的任务。
+来看看还有多少破事没做😭

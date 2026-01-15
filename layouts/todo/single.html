@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}" dir="{{ $.Param "languagedir" | default "ltr" }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} | {{ .Site.Title }}</title>
+    
+    {{- partial "head.html" . -}}
+    
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+        }
+        
+        .todo-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .todo-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+        
+        .todo-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .todo-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .todo-btn {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        .todo-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background-color: var(--light-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .todo-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-radius: 6px;
+            margin-bottom: 2rem;
+        }
+        
+        .todo-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .todo-item {
+            background-color: white;
+            padding: 1rem;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .todo-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .todo-item.completed {
+            opacity: 0.7;
+            border-left-color: var(--success-color);
+        }
+        
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .todo-text {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .todo-text.completed {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .todo-action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+        
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .priority-btn {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .todo-date {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .todo-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .todo-actions {
+                align-self: flex-end;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .todo-item {
+                background-color: #2d3748;
+                color: #e2e8f0;
+            }
+            
+            .todo-text.completed {
+                color: #a0aec0;
+            }
+            
+            .todo-stats {
+                background-color: #4a5568;
+            }
+            
+            .filter-btn {
+                background-color: #4a5568;
+                color: #e2e8f0;
+                border-color: #718096;
+            }
+        }
+    </style>
+</head>
+<body>
+    {{- partial "header.html" . -}}
+    
+    <main class="post">
+        <article class="post-content">
+            <div class="todo-container">
+                <div class="todo-header">
+                    <h1>{{ .Title }}</h1>
+                    <p>{{ .Description }}</p>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="todoInput" class="todo-input" placeholder="添加新的任务..." />
+                    <button id="addBtn" class="todo-btn">添加任务</button>
+                </div>
+                
+                <div class="controls">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">全部</button>
+                        <button class="filter-btn" data-filter="active">进行中</button>
+                        <button class="filter-btn" data-filter="completed">已完成</button>
+                    </div>
+                    <button id="clearCompleted" class="todo-btn">清除已完成</button>
+                </div>
+                
+                <div class="todo-stats">
+                    <div>总任务: <span id="totalCount">0</span></div>
+                    <div>进行中: <span id="activeCount">0</span></div>
+                    <div>已完成: <span id="completedCount">0</span></div>
+                </div>
+                
+                <ul id="todoList" class="todo-list">
+                    <!-- 任务会在这里动态添加 -->
+                </ul>
+                
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <h3>暂无任务</h3>
+                    <p>添加您的第一个任务来开始吧！</p>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    {{- partial "footer.html" . -}}
+    
+    <script>
+        class TodoList {
+            constructor() {
+                this.todos = JSON.parse(localStorage.getItem('hugo-todos')) || [];
+                this.currentFilter = 'all';
+                this.init();
+            }
+            
+            init() {
+                this.bindEvents();
+                this.render();
+            }
+            
+            bindEvents() {
+                // 添加任务
+                document.getElementById('addBtn').addEventListener('click', () => this.addTodo());
+                document.getElementById('todoInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTodo();
+                });
+                
+                // 过滤器
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.filterTodos(e.target.dataset.filter));
+                });
+                
+                // 清除已完成
+                document.getElementById('clearCompleted').addEventListener('click', () => this.clearCompleted());
+            }
+            
+            addTodo() {
+                const input = document.getElementById('todoInput');
+                const text = input.value.trim();
+                
+                if (text) {
+                    const todo = {
+                        id: Date.now(),
+                        text: text,
+                        completed: false,
+                        createdAt: new Date().toLocaleDateString('zh-CN'),
+                        priority: 'normal'
+                    };
+                    
+                    this.todos.unshift(todo);
+                    this.save();
+                    this.render();
+                    input.value = '';
+                    input.focus();
+                }
+            }
+            
+            toggleTodo(id) {
+                const todo = this.todos.find(t => t.id === id);
+                if (todo) {
+                    todo.completed = !todo.completed;
+                    this.save();
+                    this.render();
+                }
+            }
+            
+            deleteTodo(id) {
+                if (confirm('确定要删除这个任务吗？')) {
+                    this.todos = this.todos.filter(t => t.id !== id);
+                    this.save();
+                    this.render();
+                }
+            }
+            
+            togglePriority(id) {
+                const todo = this.todos.find(t => t.id === id);
+                if (todo) {
+                    const priorities = ['low', 'normal', 'high'];
+                    const currentIndex = priorities.indexOf(todo.priority);
+                    todo.priority = priorities[(currentIndex + 1) % priorities.length];
+                    this.save();
+                    this.render();
+                }
+            }
+            
+            filterTodos(filter) {
+                this.currentFilter = filter;
+                
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.filter === filter);
+                });
+                
+                this.render();
+            }
+            
+            clearCompleted() {
+                this.todos = this.todos.filter(t => !t.completed);
+                this.save();
+                this.render();
+            }
+            
+            save() {
+                localStorage.setItem('hugo-todos', JSON.stringify(this.todos));
+            }
+            
+            render() {
+                const container = document.getElementById('todoList');
+                const emptyState = document.getElementById('emptyState');
+                
+                // 过滤任务
+                let filteredTodos = this.todos;
+                if (this.currentFilter === 'active') {
+                    filteredTodos = this.todos.filter(t => !t.completed);
+                } else if (this.currentFilter === 'completed') {
+                    filteredTodos = this.todos.filter(t => t.completed);
+                }
+                
+                // 更新统计
+                const total = this.todos.length;
+                const completed = this.todos.filter(t => t.completed).length;
+                const active = total - completed;
+                
+                document.getElementById('totalCount').textContent = total;
+                document.getElementById('activeCount').textContent = active;
+                document.getElementById('completedCount').textContent = completed;
+                
+                // 渲染任务列表
+                if (filteredTodos.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    container.innerHTML = filteredTodos.map(todo => `
+                        <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                            <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}>
+                            <span class="todo-text ${todo.completed ? 'completed' : ''}">${todo.text}</span>
+                            <div class="todo-actions">
+                                <button class="todo-action-btn priority-btn" title="优先级: ${todo.priority}">
+                                    ${todo.priority === 'high' ? '🔥' : todo.priority === 'low' ? '🌊' : '📋'}
+                                </button>
+                                <button class="todo-action-btn delete-btn">删除</button>
+                            </div>
+                            <div class="todo-date">${todo.createdAt}</div>
+                        </li>
+                    `).join('');
+                    
+                    // 绑定事件到新元素
+                    container.querySelectorAll('.todo-checkbox').forEach(checkbox => {
+                        checkbox.addEventListener('change', (e) => {
+                            const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                            this.toggleTodo(id);
+                        });
+                    });
+                    
+                    container.querySelectorAll('.priority-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                            this.togglePriority(id);
+                        });
+                    });
+                    
+                    container.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                            this.deleteTodo(id);
+                        });
+                    });
+                }
+            }
+        }
+        
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new TodoList();
+        });
+    </script>
+</body>
+</html>
