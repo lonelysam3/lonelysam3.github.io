@@ -8,17 +8,6 @@
     {{- partial "head.html" . -}}
     
     <style>
-        /* 与之前相同的样式，但添加权限检查 */
-        :root {
-            --primary-color: #3498db;
-            --success-color: #2ecc71;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --border-color: #dee2e6;
-        }
-        
         .todo-container {
             max-width: 800px;
             margin: 2rem auto;
@@ -44,7 +33,7 @@
         .auth-btn {
             display: inline-block;
             padding: 12px 24px;
-            background-color: var(--primary-color);
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 6px;
@@ -54,7 +43,12 @@
             margin-top: 1rem;
         }
         
-        /* Todo 界面 */
+        /* Todo 界面样式 */
+        .todo-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
         .input-group {
             display: flex;
             gap: 10px;
@@ -64,14 +58,14 @@
         .todo-input {
             flex: 1;
             padding: 12px 15px;
-            border: 2px solid var(--border-color);
+            border: 2px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
         }
         
         .todo-btn {
             padding: 12px 24px;
-            background-color: var(--primary-color);
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 6px;
@@ -79,13 +73,45 @@
             font-weight: 600;
         }
         
+        .todo-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
         .todo-stats {
             display: flex;
             justify-content: space-between;
             padding: 1rem;
-            background-color: var(--light-color);
+            background-color: #f8f9fa;
             border-radius: 6px;
             margin-bottom: 2rem;
+            font-weight: 500;
         }
         
         .todo-list {
@@ -98,15 +124,22 @@
             padding: 1rem;
             margin-bottom: 10px;
             border-radius: 6px;
-            border-left: 4px solid var(--primary-color);
+            border-left: 4px solid #3498db;
             display: flex;
             align-items: center;
             gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .todo-item.completed {
             opacity: 0.7;
-            border-left-color: var(--success-color);
+            border-left-color: #2ecc71;
+        }
+        
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
         }
         
         .todo-text {
@@ -124,11 +157,82 @@
             gap: 10px;
         }
         
+        .delete-btn {
+            padding: 5px 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .todo-date {
+            font-size: 12px;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+        
         .user-info {
             text-align: right;
             padding: 0.5rem;
             color: #666;
             font-size: 14px;
+        }
+        
+        .logout-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            
+            .filter-buttons {
+                justify-content: center;
+            }
+            
+            .todo-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .todo-actions {
+                align-self: flex-end;
+            }
+            
+            .todo-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -137,8 +241,8 @@
     
     <main class="post">
         <article class="post-content">
-            <div id="todoContainer">
-                <!-- 内容由 JavaScript 动态加载 -->
+            <div id="appContainer">
+                <!-- 应用内容由 JavaScript 动态加载 -->
             </div>
         </article>
     </main>
@@ -146,98 +250,71 @@
     {{- partial "footer.html" . -}}
     
     <script>
-        // 会话管理
-        const SESSION_KEY = 'todo_auth_session_v2';
-        const PASSWORD_FILE_URL = '/api/password.json';
-        
-        class AuthManager {
-            constructor() {
-                this.isAuthenticated = false;
-                this.userInfo = null;
-            }
+        // 简单的认证检查
+        function checkAuth() {
+            const session = localStorage.getItem('todo_session');
+            if (!session) return false;
             
-            checkAuth() {
-                const session = localStorage.getItem(SESSION_KEY);
-                if (session) {
-                    try {
-                        const sessionData = JSON.parse(session);
-                        const now = new Date().getTime();
-                        
-                        if (now < sessionData.expires) {
-                            this.isAuthenticated = true;
-                            this.userInfo = sessionData.user;
-                            return true;
-                        }
-                    } catch (e) {
-                        console.error('会话验证失败:', e);
-                    }
-                    
-                    // 清除过期会话
-                    localStorage.removeItem(SESSION_KEY);
-                }
+            try {
+                const sessionData = JSON.parse(session);
+                const now = new Date().getTime();
                 
-                return false;
-            }
-            
-            logout() {
-                localStorage.removeItem(SESSION_KEY);
-                document.cookie = 'todo_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                this.isAuthenticated = false;
-                this.userInfo = null;
-            }
-            
-            getRemainingTime() {
-                const session = localStorage.getItem(SESSION_KEY);
-                if (session) {
-                    try {
-                        const sessionData = JSON.parse(session);
-                        const now = new Date().getTime();
-                        return Math.max(0, sessionData.expires - now);
-                    } catch (e) {
-                        return 0;
-                    }
+                if (now < sessionData.expires) {
+                    return true;
+                } else {
+                    // 会话过期，清除
+                    localStorage.removeItem('todo_session');
+                    return false;
                 }
-                return 0;
+            } catch (e) {
+                console.error('会话验证失败:', e);
+                localStorage.removeItem('todo_session');
+                return false;
             }
         }
         
+        // 显示登录提示
+        function showLoginPrompt() {
+            const container = document.getElementById('appContainer');
+            container.innerHTML = `
+                <div class="auth-prompt">
+                    <h2>🔒 需要登录</h2>
+                    <p>您需要登录才能访问待办事项</p>
+                    <p>请先登录以管理您的任务</p>
+                    <a href="/login/" class="auth-btn">前往登录</a>
+                    <div style="margin-top: 2rem; color: #666; font-size: 14px;">
+                        <p>📝 这是一个受保护的待办事项列表</p>
+                        <p>🔐 只有授权用户可以访问和编辑</p>
+                        <p>⏰ 登录状态有效期24小时</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Todo 应用类
         class TodoApp {
             constructor() {
-                this.auth = new AuthManager();
-                this.todos = JSON.parse(localStorage.getItem('hugo_todos_v2')) || [];
+                this.todos = JSON.parse(localStorage.getItem('todos_data')) || [];
                 this.currentFilter = 'all';
                 this.init();
             }
             
             init() {
-                // 检查登录状态
-                if (this.auth.checkAuth()) {
-                    this.showTodoApp();
-                } else {
-                    this.showLoginPrompt();
+                // 检查认证
+                if (!checkAuth()) {
+                    showLoginPrompt();
+                    return;
                 }
+                
+                this.renderApp();
+                this.bindEvents();
             }
             
-            showLoginPrompt() {
-                const container = document.getElementById('todoContainer');
-                container.innerHTML = `
-                    <div class="auth-prompt">
-                        <h2>🔒 需要登录</h2>
-                        <p>您需要登录才能访问此页面</p>
-                        <p>请前往登录页面验证您的身份</p>
-                        <a href="/login/" class="auth-btn">前往登录</a>
-                        <div style="margin-top: 2rem; color: #666; font-size: 14px;">
-                            <p>📝 这是一个受保护的待办事项列表</p>
-                            <p>🔐 只有授权用户可以访问和编辑</p>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            showTodoApp() {
-                const container = document.getElementById('todoContainer');
-                const remainingTime = this.auth.getRemainingTime();
-                const hoursLeft = Math.floor(remainingTime / (60 * 60 * 1000));
+            renderApp() {
+                const container = document.getElementById('appContainer');
+                const session = JSON.parse(localStorage.getItem('todo_session'));
+                const expires = new Date(session.expires);
+                const hoursLeft = Math.floor((expires - Date.now()) / (1000 * 60 * 60));
                 
                 container.innerHTML = `
                     <div class="todo-container">
@@ -248,15 +325,13 @@
                             </div>
                             <div class="user-info">
                                 <div>👤 管理员</div>
-                                <div>⏰ 登录剩余: ${hoursLeft}小时</div>
-                                <button id="logoutBtn" style="margin-top: 5px; padding: 5px 10px; background: none; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
-                                    退出登录
-                                </button>
+                                <div>⏰ 剩余: ${hoursLeft}小时</div>
+                                <button id="logoutBtn" class="logout-btn">退出登录</button>
                             </div>
                         </div>
                         
                         <div class="input-group">
-                            <input type="text" id="todoInput" class="todo-input" placeholder="添加新的任务..." />
+                            <input type="text" id="todoInput" class="todo-input" placeholder="输入新任务..." autofocus>
                             <button id="addBtn" class="todo-btn">添加任务</button>
                         </div>
                         
@@ -275,37 +350,17 @@
                             <div>已完成: <span id="completedCount">0</span></div>
                         </div>
                         
-                        <ul id="todoList" class="todo-list">
-                            <!-- 任务会在这里动态添加 -->
-                        </ul>
+                        <ul id="todoList" class="todo-list"></ul>
                         
-                        <div id="emptyState" class="empty-state" style="display: none; text-align: center; padding: 3rem; color: #666;">
+                        <div id="emptyState" class="empty-state">
                             <h3>暂无任务</h3>
                             <p>添加您的第一个任务来开始吧！</p>
-                        </div>
-                        
-                        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 14px;">
-                            <p>💡 提示：</p>
-                            <ul style="padding-left: 1.5rem;">
-                                <li>点击复选框标记任务完成</li>
-                                <li>使用筛选按钮查看不同类型的任务</li>
-                                <li>登录状态将在24小时后自动过期</li>
-                            </ul>
                         </div>
                     </div>
                 `;
                 
-                this.bindEvents();
+                this.updateStats();
                 this.renderTodos();
-                
-                // 添加一些样式
-                const style = document.createElement('style');
-                style.textContent = `
-                    .empty-state { display: none; text-align: center; padding: 3rem; color: #666; }
-                    .filter-btn { padding: 8px 16px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; }
-                    .filter-btn.active { background-color: #3498db; color: white; }
-                `;
-                document.head.appendChild(style);
             }
             
             bindEvents() {
@@ -336,8 +391,8 @@
                 // 退出登录
                 document.getElementById('logoutBtn').addEventListener('click', () => {
                     if (confirm('确定要退出登录吗？')) {
-                        this.auth.logout();
-                        this.showLoginPrompt();
+                        localStorage.removeItem('todo_session');
+                        window.location.href = '/login/';
                     }
                 });
             }
@@ -390,12 +445,29 @@
             }
             
             saveTodos() {
-                localStorage.setItem('hugo_todos_v2', JSON.stringify(this.todos));
+                localStorage.setItem('todos_data', JSON.stringify(this.todos));
+                this.updateStats();
+            }
+            
+            updateStats() {
+                const total = this.todos.length;
+                const completed = this.todos.filter(t => t.completed).length;
+                const active = total - completed;
+                
+                const totalEl = document.getElementById('totalCount');
+                const activeEl = document.getElementById('activeCount');
+                const completedEl = document.getElementById('completedCount');
+                
+                if (totalEl) totalEl.textContent = total;
+                if (activeEl) activeEl.textContent = active;
+                if (completedEl) completedEl.textContent = completed;
             }
             
             renderTodos() {
                 const todoList = document.getElementById('todoList');
                 const emptyState = document.getElementById('emptyState');
+                
+                if (!todoList || !emptyState) return;
                 
                 // 筛选任务
                 let filteredTodos = this.todos;
@@ -406,53 +478,45 @@
                 }
                 
                 // 更新统计
-                const total = this.todos.length;
-                const completed = this.todos.filter(t => t.completed).length;
-                const active = total - completed;
-                
-                document.getElementById('totalCount').textContent = total;
-                document.getElementById('activeCount').textContent = active;
-                document.getElementById('completedCount').textContent = completed;
+                this.updateStats();
                 
                 // 渲染列表
                 if (filteredTodos.length === 0) {
-                    if (todoList) todoList.innerHTML = '';
-                    if (emptyState) emptyState.style.display = 'block';
+                    todoList.innerHTML = '';
+                    emptyState.style.display = 'block';
                 } else {
-                    if (emptyState) emptyState.style.display = 'none';
+                    emptyState.style.display = 'none';
                     
-                    if (todoList) {
-                        todoList.innerHTML = filteredTodos.map(todo => `
-                            <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
-                                <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}>
-                                <span class="todo-text ${todo.completed ? 'completed' : ''}">
-                                    ${todo.text}
-                                </span>
-                                <div class="todo-actions">
-                                    <button class="todo-action-btn delete-btn">删除</button>
-                                </div>
-                                <div class="todo-date">
-                                    ${todo.createdAt}
-                                    ${todo.completed ? '<br><small>✓ 已完成</small>' : ''}
-                                </div>
-                            </li>
-                        `).join('');
-                        
-                        // 绑定事件
-                        todoList.querySelectorAll('.todo-checkbox').forEach(checkbox => {
-                            checkbox.addEventListener('change', (e) => {
-                                const id = parseInt(e.target.closest('.todo-item').dataset.id);
-                                this.toggleTodo(id);
-                            });
+                    todoList.innerHTML = filteredTodos.map(todo => `
+                        <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                            <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}>
+                            <span class="todo-text ${todo.completed ? 'completed' : ''}">
+                                ${todo.text}
+                            </span>
+                            <div class="todo-actions">
+                                <button class="delete-btn">删除</button>
+                            </div>
+                            <div class="todo-date">
+                                ${todo.createdAt}
+                                ${todo.completed ? '<br><small>✓ 已完成</small>' : ''}
+                            </div>
+                        </li>
+                    `).join('');
+                    
+                    // 绑定事件
+                    todoList.querySelectorAll('.todo-checkbox').forEach(checkbox => {
+                        checkbox.addEventListener('change', (e) => {
+                            const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                            this.toggleTodo(id);
                         });
-                        
-                        todoList.querySelectorAll('.delete-btn').forEach(btn => {
-                            btn.addEventListener('click', (e) => {
-                                const id = parseInt(e.target.closest('.todo-item').dataset.id);
-                                this.deleteTodo(id);
-                            });
+                    });
+                    
+                    todoList.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                            this.deleteTodo(id);
                         });
-                    }
+                    });
                 }
             }
         }

@@ -55,10 +55,20 @@
             background-color: #2980b9;
         }
         
+        .login-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
         .login-message {
             color: #e74c3c;
             margin-top: 10px;
-            display: none;
+            min-height: 24px;
+            font-size: 14px;
+        }
+        
+        .login-success {
+            color: #2ecc71 !important;
         }
         
         .login-info {
@@ -67,6 +77,20 @@
             margin-top: 20px;
             border-top: 1px solid #eee;
             padding-top: 15px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -79,7 +103,7 @@
                 <h1 class="login-title">🔒 登录</h1>
                 <p>请输入密码访问您的待办事项</p>
                 
-                <form id="loginForm" onsubmit="return false;">
+                <form id="loginForm">
                     <input type="password" 
                            id="passwordInput" 
                            class="login-input" 
@@ -95,9 +119,9 @@
                 </form>
                 
                 <div class="login-info">
-                    <p>📝 密码由站长单独设置</p>
                     <p>🔐 登录状态有效期24小时</p>
                     <p>📱 支持移动设备访问</p>
+                    <p>💡 忘记密码请联系管理员</p>
                 </div>
             </div>
         </article>
@@ -106,119 +130,65 @@
     {{- partial "footer.html" . -}}
     
     <script>
-        // 密码配置文件 URL
-        const PASSWORD_FILE_URL = '/api/password.json';
-        const SESSION_KEY = 'todo_auth_session_v2';
-        
-        class LoginManager {
-            constructor() {
-                this.passwordData = null;
-                this.attempts = 0;
-                this.maxAttempts = 5;
-                this.init();
-            }
+        // 简化版登录管理
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const passwordInput = document.getElementById('passwordInput');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginMessage = document.getElementById('loginMessage');
             
-            async init() {
-                this.bindEvents();
-                
-                // 检查是否有有效的会话
-                if (this.checkSession()) {
-                    // 跳转到 Todo 页面
-                    window.location.href = '/todo/';
-                    return;
-                }
-                
-                // 加载密码配置文件
-                await this.loadPasswordConfig();
-            }
+            // 检查是否已经登录
+            checkLoginStatus();
             
-            bindEvents() {
-                const loginBtn = document.getElementById('loginBtn');
-                const passwordInput = document.getElementById('passwordInput');
-                
-                loginBtn.addEventListener('click', () => this.login());
-                passwordInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.login();
-                });
-                
-                // 表单提交
-                document.getElementById('loginForm').addEventListener('submit', (e) => {
+            // 表单提交事件
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleLogin();
+            });
+            
+            // 密码输入框回车事件
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
                     e.preventDefault();
-                    this.login();
-                });
-            }
-            
-            async loadPasswordConfig() {
-                try {
-                    // 从 GitHub Pages 读取密码配置文件
-                    const response = await fetch(PASSWORD_FILE_URL);
-                    if (response.ok) {
-                        this.passwordData = await response.json();
-                        console.log('密码配置加载成功');
-                    } else {
-                        throw new Error('无法加载密码配置');
-                    }
-                } catch (error) {
-                    console.error('加载密码配置失败:', error);
-                    this.showMessage('系统配置错误，请联系管理员', 'error');
+                    handleLogin();
                 }
-            }
+            });
             
-            async login() {
-                const password = document.getElementById('passwordInput').value;
-                const loginBtn = document.getElementById('loginBtn');
+            async function handleLogin() {
+                const password = passwordInput.value.trim();
                 
                 if (!password) {
-                    this.showMessage('请输入密码', 'error');
+                    showMessage('请输入密码', 'error');
+                    passwordInput.focus();
                     return;
                 }
                 
-                // 检查尝试次数
-                if (this.attempts >= this.maxAttempts) {
-                    this.showMessage('尝试次数过多，请稍后再试', 'error');
-                    return;
-                }
-                
-                // 禁用登录按钮，显示加载状态
+                // 禁用登录按钮
                 loginBtn.disabled = true;
-                loginBtn.innerHTML = '<span>验证中...</span>';
+                loginBtn.innerHTML = '<span class="loading"></span> 验证中...';
                 
                 try {
-                    // 等待密码配置加载完成
-                    if (!this.passwordData) {
-                        await this.loadPasswordConfig();
-                    }
-                    
                     // 验证密码
-                    const isValid = await this.validatePassword(password);
+                    const isValid = await validatePassword(password);
                     
                     if (isValid) {
-                        // 登录成功，创建会话
-                        this.createSession();
-                        this.showMessage('登录成功！正在跳转...', 'success');
+                        // 登录成功
+                        showMessage('登录成功！正在跳转...', 'success');
+                        createSession();
                         
-                        // 2秒后跳转到 Todo 页面
+                        // 2秒后跳转
                         setTimeout(() => {
                             window.location.href = '/todo/';
                         }, 2000);
                     } else {
                         // 登录失败
-                        this.attempts++;
-                        const attemptsLeft = this.maxAttempts - this.attempts;
-                        
-                        if (attemptsLeft > 0) {
-                            this.showMessage(`密码错误，还剩 ${attemptsLeft} 次尝试机会`, 'error');
-                        } else {
-                            this.showMessage('尝试次数过多，请稍后再试', 'error');
-                        }
-                        
-                        // 清空密码框
-                        document.getElementById('passwordInput').value = '';
-                        document.getElementById('passwordInput').focus();
+                        showMessage('密码错误，请重试', 'error');
+                        passwordInput.value = '';
+                        passwordInput.focus();
                     }
                 } catch (error) {
                     console.error('登录出错:', error);
-                    this.showMessage('登录过程出错，请重试', 'error');
+                    showMessage('登录过程出错，请重试', 'error');
                 } finally {
                     // 恢复登录按钮
                     loginBtn.disabled = false;
@@ -226,34 +196,40 @@
                 }
             }
             
-            async validatePassword(inputPassword) {
-                if (!this.passwordData) {
-                    throw new Error('密码配置未加载');
+            async function validatePassword(inputPassword) {
+                try {
+                    // 从配置文件读取密码哈希
+                    const response = await fetch('/api/password.json');
+                    if (!response.ok) {
+                        throw new Error('配置文件加载失败');
+                    }
+                    
+                    const config = await response.json();
+                    
+                    if (config.hashMethod === 'sha256') {
+                        // 计算输入密码的哈希
+                        const inputHash = await sha256(inputPassword + config.salt);
+                        return inputHash === config.hash;
+                    } else if (config.password) {
+                        // 直接比较密码（仅用于测试）
+                        return inputPassword === config.password;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error('密码验证失败:', error);
+                    return false;
                 }
-                
-                // 方法1: 使用加密验证
-                if (this.passwordData.hashMethod === 'sha256') {
-                    // 计算输入密码的哈希
-                    const inputHash = await this.sha256(inputPassword + this.passwordData.salt);
-                    return inputHash === this.passwordData.hash;
-                }
-                
-                // 方法2: 直接比较（不推荐，仅用于演示）
-                if (this.passwordData.password) {
-                    return inputPassword === this.passwordData.password;
-                }
-                
-                return false;
             }
             
-            async sha256(message) {
+            async function sha256(message) {
                 const msgBuffer = new TextEncoder().encode(message);
                 const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             }
             
-            createSession() {
+            function createSession() {
                 const now = new Date().getTime();
                 const expires = now + (24 * 60 * 60 * 1000); // 24小时
                 
@@ -264,56 +240,52 @@
                     user: 'admin'
                 };
                 
-                // 使用 localStorage 存储会话
-                localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-                
-                // 同时设置 cookie（备用）
-                document.cookie = `todo_auth=1; expires=${new Date(expires).toUTCString()}; path=/`;
+                localStorage.setItem('todo_session', JSON.stringify(sessionData));
             }
             
-            checkSession() {
-                const session = localStorage.getItem(SESSION_KEY);
+            function checkLoginStatus() {
+                const session = localStorage.getItem('todo_session');
                 if (session) {
                     try {
                         const sessionData = JSON.parse(session);
                         const now = new Date().getTime();
                         
                         if (now < sessionData.expires) {
-                            return true;
+                            // 已登录，跳转到 Todo 页面
+                            window.location.href = '/todo/';
+                            return;
+                        } else {
+                            // 会话过期，清除
+                            localStorage.removeItem('todo_session');
                         }
                     } catch (e) {
                         console.error('会话数据损坏:', e);
+                        localStorage.removeItem('todo_session');
                     }
-                    
-                    // 清除过期会话
-                    localStorage.removeItem(SESSION_KEY);
                 }
-                
-                return false;
             }
             
-            showMessage(text, type = 'error') {
-                const messageEl = document.getElementById('loginMessage');
-                messageEl.textContent = text;
-                messageEl.style.color = type === 'error' ? '#e74c3c' : '#2ecc71';
-                messageEl.style.display = 'block';
+            function showMessage(text, type = 'error') {
+                loginMessage.textContent = text;
+                loginMessage.className = 'login-message ' + (type === 'success' ? 'login-success' : '');
+                loginMessage.style.display = 'block';
                 
-                // 5秒后隐藏消息
-                setTimeout(() => {
-                    messageEl.style.display = 'none';
-                }, 5000);
+                // 5秒后隐藏错误消息，成功消息不自动隐藏
+                if (type === 'error') {
+                    setTimeout(() => {
+                        loginMessage.style.display = 'none';
+                    }, 5000);
+                }
             }
-        }
-        
-        // 初始化登录管理器
-        document.addEventListener('DOMContentLoaded', () => {
-            new LoginManager();
+            
+            // 初始化时聚焦到密码输入框
+            passwordInput.focus();
         });
         
-        // 开发工具：生成密码配置
+        // 调试工具：在控制台生成密码配置
         window.generatePasswordConfig = async function(password) {
             if (!password) {
-                alert('请输入密码');
+                console.error('请输入密码');
                 return;
             }
             
@@ -326,26 +298,22 @@
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             
-            // 创建配置对象
             const config = {
-                hashMethod: 'sha256',
+                hashMethod: "sha256",
                 salt: salt,
                 hash: hash,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                note: "请将此配置保存到 /static/api/password.json"
             };
             
-            // 显示结果
-            const result = `
-// 复制以下内容到 /static/api/password.json
-${JSON.stringify(config, null, 2)}
-            `;
+            console.log('🔐 密码配置生成成功：');
+            console.log(JSON.stringify(config, null, 2));
+            console.log('📋 已自动复制到剪贴板');
             
-            console.log(result);
+            // 复制到剪贴板
+            navigator.clipboard.writeText(JSON.stringify(config, null, 2));
             
-            if (confirm('配置已生成！是否复制到剪贴板？')) {
-                navigator.clipboard.writeText(JSON.stringify(config, null, 2));
-                alert('配置已复制到剪贴板');
-            }
+            return config;
         };
     </script>
 </body>
