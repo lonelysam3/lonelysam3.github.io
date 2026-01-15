@@ -51,9 +51,6 @@ languages:
         - name: 待办事项
           pageRef: todo/
           weight: 30
-        - name: "登录"
-          pageRef: login/
-          weight: 31
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
   title: "lonelysam3's Blog"
