@@ -8,6 +8,7 @@
     {{- partial "head.html" . -}}
     
     <style>
+        /* 与之前相同的样式，但添加权限检查 */
         :root {
             --primary-color: #3498db;
             --success-color: #2ecc71;
@@ -24,42 +25,33 @@
             padding: 0 1rem;
         }
         
-        /* 登录界面 */
-        .auth-container {
-            max-width: 400px;
+        /* 登录提示 */
+        .auth-prompt {
+            text-align: center;
+            padding: 3rem;
+            max-width: 500px;
             margin: 4rem auto;
-            padding: 2rem;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
         }
         
-        .auth-input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 16px;
+        .auth-prompt h2 {
+            color: #e74c3c;
+            margin-bottom: 1rem;
         }
         
         .auth-btn {
-            width: 100%;
-            padding: 12px;
+            display: inline-block;
+            padding: 12px 24px;
             background-color: var(--primary-color);
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            margin-top: 10px;
-        }
-        
-        .auth-message {
-            color: var(--danger-color);
-            margin-top: 10px;
-            display: none;
+            text-decoration: none;
+            margin-top: 1rem;
         }
         
         /* Todo 界面 */
@@ -132,31 +124,11 @@
             gap: 10px;
         }
         
-        .lock-notice {
-            text-align: center;
-            padding: 1rem;
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 6px;
-            margin: 1rem 0;
-            color: #856404;
-        }
-        
-        .readonly .input-group,
-        .readonly .todo-actions,
-        .readonly #clearCompleted {
-            display: none;
-        }
-        
-        .readonly .todo-checkbox {
-            pointer-events: none;
-        }
-        
-        .security-notice {
-            font-size: 12px;
+        .user-info {
+            text-align: right;
+            padding: 0.5rem;
             color: #666;
-            margin-top: 10px;
-            text-align: center;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -165,57 +137,8 @@
     
     <main class="post">
         <article class="post-content">
-            <div id="authContainer" class="auth-container" style="display: none;">
-                <h2>🔒 需要密码验证</h2>
-                <p>请输入密码以编辑待办事项</p>
-                <input type="password" id="passwordInput" class="auth-input" placeholder="输入密码" autocomplete="off">
-                <button id="loginBtn" class="auth-btn">验证密码</button>
-                <p id="authMessage" class="auth-message">密码错误</p>
-                <div class="security-notice">
-                    <p>🔐 密码经过SHA-256哈希验证，不会被直接存储</p>
-                    <p>📱 登录状态将在24小时后过期</p>
-                </div>
-            </div>
-            
-            <div id="todoContainer" class="todo-container" style="display: none;">
-                <div class="todo-header">
-                    <h1>{{ .Title }}</h1>
-                    <p>{{ .Description }}</p>
-                </div>
-                
-                <div id="lockNotice" class="lock-notice" style="display: none;">
-                    🔒 只读模式 - 只有授权用户可以编辑
-                </div>
-                
-                <div class="input-group">
-                    <input type="text" id="todoInput" class="todo-input" placeholder="添加新的任务..." />
-                    <button id="addBtn" class="todo-btn">添加任务</button>
-                </div>
-                
-                <div class="controls">
-                    <div class="filter-buttons">
-                        <button class="filter-btn active" data-filter="all">全部</button>
-                        <button class="filter-btn" data-filter="active">进行中</button>
-                        <button class="filter-btn" data-filter="completed">已完成</button>
-                    </div>
-                    <button id="clearCompleted" class="todo-btn">清除已完成</button>
-                    <button id="logoutBtn" class="todo-btn" style="background-color: var(--danger-color);">退出登录</button>
-                </div>
-                
-                <div class="todo-stats">
-                    <div>总任务: <span id="totalCount">0</span></div>
-                    <div>进行中: <span id="activeCount">0</span></div>
-                    <div>已完成: <span id="completedCount">0</span></div>
-                </div>
-                
-                <ul id="todoList" class="todo-list">
-                    <!-- 任务会在这里动态添加 -->
-                </ul>
-                
-                <div id="emptyState" class="empty-state" style="display: none;">
-                    <h3>暂无任务</h3>
-                    <p>添加您的第一个任务来开始吧！</p>
-                </div>
+            <div id="todoContainer">
+                <!-- 内容由 JavaScript 动态加载 -->
             </div>
         </article>
     </main>
@@ -223,637 +146,321 @@
     {{- partial "footer.html" . -}}
     
     <script>
-        // ============================================
-        // 安全配置 - 基于哈希的密码验证
-        // ============================================
+        // 会话管理
+        const SESSION_KEY = 'todo_auth_session_v2';
+        const PASSWORD_FILE_URL = '/api/password.json';
         
-        // 注意：这里的密码哈希是 "shanmu20070908" 的 SHA-256 哈希值
-        // 您可以通过在线工具或命令行生成其他密码的哈希
-        // echo -n "your_password" | openssl sha256
-        
-        const SECURITY_CONFIG = {
-            // 密码 "shanmu20070908" 的 SHA-256 哈希值（小写）
-            // 要更改密码，请使用其他工具生成新密码的 SHA-256 哈希值
-            PASSWORD_HASH: '206f9eae479224592b5b305d6cc932348b7558effd342cc6dac6f74ea8d308be',
-            
-            // 实际上正确的 "shanmu20070908" 的 SHA-256 哈希值是：
-            // 您需要实际计算这个值，这里只是示例
-            // 请用您的密码的SHA256哈希替换下面的值
-            // 示例：echo -n "shanmu20070908" | openssl sha256
-            // 在终端中运行上述命令获取正确的哈希值
-            
-            // 盐值，增加安全性（可选）
-            SALT: 'hugo_papermod_todo_2023_salt',
-            
-            // 会话过期时间（小时）
-            SESSION_EXPIRE_HOURS: 24,
-            
-            // 是否启用严格模式（需要密码才能查看）
-            STRICT_MODE: false,  // true: 需要密码才能查看；false: 可以查看但不能编辑
-            
-            // 最大尝试次数
-            MAX_ATTEMPTS: 5,
-            
-            // 锁定时间（分钟）
-            LOCKOUT_TIME: 15
-        };
-        
-        // ============================================
-        // SHA-256 哈希函数
-        // ============================================
-        async function sha256(message) {
-            // 将消息编码为 UTF-8
-            const msgBuffer = new TextEncoder().encode(message);
-            
-            // 计算哈希值
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            
-            // 将 ArrayBuffer 转换为十六进制字符串
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            return hashHex;
-        }
-        
-        // ============================================
-        // 认证管理器
-        // ============================================
         class AuthManager {
             constructor() {
                 this.isAuthenticated = false;
-                this.sessionKey = 'todo_auth_session_hash';
-                this.attemptsKey = 'todo_auth_attempts';
-                this.lockoutKey = 'todo_auth_lockout';
-                this.checkSession();
+                this.userInfo = null;
             }
             
-            checkSession() {
-                // 检查是否在锁定状态
-                if (this.isLockedOut()) {
-                    return false;
-                }
-                
-                const session = localStorage.getItem(this.sessionKey);
+            checkAuth() {
+                const session = localStorage.getItem(SESSION_KEY);
                 if (session) {
                     try {
                         const sessionData = JSON.parse(session);
                         const now = new Date().getTime();
                         
-                        // 验证会话是否过期
                         if (now < sessionData.expires) {
-                            // 验证会话签名
-                            const expectedSignature = this.generateSessionSignature(sessionData.userId, sessionData.expires);
-                            if (sessionData.signature === expectedSignature) {
-                                this.isAuthenticated = true;
-                                return true;
-                            }
+                            this.isAuthenticated = true;
+                            this.userInfo = sessionData.user;
+                            return true;
                         }
                     } catch (e) {
                         console.error('会话验证失败:', e);
                     }
                     
-                    // 清除无效会话
-                    localStorage.removeItem(this.sessionKey);
+                    // 清除过期会话
+                    localStorage.removeItem(SESSION_KEY);
                 }
                 
                 return false;
             }
             
-            async verifyPassword(password) {
-                // 检查锁定状态
-                if (this.isLockedOut()) {
-                    return { success: false, message: '账户已锁定，请稍后再试' };
-                }
-                
-                // 计算输入密码的哈希值（带盐）
-                const passwordWithSalt = password + SECURITY_CONFIG.SALT;
-                const inputHash = await sha256(passwordWithSalt);
-                
-                // 与存储的哈希值比较
-                if (inputHash === SECURITY_CONFIG.PASSWORD_HASH.toLowerCase()) {
-                    // 重置尝试次数
-                    localStorage.removeItem(this.attemptsKey);
-                    localStorage.removeItem(this.lockoutKey);
-                    
-                    // 创建新会话
-                    this.createSession();
-                    return { success: true };
-                } else {
-                    // 增加失败尝试次数
-                    this.recordFailedAttempt();
-                    const attemptsLeft = this.getRemainingAttempts();
-                    
-                    return { 
-                        success: false, 
-                        message: `密码错误，还剩 ${attemptsLeft} 次尝试机会` 
-                    };
-                }
+            logout() {
+                localStorage.removeItem(SESSION_KEY);
+                document.cookie = 'todo_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                this.isAuthenticated = false;
+                this.userInfo = null;
             }
             
-            createSession() {
-                const now = new Date().getTime();
-                const expires = now + (SECURITY_CONFIG.SESSION_EXPIRE_HOURS * 60 * 60 * 1000);
-                const userId = 'admin'; // 固定用户ID
-                const signature = this.generateSessionSignature(userId, expires);
-                
-                const sessionData = {
-                    userId: userId,
-                    expires: expires,
-                    signature: signature,
-                    created: now
-                };
-                
-                localStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
-                this.isAuthenticated = true;
-            }
-            
-            generateSessionSignature(userId, expires) {
-                // 简单的签名生成，增加会话安全性
-                const data = `${userId}|${expires}|${SECURITY_CONFIG.SALT}`;
-                // 这里我们使用简单的哈希，实际应用中可以使用更复杂的签名
-                return btoa(data).substring(0, 32);
-            }
-            
-            recordFailedAttempt() {
-                const attempts = parseInt(localStorage.getItem(this.attemptsKey) || '0') + 1;
-                localStorage.setItem(this.attemptsKey, attempts.toString());
-                
-                if (attempts >= SECURITY_CONFIG.MAX_ATTEMPTS) {
-                    const lockoutUntil = new Date().getTime() + (SECURITY_CONFIG.LOCKOUT_TIME * 60 * 1000);
-                    localStorage.setItem(this.lockoutKey, lockoutUntil.toString());
-                }
-            }
-            
-            getRemainingAttempts() {
-                const attempts = parseInt(localStorage.getItem(this.attemptsKey) || '0');
-                return Math.max(0, SECURITY_CONFIG.MAX_ATTEMPTS - attempts);
-            }
-            
-            isLockedOut() {
-                const lockoutUntil = localStorage.getItem(this.lockoutKey);
-                if (lockoutUntil) {
-                    const now = new Date().getTime();
-                    if (now < parseInt(lockoutUntil)) {
-                        return true;
-                    } else {
-                        // 锁定时间已过，清除锁定状态
-                        localStorage.removeItem(this.lockoutKey);
-                        localStorage.removeItem(this.attemptsKey);
-                    }
-                }
-                return false;
-            }
-            
-            getLockoutTimeLeft() {
-                const lockoutUntil = localStorage.getItem(this.lockoutKey);
-                if (lockoutUntil) {
-                    const now = new Date().getTime();
-                    const timeLeft = parseInt(lockoutUntil) - now;
-                    if (timeLeft > 0) {
-                        return Math.ceil(timeLeft / (60 * 1000)); // 返回剩余分钟数
+            getRemainingTime() {
+                const session = localStorage.getItem(SESSION_KEY);
+                if (session) {
+                    try {
+                        const sessionData = JSON.parse(session);
+                        const now = new Date().getTime();
+                        return Math.max(0, sessionData.expires - now);
+                    } catch (e) {
+                        return 0;
                     }
                 }
                 return 0;
             }
-            
-            logout() {
-                localStorage.removeItem(this.sessionKey);
-                this.isAuthenticated = false;
-            }
-            
-            isStrictMode() {
-                return SECURITY_CONFIG.STRICT_MODE;
-            }
         }
         
-        // ============================================
-        // Todo 管理器
-        // ============================================
-        class TodoManager {
-            constructor(authManager) {
-                this.authManager = authManager;
-                this.todos = JSON.parse(localStorage.getItem('hugo_todos_private_hash')) || [];
+        class TodoApp {
+            constructor() {
+                this.auth = new AuthManager();
+                this.todos = JSON.parse(localStorage.getItem('hugo_todos_v2')) || [];
                 this.currentFilter = 'all';
-                
-                // 如果没有任务，添加示例任务
-                if (this.todos.length === 0) {
-                    this.addExampleTodos();
+                this.init();
+            }
+            
+            init() {
+                // 检查登录状态
+                if (this.auth.checkAuth()) {
+                    this.showTodoApp();
+                } else {
+                    this.showLoginPrompt();
                 }
             }
             
-            addExampleTodos() {
-                const examples = [
-                    { 
-                        id: 1, 
-                        text: "欢迎使用安全Todo List", 
-                        completed: false, 
-                        createdAt: new Date().toLocaleDateString('zh-CN'), 
-                        priority: "high" 
-                    },
-                    { 
-                        id: 2, 
-                        text: "点击左侧选框标记完成", 
-                        completed: false, 
-                        createdAt: new Date().toLocaleDateString('zh-CN'), 
-                        priority: "normal" 
-                    },
-                    { 
-                        id: 3, 
-                        text: "只有授权用户可以编辑", 
-                        completed: true, 
-                        createdAt: new Date().toLocaleDateString('zh-CN'), 
-                        priority: "low" 
-                    }
-                ];
-                this.todos = examples;
-                this.save();
+            showLoginPrompt() {
+                const container = document.getElementById('todoContainer');
+                container.innerHTML = `
+                    <div class="auth-prompt">
+                        <h2>🔒 需要登录</h2>
+                        <p>您需要登录才能访问此页面</p>
+                        <p>请前往登录页面验证您的身份</p>
+                        <a href="/login/" class="auth-btn">前往登录</a>
+                        <div style="margin-top: 2rem; color: #666; font-size: 14px;">
+                            <p>📝 这是一个受保护的待办事项列表</p>
+                            <p>🔐 只有授权用户可以访问和编辑</p>
+                        </div>
+                    </div>
+                `;
             }
             
-            addTodo(text) {
-                if (!text.trim()) return null;
+            showTodoApp() {
+                const container = document.getElementById('todoContainer');
+                const remainingTime = this.auth.getRemainingTime();
+                const hoursLeft = Math.floor(remainingTime / (60 * 60 * 1000));
                 
-                const todo = {
-                    id: Date.now(),
-                    text: text.trim(),
-                    completed: false,
-                    createdAt: new Date().toLocaleDateString('zh-CN'),
-                    priority: 'normal',
-                    createdBy: 'user'
-                };
+                container.innerHTML = `
+                    <div class="todo-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                            <div>
+                                <h1>{{ .Title }}</h1>
+                                <p>{{ .Description }}</p>
+                            </div>
+                            <div class="user-info">
+                                <div>👤 管理员</div>
+                                <div>⏰ 登录剩余: ${hoursLeft}小时</div>
+                                <button id="logoutBtn" style="margin-top: 5px; padding: 5px 10px; background: none; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+                                    退出登录
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <input type="text" id="todoInput" class="todo-input" placeholder="添加新的任务..." />
+                            <button id="addBtn" class="todo-btn">添加任务</button>
+                        </div>
+                        
+                        <div class="controls">
+                            <div class="filter-buttons">
+                                <button class="filter-btn active" data-filter="all">全部</button>
+                                <button class="filter-btn" data-filter="active">进行中</button>
+                                <button class="filter-btn" data-filter="completed">已完成</button>
+                            </div>
+                            <button id="clearCompleted" class="todo-btn">清除已完成</button>
+                        </div>
+                        
+                        <div class="todo-stats">
+                            <div>总任务: <span id="totalCount">0</span></div>
+                            <div>进行中: <span id="activeCount">0</span></div>
+                            <div>已完成: <span id="completedCount">0</span></div>
+                        </div>
+                        
+                        <ul id="todoList" class="todo-list">
+                            <!-- 任务会在这里动态添加 -->
+                        </ul>
+                        
+                        <div id="emptyState" class="empty-state" style="display: none; text-align: center; padding: 3rem; color: #666;">
+                            <h3>暂无任务</h3>
+                            <p>添加您的第一个任务来开始吧！</p>
+                        </div>
+                        
+                        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 14px;">
+                            <p>💡 提示：</p>
+                            <ul style="padding-left: 1.5rem;">
+                                <li>点击复选框标记任务完成</li>
+                                <li>使用筛选按钮查看不同类型的任务</li>
+                                <li>登录状态将在24小时后自动过期</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
                 
-                this.todos.unshift(todo);
-                this.save();
-                return todo;
+                this.bindEvents();
+                this.renderTodos();
+                
+                // 添加一些样式
+                const style = document.createElement('style');
+                style.textContent = `
+                    .empty-state { display: none; text-align: center; padding: 3rem; color: #666; }
+                    .filter-btn { padding: 8px 16px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; }
+                    .filter-btn.active { background-color: #3498db; color: white; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            bindEvents() {
+                // 添加任务
+                document.getElementById('addBtn').addEventListener('click', () => this.addTodo());
+                document.getElementById('todoInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTodo();
+                });
+                
+                // 筛选
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.currentFilter = e.target.dataset.filter;
+                        document.querySelectorAll('.filter-btn').forEach(b => {
+                            b.classList.toggle('active', b === e.target);
+                        });
+                        this.renderTodos();
+                    });
+                });
+                
+                // 清除已完成
+                document.getElementById('clearCompleted').addEventListener('click', () => {
+                    if (confirm('确定要清除所有已完成的任务吗？')) {
+                        this.clearCompleted();
+                    }
+                });
+                
+                // 退出登录
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    if (confirm('确定要退出登录吗？')) {
+                        this.auth.logout();
+                        this.showLoginPrompt();
+                    }
+                });
+            }
+            
+            addTodo() {
+                const input = document.getElementById('todoInput');
+                const text = input.value.trim();
+                
+                if (text) {
+                    const todo = {
+                        id: Date.now(),
+                        text: text,
+                        completed: false,
+                        createdAt: new Date().toLocaleDateString('zh-CN'),
+                        createdTime: new Date().toISOString()
+                    };
+                    
+                    this.todos.unshift(todo);
+                    this.saveTodos();
+                    this.renderTodos();
+                    input.value = '';
+                    input.focus();
+                }
             }
             
             toggleTodo(id) {
                 const todo = this.todos.find(t => t.id === id);
                 if (todo) {
                     todo.completed = !todo.completed;
-                    todo.completedAt = todo.completed ? new Date().toLocaleDateString('zh-CN') : null;
-                    this.save();
+                    if (todo.completed) {
+                        todo.completedAt = new Date().toISOString();
+                    }
+                    this.saveTodos();
+                    this.renderTodos();
                 }
             }
             
             deleteTodo(id) {
-                this.todos = this.todos.filter(t => t.id !== id);
-                this.save();
-            }
-            
-            updateTodoPriority(id, priority) {
-                const todo = this.todos.find(t => t.id === id);
-                if (todo) {
-                    todo.priority = priority;
-                    this.save();
+                if (confirm('确定要删除这个任务吗？')) {
+                    this.todos = this.todos.filter(t => t.id !== id);
+                    this.saveTodos();
+                    this.renderTodos();
                 }
             }
             
             clearCompleted() {
                 this.todos = this.todos.filter(t => !t.completed);
-                this.save();
+                this.saveTodos();
+                this.renderTodos();
             }
             
-            save() {
-                localStorage.setItem('hugo_todos_private_hash', JSON.stringify(this.todos));
-            }
-            
-            getFilteredTodos() {
-                switch(this.currentFilter) {
-                    case 'active':
-                        return this.todos.filter(t => !t.completed);
-                    case 'completed':
-                        return this.todos.filter(t => t.completed);
-                    default:
-                        return this.todos;
-                }
-            }
-            
-            getStats() {
-                const total = this.todos.length;
-                const completed = this.todos.filter(t => t.completed).length;
-                const active = total - completed;
-                return { total, active, completed };
-            }
-        }
-        
-        // ============================================
-        // 用户界面管理器
-        // ============================================
-        class UIManager {
-            constructor(authManager, todoManager) {
-                this.authManager = authManager;
-                this.todoManager = todoManager;
-                
-                // DOM 元素
-                this.elements = {
-                    authContainer: document.getElementById('authContainer'),
-                    todoContainer: document.getElementById('todoContainer'),
-                    passwordInput: document.getElementById('passwordInput'),
-                    loginBtn: document.getElementById('loginBtn'),
-                    authMessage: document.getElementById('authMessage'),
-                    lockNotice: document.getElementById('lockNotice'),
-                    logoutBtn: document.getElementById('logoutBtn'),
-                    todoInput: document.getElementById('todoInput'),
-                    addBtn: document.getElementById('addBtn'),
-                    todoList: document.getElementById('todoList'),
-                    clearCompleted: document.getElementById('clearCompleted'),
-                    emptyState: document.getElementById('emptyState'),
-                    filterButtons: document.querySelectorAll('.filter-btn')
-                };
-            }
-            
-            init() {
-                this.bindEvents();
-                this.showAppropriateView();
-            }
-            
-            bindEvents() {
-                // 登录相关
-                this.elements.loginBtn.addEventListener('click', () => this.handleLogin());
-                this.elements.passwordInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.handleLogin();
-                });
-                
-                // Todo 操作
-                this.elements.addBtn.addEventListener('click', () => this.addTodo());
-                this.elements.todoInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.addTodo();
-                });
-                
-                // 过滤
-                this.elements.filterButtons.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const filter = e.target.dataset.filter;
-                        this.todoManager.currentFilter = filter;
-                        this.updateFilterButtons(filter);
-                        this.renderTodos();
-                    });
-                });
-                
-                // 清除已完成
-                this.elements.clearCompleted.addEventListener('click', () => {
-                    if (confirm('确定要清除所有已完成的任务吗？')) {
-                        this.todoManager.clearCompleted();
-                        this.renderTodos();
-                    }
-                });
-                
-                // 退出登录
-                this.elements.logoutBtn.addEventListener('click', () => {
-                    if (confirm('确定要退出登录吗？')) {
-                        this.authManager.logout();
-                        this.showAppropriateView();
-                    }
-                });
-            }
-            
-            async handleLogin() {
-                const password = this.elements.passwordInput.value;
-                
-                if (!password) {
-                    this.showAuthMessage('请输入密码');
-                    return;
-                }
-                
-                // 禁用登录按钮，防止重复点击
-                this.elements.loginBtn.disabled = true;
-                this.elements.loginBtn.textContent = '验证中...';
-                
-                // 检查是否锁定
-                if (this.authManager.isLockedOut()) {
-                    const minutesLeft = this.authManager.getLockoutTimeLeft();
-                    this.showAuthMessage(`账户已锁定，请 ${minutesLeft} 分钟后再试`);
-                    this.elements.loginBtn.disabled = false;
-                    this.elements.loginBtn.textContent = '验证密码';
-                    return;
-                }
-                
-                const result = await this.authManager.verifyPassword(password);
-                
-                if (result.success) {
-                    this.showAppropriateView();
-                    this.elements.passwordInput.value = '';
-                    this.hideAuthMessage();
-                } else {
-                    this.showAuthMessage(result.message);
-                    this.elements.passwordInput.value = '';
-                    this.elements.passwordInput.focus();
-                }
-                
-                // 重新启用登录按钮
-                this.elements.loginBtn.disabled = false;
-                this.elements.loginBtn.textContent = '验证密码';
-            }
-            
-            showAuthMessage(message) {
-                this.elements.authMessage.textContent = message;
-                this.elements.authMessage.style.display = 'block';
-            }
-            
-            hideAuthMessage() {
-                this.elements.authMessage.style.display = 'none';
-            }
-            
-            showAppropriateView() {
-                // 检查是否锁定
-                if (this.authManager.isLockedOut()) {
-                    const minutesLeft = this.authManager.getLockoutTimeLeft();
-                    this.elements.authContainer.style.display = 'block';
-                    this.elements.todoContainer.style.display = 'none';
-                    this.showAuthMessage(`账户已锁定，请 ${minutesLeft} 分钟后再试`);
-                    return;
-                }
-                
-                if (this.authManager.isStrictMode() && !this.authManager.isAuthenticated) {
-                    // 严格模式：未登录显示登录界面
-                    this.elements.authContainer.style.display = 'block';
-                    this.elements.todoContainer.style.display = 'none';
-                } else if (!this.authManager.isAuthenticated) {
-                    // 非严格模式：显示只读的 Todo 界面
-                    this.elements.authContainer.style.display = 'none';
-                    this.elements.todoContainer.style.display = 'block';
-                    this.elements.lockNotice.style.display = 'block';
-                    this.elements.todoContainer.classList.add('readonly');
-                    this.elements.logoutBtn.style.display = 'none';
-                    this.renderTodos();
-                } else {
-                    // 已登录：显示完整功能
-                    this.elements.authContainer.style.display = 'none';
-                    this.elements.todoContainer.style.display = 'block';
-                    this.elements.lockNotice.style.display = 'none';
-                    this.elements.todoContainer.classList.remove('readonly');
-                    this.elements.logoutBtn.style.display = 'block';
-                    this.renderTodos();
-                }
-            }
-            
-            addTodo() {
-                if (!this.authManager.isAuthenticated) {
-                    alert('请先登录以添加任务');
-                    this.elements.authContainer.style.display = 'block';
-                    this.elements.todoContainer.style.display = 'none';
-                    return;
-                }
-                
-                const text = this.elements.todoInput.value;
-                if (text.trim()) {
-                    this.todoManager.addTodo(text);
-                    this.elements.todoInput.value = '';
-                    this.renderTodos();
-                    this.elements.todoInput.focus();
-                }
-            }
-            
-            updateFilterButtons(activeFilter) {
-                this.elements.filterButtons.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.filter === activeFilter);
-                });
+            saveTodos() {
+                localStorage.setItem('hugo_todos_v2', JSON.stringify(this.todos));
             }
             
             renderTodos() {
-                const todos = this.todoManager.getFilteredTodos();
-                const stats = this.todoManager.getStats();
+                const todoList = document.getElementById('todoList');
+                const emptyState = document.getElementById('emptyState');
+                
+                // 筛选任务
+                let filteredTodos = this.todos;
+                if (this.currentFilter === 'active') {
+                    filteredTodos = this.todos.filter(t => !t.completed);
+                } else if (this.currentFilter === 'completed') {
+                    filteredTodos = this.todos.filter(t => t.completed);
+                }
                 
                 // 更新统计
-                document.getElementById('totalCount').textContent = stats.total;
-                document.getElementById('activeCount').textContent = stats.active;
-                document.getElementById('completedCount').textContent = stats.completed;
+                const total = this.todos.length;
+                const completed = this.todos.filter(t => t.completed).length;
+                const active = total - completed;
+                
+                document.getElementById('totalCount').textContent = total;
+                document.getElementById('activeCount').textContent = active;
+                document.getElementById('completedCount').textContent = completed;
                 
                 // 渲染列表
-                if (todos.length === 0) {
-                    this.elements.todoList.innerHTML = '';
-                    this.elements.emptyState.style.display = 'block';
+                if (filteredTodos.length === 0) {
+                    if (todoList) todoList.innerHTML = '';
+                    if (emptyState) emptyState.style.display = 'block';
                 } else {
-                    this.elements.emptyState.style.display = 'none';
+                    if (emptyState) emptyState.style.display = 'none';
                     
-                    this.elements.todoList.innerHTML = todos.map(todo => `
-                        <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
-                            <input type="checkbox" class="todo-checkbox" 
-                                   ${todo.completed ? 'checked' : ''}
-                                   ${!this.authManager.isAuthenticated ? 'disabled' : ''}>
-                            <span class="todo-text ${todo.completed ? 'completed' : ''}">
-                                ${todo.text}
-                                ${todo.priority === 'high' ? ' 🔥' : todo.priority === 'low' ? ' 🌊' : ''}
-                            </span>
-                            ${this.authManager.isAuthenticated ? `
+                    if (todoList) {
+                        todoList.innerHTML = filteredTodos.map(todo => `
+                            <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                                <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}>
+                                <span class="todo-text ${todo.completed ? 'completed' : ''}">
+                                    ${todo.text}
+                                </span>
                                 <div class="todo-actions">
                                     <button class="todo-action-btn delete-btn">删除</button>
                                 </div>
-                            ` : ''}
-                            <div class="todo-date">
-                                ${todo.createdAt}
-                                ${todo.completedAt ? `<br><small>完成于: ${todo.completedAt}</small>` : ''}
-                            </div>
-                        </li>
-                    `).join('');
-                    
-                    // 绑定事件
-                    this.bindTodoEvents();
+                                <div class="todo-date">
+                                    ${todo.createdAt}
+                                    ${todo.completed ? '<br><small>✓ 已完成</small>' : ''}
+                                </div>
+                            </li>
+                        `).join('');
+                        
+                        // 绑定事件
+                        todoList.querySelectorAll('.todo-checkbox').forEach(checkbox => {
+                            checkbox.addEventListener('change', (e) => {
+                                const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                                this.toggleTodo(id);
+                            });
+                        });
+                        
+                        todoList.querySelectorAll('.delete-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                                this.deleteTodo(id);
+                            });
+                        });
+                    }
                 }
-            }
-            
-            bindTodoEvents() {
-                // 复选框事件
-                this.elements.todoList.querySelectorAll('.todo-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => {
-                        if (!this.authManager.isAuthenticated) {
-                            e.preventDefault();
-                            return;
-                        }
-                        
-                        const id = parseInt(e.target.closest('.todo-item').dataset.id);
-                        this.todoManager.toggleTodo(id);
-                        this.renderTodos();
-                    });
-                });
-                
-                // 删除按钮事件
-                this.elements.todoList.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        if (!this.authManager.isAuthenticated) return;
-                        
-                        const id = parseInt(e.target.closest('.todo-item').dataset.id);
-                        if (confirm('确定要删除这个任务吗？')) {
-                            this.todoManager.deleteTodo(id);
-                            this.renderTodos();
-                        }
-                    });
-                });
             }
         }
         
-        // ============================================
         // 初始化应用
-        // ============================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // 验证密码哈希配置
-                if (!SECURITY_CONFIG.PASSWORD_HASH || SECURITY_CONFIG.PASSWORD_HASH.length !== 64) {
-                    console.error('❌ 密码哈希配置错误：请设置正确的SHA-256哈希值（64位十六进制）');
-                    alert('系统配置错误：请检查密码哈希设置');
-                    return;
-                }
-                
-                const authManager = new AuthManager();
-                const todoManager = new TodoManager(authManager);
-                const uiManager = new UIManager(authManager, todoManager);
-                
-                uiManager.init();
-                
-                // 开发模式提示
-                if (window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1') {
-                    console.log('🔐 安全Todo List - 开发模式');
-                    console.log('📝 请确保已设置正确的密码哈希值');
-                    console.log('🔑 当前使用SHA-256哈希验证');
-                    console.log('💡 提示：密码尝试次数限制为 ' + SECURITY_CONFIG.MAX_ATTEMPTS + ' 次');
-                }
-            } catch (error) {
-                console.error('初始化失败:', error);
-                document.body.innerHTML = `
-                    <div style="text-align: center; padding: 50px;">
-                        <h2>❌ 系统错误</h2>
-                        <p>Todo List 初始化失败，请刷新页面重试</p>
-                        <p style="color: #666; font-size: 12px;">错误详情: ${error.message}</p>
-                    </div>
-                `;
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            new TodoApp();
         });
-        
-        // ============================================
-        // 密码哈希生成工具函数（仅用于开发）
-        // ============================================
-        window.generatePasswordHash = async function(password) {
-            if (!password) {
-                alert('请输入密码');
-                return;
-            }
-            
-            try {
-                const hash = await sha256(password + SECURITY_CONFIG.SALT);
-                console.log('🔐 密码哈希生成结果：');
-                console.log('密码: ' + password);
-                console.log('SHA-256哈希: ' + hash);
-                console.log('📋 请复制上面的哈希值到 SECURITY_CONFIG.PASSWORD_HASH');
-                
-                // 显示结果
-                const result = `
-                    密码: ${password}
-                    SHA-256哈希: ${hash}
-                    盐值: ${SECURITY_CONFIG.SALT}
-                    
-                    请复制哈希值替换 SECURITY_CONFIG.PASSWORD_HASH
-                `;
-                
-                if (confirm('哈希生成成功！是否复制到剪贴板？')) {
-                    navigator.clipboard.writeText(hash);
-                    alert('哈希值已复制到剪贴板');
-                }
-            } catch (error) {
-                console.error('生成哈希失败:', error);
-                alert('生成哈希失败: ' + error.message);
-            }
-        };
     </script>
 </body>
 </html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}" dir="{{ $.Param "languagedir" | default "ltr" }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} | {{ .Site.Title }}</title>
+    
+    {{- partial "head.html" . -}}
+    
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .login-title {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        
+        .login-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .login-message {
+            color: #e74c3c;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .login-info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    {{- partial "header.html" . -}}
+    
+    <main class="post">
+        <article class="post-content">
+            <div class="login-container">
+                <h1 class="login-title">🔒 登录</h1>
+                <p>请输入密码访问您的待办事项</p>
+                
+                <form id="loginForm" onsubmit="return false;">
+                    <input type="password" 
+                           id="passwordInput" 
+                           class="login-input" 
+                           placeholder="输入密码"
+                           autocomplete="current-password"
+                           required>
+                    
+                    <button type="submit" id="loginBtn" class="login-btn">
+                        登录
+                    </button>
+                    
+                    <div id="loginMessage" class="login-message"></div>
+                </form>
+                
+                <div class="login-info">
+                    <p>📝 密码由站长单独设置</p>
+                    <p>🔐 登录状态有效期24小时</p>
+                    <p>📱 支持移动设备访问</p>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    {{- partial "footer.html" . -}}
+    
+    <script>
+        // 密码配置文件 URL
+        const PASSWORD_FILE_URL = '/api/password.json';
+        const SESSION_KEY = 'todo_auth_session_v2';
+        
+        class LoginManager {
+            constructor() {
+                this.passwordData = null;
+                this.attempts = 0;
+                this.maxAttempts = 5;
+                this.init();
+            }
+            
+            async init() {
+                this.bindEvents();
+                
+                // 检查是否有有效的会话
+                if (this.checkSession()) {
+                    // 跳转到 Todo 页面
+                    window.location.href = '/todo/';
+                    return;
+                }
+                
+                // 加载密码配置文件
+                await this.loadPasswordConfig();
+            }
+            
+            bindEvents() {
+                const loginBtn = document.getElementById('loginBtn');
+                const passwordInput = document.getElementById('passwordInput');
+                
+                loginBtn.addEventListener('click', () => this.login());
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.login();
+                });
+                
+                // 表单提交
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.login();
+                });
+            }
+            
+            async loadPasswordConfig() {
+                try {
+                    // 从 GitHub Pages 读取密码配置文件
+                    const response = await fetch(PASSWORD_FILE_URL);
+                    if (response.ok) {
+                        this.passwordData = await response.json();
+                        console.log('密码配置加载成功');
+                    } else {
+                        throw new Error('无法加载密码配置');
+                    }
+                } catch (error) {
+                    console.error('加载密码配置失败:', error);
+                    this.showMessage('系统配置错误，请联系管理员', 'error');
+                }
+            }
+            
+            async login() {
+                const password = document.getElementById('passwordInput').value;
+                const loginBtn = document.getElementById('loginBtn');
+                
+                if (!password) {
+                    this.showMessage('请输入密码', 'error');
+                    return;
+                }
+                
+                // 检查尝试次数
+                if (this.attempts >= this.maxAttempts) {
+                    this.showMessage('尝试次数过多，请稍后再试', 'error');
+                    return;
+                }
+                
+                // 禁用登录按钮，显示加载状态
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span>验证中...</span>';
+                
+                try {
+                    // 等待密码配置加载完成
+                    if (!this.passwordData) {
+                        await this.loadPasswordConfig();
+                    }
+                    
+                    // 验证密码
+                    const isValid = await this.validatePassword(password);
+                    
+                    if (isValid) {
+                        // 登录成功，创建会话
+                        this.createSession();
+                        this.showMessage('登录成功！正在跳转...', 'success');
+                        
+                        // 2秒后跳转到 Todo 页面
+                        setTimeout(() => {
+                            window.location.href = '/todo/';
+                        }, 2000);
+                    } else {
+                        // 登录失败
+                        this.attempts++;
+                        const attemptsLeft = this.maxAttempts - this.attempts;
+                        
+                        if (attemptsLeft > 0) {
+                            this.showMessage(`密码错误，还剩 ${attemptsLeft} 次尝试机会`, 'error');
+                        } else {
+                            this.showMessage('尝试次数过多，请稍后再试', 'error');
+                        }
+                        
+                        // 清空密码框
+                        document.getElementById('passwordInput').value = '';
+                        document.getElementById('passwordInput').focus();
+                    }
+                } catch (error) {
+                    console.error('登录出错:', error);
+                    this.showMessage('登录过程出错，请重试', 'error');
+                } finally {
+                    // 恢复登录按钮
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '登录';
+                }
+            }
+            
+            async validatePassword(inputPassword) {
+                if (!this.passwordData) {
+                    throw new Error('密码配置未加载');
+                }
+                
+                // 方法1: 使用加密验证
+                if (this.passwordData.hashMethod === 'sha256') {
+                    // 计算输入密码的哈希
+                    const inputHash = await this.sha256(inputPassword + this.passwordData.salt);
+                    return inputHash === this.passwordData.hash;
+                }
+                
+                // 方法2: 直接比较（不推荐，仅用于演示）
+                if (this.passwordData.password) {
+                    return inputPassword === this.passwordData.password;
+                }
+                
+                return false;
+            }
+            
+            async sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+            
+            createSession() {
+                const now = new Date().getTime();
+                const expires = now + (24 * 60 * 60 * 1000); // 24小时
+                
+                const sessionData = {
+                    authenticated: true,
+                    expires: expires,
+                    created: now,
+                    user: 'admin'
+                };
+                
+                // 使用 localStorage 存储会话
+                localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+                
+                // 同时设置 cookie（备用）
+                document.cookie = `todo_auth=1; expires=${new Date(expires).toUTCString()}; path=/`;
+            }
+            
+            checkSession() {
+                const session = localStorage.getItem(SESSION_KEY);
+                if (session) {
+                    try {
+                        const sessionData = JSON.parse(session);
+                        const now = new Date().getTime();
+                        
+                        if (now < sessionData.expires) {
+                            return true;
+                        }
+                    } catch (e) {
+                        console.error('会话数据损坏:', e);
+                    }
+                    
+                    // 清除过期会话
+                    localStorage.removeItem(SESSION_KEY);
+                }
+                
+                return false;
+            }
+            
+            showMessage(text, type = 'error') {
+                const messageEl = document.getElementById('loginMessage');
+                messageEl.textContent = text;
+                messageEl.style.color = type === 'error' ? '#e74c3c' : '#2ecc71';
+                messageEl.style.display = 'block';
+                
+                // 5秒后隐藏消息
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // 初始化登录管理器
+        document.addEventListener('DOMContentLoaded', () => {
+            new LoginManager();
+        });
+        
+        // 开发工具：生成密码配置
+        window.generatePasswordConfig = async function(password) {
+            if (!password) {
+                alert('请输入密码');
+                return;
+            }
+            
+            const salt = Math.random().toString(36).substring(2) + 
+                        Math.random().toString(36).substring(2);
+            
+            // 计算哈希
+            const msgBuffer = new TextEncoder().encode(password + salt);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // 创建配置对象
+            const config = {
+                hashMethod: 'sha256',
+                salt: salt,
+                hash: hash,
+                createdAt: new Date().toISOString()
+            };
+            
+            // 显示结果
+            const result = `
+// 复制以下内容到 /static/api/password.json
+${JSON.stringify(config, null, 2)}
+            `;
+            
+            console.log(result);
+            
+            if (confirm('配置已生成！是否复制到剪贴板？')) {
+                navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+                alert('配置已复制到剪贴板');
+            }
+        };
+    </script>
+</body>
+</html>
