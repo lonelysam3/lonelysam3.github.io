@@ -79,18 +79,33 @@
             padding-top: 15px;
         }
         
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
+        .guest-access {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .guest-access h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        
+        .guest-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        
+        .guest-btn:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
@@ -101,7 +116,7 @@
         <article class="post-content">
             <div class="login-container">
                 <h1 class="login-title">🔒 登录</h1>
-                <p>请输入密码访问您的待办事项</p>
+                <p>登录以编辑待办事项</p>
                 
                 <form id="loginForm">
                     <input type="password" 
@@ -120,8 +135,16 @@
                 
                 <div class="login-info">
                     <p>🔐 登录状态有效期24小时</p>
-                    <p>📱 支持移动设备访问</p>
-                    <p>💡 忘记密码请联系管理员</p>
+                    <p>✏️ 登录后可添加、编辑、删除任务</p>
+                </div>
+                
+                <div class="guest-access">
+                    <h3>👀 访客访问</h3>
+                    <p>只想查看任务？您可以以只读模式访问</p>
+                    <a href="/todo/" class="guest-btn">以访客身份查看</a>
+                    <p style="font-size: 12px; margin-top: 10px; color: #666;">
+                        * 访客只能查看任务，不能编辑
+                    </p>
                 </div>
             </div>
         </article>
@@ -130,7 +153,6 @@
     {{- partial "footer.html" . -}}
     
     <script>
-        // 简化版登录管理
         document.addEventListener('DOMContentLoaded', function() {
             const loginForm = document.getElementById('loginForm');
             const passwordInput = document.getElementById('passwordInput');
@@ -138,7 +160,13 @@
             const loginMessage = document.getElementById('loginMessage');
             
             // 检查是否已经登录
-            checkLoginStatus();
+            if (checkLoginStatus()) {
+                window.location.href = '/todo/';
+                return;
+            }
+            
+            // 设置访客模式
+            setGuestMode();
             
             // 表单提交事件
             loginForm.addEventListener('submit', async function(e) {
@@ -165,7 +193,7 @@
                 
                 // 禁用登录按钮
                 loginBtn.disabled = true;
-                loginBtn.innerHTML = '<span class="loading"></span> 验证中...';
+                loginBtn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 1s linear infinite;margin-right:5px;"></span> 验证中...';
                 
                 try {
                     // 验证密码
@@ -251,17 +279,22 @@
                         const now = new Date().getTime();
                         
                         if (now < sessionData.expires) {
-                            // 已登录，跳转到 Todo 页面
-                            window.location.href = '/todo/';
-                            return;
+                            return true;
                         } else {
-                            // 会话过期，清除
                             localStorage.removeItem('todo_session');
                         }
                     } catch (e) {
                         console.error('会话数据损坏:', e);
                         localStorage.removeItem('todo_session');
                     }
+                }
+                return false;
+            }
+            
+            function setGuestMode() {
+                // 设置访客模式标志
+                if (!localStorage.getItem('todo_guest_mode')) {
+                    localStorage.setItem('todo_guest_mode', 'true');
                 }
             }
             
@@ -281,40 +314,6 @@
             // 初始化时聚焦到密码输入框
             passwordInput.focus();
         });
-        
-        // 调试工具：在控制台生成密码配置
-        window.generatePasswordConfig = async function(password) {
-            if (!password) {
-                console.error('请输入密码');
-                return;
-            }
-            
-            const salt = Math.random().toString(36).substring(2) + 
-                        Math.random().toString(36).substring(2);
-            
-            // 计算哈希
-            const msgBuffer = new TextEncoder().encode(password + salt);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            const config = {
-                hashMethod: "sha256",
-                salt: salt,
-                hash: hash,
-                createdAt: new Date().toISOString(),
-                note: "请将此配置保存到 /static/api/password.json"
-            };
-            
-            console.log('🔐 密码配置生成成功：');
-            console.log(JSON.stringify(config, null, 2));
-            console.log('📋 已自动复制到剪贴板');
-            
-            // 复制到剪贴板
-            navigator.clipboard.writeText(JSON.stringify(config, null, 2));
-            
-            return config;
-        };
     </script>
 </body>
 </html>
