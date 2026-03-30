@@ -352,21 +352,6 @@
                 return false;
             }
             
-            createSession() {
-                const now = new Date().getTime();
-                const expires = now + (24 * 60 * 60 * 1000); // 24小时
-                
-                const sessionData = {
-                    authenticated: true,
-                    expires: expires,
-                    created: now,
-                    user: 'admin'
-                };
-                
-                localStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
-                this.isAuthenticated = true;
-            }
-            
             logout() {
                 localStorage.removeItem(this.sessionKey);
                 this.isAuthenticated = false;

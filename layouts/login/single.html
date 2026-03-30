@@ -165,9 +165,6 @@
                 return;
             }
             
-            // 设置访客模式
-            setGuestMode();
-            
             // 表单提交事件
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -289,13 +286,6 @@
                     }
                 }
                 return false;
-            }
-            
-            function setGuestMode() {
-                // 设置访客模式标志
-                if (!localStorage.getItem('todo_guest_mode')) {
-                    localStorage.setItem('todo_guest_mode', 'true');
-                }
             }
             
             function showMessage(text, type = 'error') {
