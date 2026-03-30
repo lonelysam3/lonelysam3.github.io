@@ -48,9 +48,6 @@ languages:
         - name: 关于
           pageRef: about/
           weight: 21
-        - name: 待办事项
-          pageRef: todo/
-          weight: 30
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
   title: "lonelysam3's Blog"
@@ -187,7 +184,7 @@ params:
     emitMetadata: "0"
     inputPosition: "bottom"
     lightTheme: "light"
-#    darkTheme: "dark"
+    darkTheme: "dark"
     lang: "zh-CN"
     crossorigin: "anonymous"
 #pygmentsUseClasses: true
