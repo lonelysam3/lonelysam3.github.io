@@ -42,9 +42,6 @@ languages:
         - name: 标签
           pageRef: tags/
           weight: 10
-        - name: 搜索
-          pageRef: search/
-          weight: 20
         - name: 关于
           pageRef: about/
           weight: 21
@@ -207,4 +204,3 @@ outputs:
     - HTML # 生成的静态页面
     - RSS # 这个其实无所谓
     - JSON # necessary for search, 这里的配置修改好之后，一定要重新生成一下
-
