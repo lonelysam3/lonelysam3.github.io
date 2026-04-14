@@ -5,12 +5,7 @@
         gap: 16px;
     }
 
-    .home .home-searchbox-source {
-        display: none;
-    }
-
     .home .header .nav #searchbox.home-top-search {
-        display: block;
         flex: 1;
         max-width: 420px;
         margin: 0 auto;
@@ -42,16 +37,4 @@
 {{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-home.js" }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}"></script>
 {{- end }}
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const searchBox = document.getElementById("searchbox");
-        const nav = document.querySelector(".header .nav");
-        const menu = nav?.querySelector("#menu");
-
-        if (!searchBox || !nav || !menu) return;
-
-        searchBox.classList.add("home-top-search");
-        nav.insertBefore(searchBox, menu);
-    });
-</script>
 {{- end -}}

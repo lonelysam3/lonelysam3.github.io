@@ -1,10 +1,22 @@
 {{- with site.Params.homeInfoParams }}
 <article class="first-entry home-info">
-    <div id="searchbox" class="home-searchbox-source">
+    <div id="searchbox">
         <input id="searchInput" placeholder="{{ site.Params.searchPlaceholder | default "搜索 ↵" }}"
             aria-label="search" type="search" autocomplete="off" maxlength="64">
         <ul id="searchResults" aria-label="search results"></ul>
     </div>
+    <script>
+        (function () {
+            const searchBox = document.getElementById("searchbox");
+            const nav = document.querySelector(".header .nav");
+            const menu = nav?.querySelector("#menu");
+
+            if (!searchBox || !nav || !menu) return;
+
+            searchBox.classList.add("home-top-search");
+            nav.insertBefore(searchBox, menu);
+        })();
+    </script>
     <header class="entry-header">
         <h1>{{ .Title | markdownify }}</h1>
     </header>
