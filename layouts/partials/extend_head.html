@@ -7,7 +7,7 @@
 {{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-home.js" | fingerprint }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}" integrity="{{ $search.Data.Integrity }}"></script>
 {{- else }}
-{{- $search := (slice $fusejs $fastsearch) | resources.Concat "assets/js/search-home.js" }}
+{{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-home.js" }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}"></script>
 {{- end }}
 {{- end -}}
