@@ -1,0 +1,18 @@
+{{- with site.Params.homeInfoParams }}
+<article class="first-entry home-info">
+    <div id="searchbox">
+        <input id="searchInput" placeholder="{{ site.Params.searchPlaceholder | default "搜索 ↵" }}"
+            aria-label="search" type="search" autocomplete="off" maxlength="64">
+        <ul id="searchResults" aria-label="search results"></ul>
+    </div>
+    <header class="entry-header">
+        <h1>{{ .Title | markdownify }}</h1>
+    </header>
+    <div class="entry-content">
+        {{ .Content | markdownify }}
+    </div>
+    <footer class="entry-footer">
+        {{ partial "social_icons.html" (dict "align" site.Params.homeInfoParams.AlignSocialIconsTo) }}
+    </footer>
+</article>
+{{- end -}}
