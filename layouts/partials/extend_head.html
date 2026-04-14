@@ -1,5 +1,32 @@
 {{- if .IsHome -}}
 <link crossorigin="anonymous" rel="preload" as="fetch" href="./index.json">
+<style>
+    .home .header .nav {
+        gap: 16px;
+    }
+
+    .home .header .nav #searchbox.home-top-search {
+        flex: 1;
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .home .header .nav #searchbox.home-top-search #searchInput {
+        width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+        .home .header .nav #searchbox.home-top-search {
+            max-width: 320px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .home .header .nav #searchbox.home-top-search {
+            display: none;
+        }
+    }
+</style>
 {{- $fastsearch := resources.Get "js/fastsearch.js" | js.Build (dict "params" (dict "fuseOpts" site.Params.fuseOpts)) | resources.Minify }}
 {{- $fusejs := resources.Get "js/fuse.basic.min.js" }}
 {{- $license_js := resources.Get "js/license.js" }}
@@ -10,4 +37,17 @@
 {{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-home.js" }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}"></script>
 {{- end }}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchBox = document.getElementById("searchbox");
+        const nav = document.querySelector(".header .nav");
+        const logo = nav?.querySelector(".logo");
+        const menu = nav?.querySelector("#menu");
+
+        if (!searchBox || !nav || !logo || !menu) return;
+
+        searchBox.classList.add("home-top-search");
+        nav.insertBefore(searchBox, menu);
+    });
+</script>
 {{- end -}}
