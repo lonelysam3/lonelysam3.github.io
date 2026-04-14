@@ -5,7 +5,12 @@
         gap: 16px;
     }
 
+    .home .first-entry.home-info #searchbox {
+        display: none;
+    }
+
     .home .header .nav #searchbox.home-top-search {
+        display: block;
         flex: 1;
         max-width: 420px;
         margin: 0 auto;
@@ -41,10 +46,9 @@
     document.addEventListener("DOMContentLoaded", function () {
         const searchBox = document.getElementById("searchbox");
         const nav = document.querySelector(".header .nav");
-        const logo = nav?.querySelector(".logo");
         const menu = nav?.querySelector("#menu");
 
-        if (!searchBox || !nav || !logo || !menu) return;
+        if (!searchBox || !nav || !menu) return;
 
         searchBox.classList.add("home-top-search");
         nav.insertBefore(searchBox, menu);
