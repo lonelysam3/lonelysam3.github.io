@@ -1,0 +1,144 @@
+/* ==========================================================================
+   20-theme.css — 设计令牌（颜色 / 尺寸 / 动效）
+   --------------------------------------------------------------------------
+   覆盖 PaperMod 的 :root 变量，建立带识别度的冷色体系，并补齐主题原本
+   缺失的令牌：accent（强调色）、shadow（层次）、code-header 等。
+   选择器权重高于主题自身，无需 !important。
+   ========================================================================== */
+
+:root {
+    /* ---- 尺寸与节奏 ---- */
+    --gap: 28px;
+    --content-gap: 22px;
+    --nav-width: 1080px;
+    --main-width: 768px;
+    --header-height: 64px;
+    --footer-height: 64px;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-lg: 16px;
+
+    /* ---- 排版节奏 ---- */
+    --entry-padding: 22px 24px;
+    --card-gap: 18px;
+
+    /* ---- 亮色配色（冷调中性 + 青色强调）---- */
+    --theme: rgb(253, 254, 255);
+    --entry: rgb(255, 255, 255);
+    --primary: rgb(22, 28, 38);
+    --secondary: rgb(99, 112, 130);
+    --tertiary: rgb(228, 233, 240);
+    --content: rgb(38, 46, 58);
+    --code-block-bg: rgb(246, 248, 251);
+    --code-bg: rgb(238, 242, 247);
+    --border: rgb(232, 236, 242);
+    --border-strong: rgb(214, 221, 230);
+
+    /* ---- 强调色 ---- */
+    --accent: rgb(8, 124, 150);
+    --accent-hover: rgb(5, 100, 124);
+    --accent-soft: rgba(8, 124, 150, 0.08);
+    --accent-ring: rgba(8, 124, 150, 0.28);
+
+    /* ---- 行内代码 ---- */
+    --code-inline-bg: rgba(8, 124, 150, 0.075);
+    --code-inline-fg: rgb(11, 104, 128);
+
+    /* ---- 代码块 ---- */
+    --code-header-bg: rgb(240, 243, 248);
+    --code-header-fg: rgb(120, 133, 150);
+    --code-block-fg: rgb(45, 55, 72);
+
+    /* ---- 层次与动效 ---- */
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+    --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.07), 0 2px 4px rgba(16, 24, 40, 0.04);
+    --shadow-lg: 0 12px 28px rgba(16, 24, 40, 0.10), 0 4px 10px rgba(16, 24, 40, 0.05);
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --dur: 180ms;
+
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    /* ---- 暗色配色（深蓝黑 + 亮青强调，比纯灰更有氛围）---- */
+    --theme: rgb(15, 18, 24);
+    --entry: rgb(24, 29, 38);
+    --primary: rgb(232, 237, 244);
+    --secondary: rgb(148, 160, 178);
+    --tertiary: rgb(52, 60, 74);
+    --content: rgb(198, 206, 218);
+    --code-block-bg: rgb(20, 24, 32);
+    --code-bg: rgb(31, 37, 48);
+    --border: rgb(38, 45, 58);
+    --border-strong: rgb(56, 65, 80);
+
+    --accent: rgb(61, 214, 232);
+    --accent-hover: rgb(118, 232, 245);
+    --accent-soft: rgba(61, 214, 232, 0.10);
+    --accent-ring: rgba(61, 214, 232, 0.30);
+
+    --code-inline-bg: rgba(61, 214, 232, 0.10);
+    --code-inline-fg: rgb(130, 227, 240);
+
+    --code-header-bg: rgb(26, 31, 41);
+    --code-header-fg: rgb(126, 139, 158);
+    --code-block-fg: rgb(205, 213, 226);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.32);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.38);
+    --shadow-lg: 0 14px 32px rgba(0, 0, 0, 0.46);
+
+    color-scheme: dark;
+}
+
+/* 列表页背景沿用主题语义，但让列表卡片与其拉开层次 */
+.list {
+    background: var(--code-bg);
+}
+
+[data-theme="dark"] .list {
+    background: var(--theme);
+}
+
+/* 主题切换时让颜色平滑过渡；用户要求减少动画时自动关闭 */
+@media (prefers-reduced-motion: no-preference) {
+    body,
+    .entry,
+    .post-entry,
+    .nav,
+    #menu,
+    .footer,
+    a,
+    .post-title,
+    .entry-header h2,
+    .post-content h1,
+    .post-content h2,
+    .post-content h3,
+    .post-content blockquote,
+    .post-content table th,
+    .post-content table td,
+    .chroma,
+    .highlight,
+    code,
+    .toc,
+    .paginav,
+    .top-link,
+    #searchbox input {
+        transition:
+            background-color var(--dur) var(--ease),
+            border-color var(--dur) var(--ease),
+            color var(--dur) var(--ease),
+            box-shadow var(--dur) var(--ease);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

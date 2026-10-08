@@ -2,3 +2,7 @@ public
 resources
 .hugo_build.lock
 hugo.exe
+
+# 本地视觉验证取证（无头浏览器截图与探测页），不入库
+.shots/
+.probe/

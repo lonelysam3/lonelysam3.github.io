@@ -1,0 +1,37 @@
+{{- /* ==========================================================================
+   extend_footer.html — 全局页脚自定义区（覆盖主题同名 partial）
+   --------------------------------------------------------------------------
+   导航滚动提示：使用 IntersectionObserver 监听顶部哨兵元素，而不是监听
+   scroll 事件——滚动回调每次触发都会参与布局计算，用观察器把成本降到零。
+
+   说明：sticky 定位在 .header 上（见 30-ui.css 的说明），但状态类仍然打在
+   .nav 上，CSS 侧通过 html.js .nav.is-scrolled 生效。
+   ========================================================================== */ -}}
+
+<script>
+    (function () {
+        var nav = document.querySelector('.nav');
+        var header = document.querySelector('.header');
+        if (!nav || !header) { return; }
+
+        var sentinel = document.createElement('div');
+        sentinel.setAttribute('aria-hidden', 'true');
+        sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;';
+
+        if (header.parentNode) {
+            header.parentNode.insertBefore(sentinel, header);
+        }
+
+        if (!('IntersectionObserver' in window)) {
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            for (var i = 0; i < entries.length; i++) {
+                nav.classList.toggle('is-scrolled', !entries[i].isIntersecting);
+            }
+        }, { threshold: 0 });
+
+        observer.observe(sentinel);
+    })();
+</script>

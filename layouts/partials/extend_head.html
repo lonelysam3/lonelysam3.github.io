@@ -1,0 +1,32 @@
+{{- /* ==========================================================================
+   extend_head.html — 全局 <head> 自定义区（覆盖主题同名 partial）
+   --------------------------------------------------------------------------
+   1) 尽早标记 JS 可用，供 30-ui.css 中的导航交互样式使用
+   2) 预热字体 CDN 连接
+   3) 加载 JetBrains Mono（编码字体）的 400/500/600/700 四个字重
+
+   设计说明：
+   · JetBrains Mono 不含 CJK 字形，中文回退由 10-fonts.css 的字体栈统一兜底。
+   · fontsource 按 unicode-range 分片（cyrillic / greek / vietnamese /
+     latin-ext / latin），浏览器只会下载当前页面真正用到的子集。
+   · 四个字重对应实际用到的排版层级：400 正文代码、500 导航激活态与强调、
+     600 标题与 logo、700 粗体；缺哪个就会触发浏览器合成粗体（中文尤其糊）。
+   · 刻意不做字体 preload：preconnect 已提前建连，preload 反而会强制拉取
+     当前页面并不使用的字重，属于负优化。
+   ========================================================================== */ -}}
+
+{{- /* 1. JS 能力标记：必须在样式生效前同步执行，避免导航样式跳变 */ -}}
+<script>document.documentElement.classList.add('js');</script>
+
+{{- /* 2. 字体 CDN 预热 */ -}}
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+{{- /* 3. 编码字体：JetBrains Mono v5.3.0，四个字重 */ -}}
+{{- $monoBase := "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.3.0" -}}
+{{- range $w := slice "400" "500" "600" "700" }}
+<link rel="stylesheet"
+      href="{{ $monoBase }}/{{ $w }}.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer">
+{{- end }}

@@ -1,0 +1,793 @@
+/* ==========================================================================
+   30-ui.css — 组件与交互精修
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 顶部导航 / Header
+   --------------------------------------------------------------------------
+   注意：sticky 必须落在 .header 而不是 .nav 上。
+   .nav 的父元素 <header class="header"> 高度只等于导航自身（约 65px），
+   sticky 元素只能在其"包含块"范围内吸附，父块与自身等高时等于没有吸附空间，
+   实测滚动后 nav.getBoundingClientRect().top 会跟随滚动变成负值。
+   把 sticky 提到 .header 上，导航才真正固定在视口顶部。
+   -------------------------------------------------------------------------- */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.nav {
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    background: color-mix(in srgb, var(--theme) 82%, transparent);
+}
+
+/* 不支持 color-mix 的旧浏览器走不透明兜底 */
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+    .nav {
+        background: var(--theme);
+    }
+}
+
+/* 仅在有 JS 时使用滚动提示线，避免无 JS 场景下的固定悬浮感 */
+html.js .nav.is-scrolled {
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.logo a {
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--primary);
+}
+
+/* 用下划线扫出替代主题默认的实线边框，更轻更快 */
+#menu .active {
+    font-weight: 500;
+    border-bottom: none;
+    position: relative;
+}
+
+#menu .active::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+}
+
+#menu a {
+    color: var(--secondary);
+    font-size: 14px;
+    letter-spacing: -0.01em;
+}
+
+#menu a:hover,
+#menu .active {
+    color: var(--primary);
+}
+
+#menu a:focus-visible,
+.logo a:focus-visible,
+button#theme-toggle:focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+}
+
+button#theme-toggle {
+    font-size: 22px;
+    color: var(--secondary);
+    opacity: 0.85;
+}
+
+button#theme-toggle:hover {
+    color: var(--accent);
+    opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   2. 正文排版
+   -------------------------------------------------------------------------- */
+.page-header h1 {
+    font-size: 2.15rem;
+    font-weight: 650;
+    letter-spacing: -0.022em;
+}
+
+.post-title {
+    font-size: 2.05rem;
+    font-weight: 650;
+    letter-spacing: -0.022em;
+    line-height: var(--leading-tight);
+}
+
+.post-content {
+    line-height: var(--leading-body);
+    color: var(--content);
+}
+
+.post-content p {
+    margin-bottom: 1.15em;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6 {
+    font-weight: 650;
+    letter-spacing: -0.018em;
+    line-height: var(--leading-tight);
+    color: var(--primary);
+}
+
+.post-content h1,
+.post-content h2 {
+    margin-top: 2.2em;
+    padding-bottom: 0.4em;
+    border-bottom: 1px solid var(--border);
+}
+
+.post-content h2 {
+    font-size: 1.55rem;
+}
+
+.post-content h3 {
+    font-size: 1.25rem;
+    margin-top: 1.9em;
+}
+
+.post-content h4 {
+    font-size: 1.06rem;
+    margin-top: 1.7em;
+}
+
+.post-content h5,
+.post-content h6 {
+    font-size: 0.98rem;
+    margin-top: 1.6em;
+    color: var(--secondary);
+}
+
+/* 标题锚点：默认不打扰，hover 时才提示 */
+.post-content .anchor {
+    margin-inline-start: 0.35em;
+    color: var(--secondary);
+    opacity: 0;
+    font-weight: 400;
+}
+
+.post-content .anchor svg,
+.post-content .anchor .anchor-icon {
+    width: 0.72em;
+    height: 0.72em;
+    vertical-align: baseline;
+}
+
+.post-content h1:hover .anchor,
+.post-content h2:hover .anchor,
+.post-content h3:hover .anchor,
+.post-content h4:hover .anchor,
+.post-content h5:hover .anchor,
+.post-content h6:hover .anchor,
+.post-content .anchor:focus-visible {
+    opacity: 0.55;
+}
+
+/* 正文链接：细下划线 + 高亮扫过 */
+.post-content a:not(.anchor) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.28em;
+    transition:
+        color var(--dur) var(--ease),
+        text-decoration-color var(--dur) var(--ease);
+}
+
+.post-content a:not(.anchor):hover {
+    color: var(--accent-hover);
+    text-decoration-color: currentColor;
+}
+
+.post-content a:not(.anchor):focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 3px;
+    border-radius: 3px;
+}
+
+/* 行内代码：主题原本过于突出，改为轻量令牌 */
+code {
+    background: var(--code-inline-bg);
+    color: var(--code-inline-fg);
+    border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+    border-radius: var(--radius-sm);
+    padding: 0.14em 0.4em;
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+}
+
+/* 代码块内部的 code 不应再套一层 inline 样式 */
+.highlight code,
+pre.chroma code,
+.highlight pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+}
+
+kbd {
+    font-size: 0.82em;
+    background: var(--code-bg);
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-sm);
+    padding: 0.15em 0.45em;
+    color: var(--primary);
+}
+
+/* 引用块：accent 左边线 + 轻底 */
+.post-content blockquote {
+    border-inline-start: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1em 1.2em;
+    margin: 1.6em 0;
+    color: var(--content);
+}
+
+.post-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* 列表：层级缩进与标记色 */
+.post-content ul,
+.post-content ol {
+    padding-inline-start: 1.6em;
+    margin-bottom: 1.15em;
+}
+
+.post-content li {
+    margin-bottom: 0.45em;
+}
+
+.post-content li::marker {
+    color: var(--accent);
+}
+
+/* 分隔线 */
+.post-content hr {
+    height: 1px;
+    background: var(--border);
+    border: none;
+    margin: 2.4em 0;
+}
+
+/* 表格：去重边框 + 表头底色 + 横向滚动兜底 */
+.md-content table,
+.post-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.94em;
+    margin: 1.6em 0;
+}
+
+.post-content table th,
+.post-content table td {
+    padding: 0.6em 0.9em;
+    border-bottom: 1px solid var(--border);
+    text-align: start;
+}
+
+.post-content table thead th {
+    background: var(--code-bg);
+    font-weight: 600;
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.post-content table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.post-content table tbody tr:hover {
+    background: var(--accent-soft);
+}
+
+/* 图片：圆角 + 极轻边框，避免白底图在黑底下"飘" */
+.post-content img {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-inline: auto;
+}
+
+/* 选中文字 */
+::selection {
+    background: var(--accent);
+    color: var(--theme);
+}
+
+/* 自定义滚动条（主题的 scroll-bar.css 已被启用） */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 6px;
+    border: 2px solid var(--theme);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary);
+}
+
+/* --------------------------------------------------------------------------
+   3. 首页信息区 / Profile
+   -------------------------------------------------------------------------- */
+.home-info .entry-content {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--secondary);
+}
+
+.home-info .entry-header h1 {
+    font-size: 1.85rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6rem;
+}
+
+.social-icons {
+    margin-top: 0.4rem;
+    gap: 4px;
+}
+
+.social-icons a {
+    color: var(--secondary);
+    border-radius: var(--radius-sm);
+    transition:
+        color var(--dur) var(--ease),
+        background-color var(--dur) var(--ease),
+        transform var(--dur) var(--ease);
+}
+
+.social-icons a:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+}
+
+.social-icons a svg {
+    height: 22px;
+    width: 22px;
+}
+
+/* --------------------------------------------------------------------------
+   4. 文章列表卡片
+   -------------------------------------------------------------------------- */
+.post-entry,
+.first-entry {
+    padding: var(--entry-padding);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--entry);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 左侧强调条：hover 时从顶部滑出 */
+.post-entry::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 3px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 220ms var(--ease);
+}
+
+.post-entry:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+}
+
+.post-entry:hover::before {
+    transform: scaleY(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .post-entry:hover {
+        transform: none;
+    }
+}
+
+.entry-header h2 {
+    font-size: 1.28rem;
+    font-weight: 620;
+    letter-spacing: -0.018em;
+    line-height: var(--leading-tight);
+}
+
+.entry-content {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--secondary);
+    margin: 10px 0 0;
+}
+
+.entry-footer {
+    font-size: 0.78rem;
+    color: var(--secondary);
+    margin-top: 12px;
+    letter-spacing: -0.01em;
+}
+
+/* 首页首篇：强调但不失控 */
+.first-entry {
+    margin: 0 0 var(--card-gap) 0;
+    min-height: 240px;
+}
+
+.first-entry .entry-header h1 {
+    font-size: 1.7rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+}
+
+/* --------------------------------------------------------------------------
+   5. 元信息 / 面包屑 / 标签 / 阅读时间
+   -------------------------------------------------------------------------- */
+.post-meta,
+.entry-footer,
+.breadcrumbs {
+    font-size: 0.8rem;
+    letter-spacing: -0.01em;
+    color: var(--secondary);
+}
+
+.breadcrumbs a {
+    color: var(--secondary);
+}
+
+.breadcrumbs a:hover {
+    color: var(--accent);
+}
+
+.post-meta a,
+.entry-footer a {
+    color: var(--secondary);
+    text-decoration: none;
+}
+
+.post-meta a:hover,
+.entry-footer a:hover {
+    color: var(--accent);
+}
+
+.post-tags a,
+.terms-tags a {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 2px 9px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    color: var(--secondary);
+    background: transparent;
+    transition:
+        color var(--dur) var(--ease),
+        border-color var(--dur) var(--ease),
+        background-color var(--dur) var(--ease);
+}
+
+.post-tags a:hover,
+.terms-tags a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   6. 上一页 / 下一页 · 分页 · 返回顶部
+   -------------------------------------------------------------------------- */
+.paginav {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--entry);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.paginav a {
+    padding: 14px 16px;
+    border-radius: 0;
+}
+
+.paginav a:hover {
+    background: var(--accent-soft);
+}
+
+.paginav .title {
+    font-size: 0.72rem;
+    color: var(--secondary);
+    letter-spacing: 0.02em;
+}
+
+.paginav .prev,
+.paginav .next {
+    color: var(--primary);
+}
+
+.pagination a {
+    background: var(--primary);
+    color: var(--theme);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 34px;
+    border-radius: 999px;
+    padding: 0 18px;
+    box-shadow: var(--shadow-sm);
+}
+
+.pagination a:hover {
+    background: var(--accent);
+    color: var(--theme);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.top-link {
+    background: var(--entry);
+    color: var(--secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    border-radius: 999px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+}
+
+.top-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   7. 目录 TOC
+   -------------------------------------------------------------------------- */
+.toc {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--code-bg);
+    padding: 14px 18px;
+    box-shadow: none;
+    font-size: 0.85rem;
+}
+
+.toc a {
+    color: var(--secondary);
+}
+
+.toc a:hover,
+.toc a.active {
+    color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   8. 搜索页
+   -------------------------------------------------------------------------- */
+#searchbox input {
+    background: var(--entry);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--primary);
+    font-size: 0.95rem;
+    padding: 12px 14px;
+}
+
+#searchbox input::placeholder {
+    color: var(--secondary);
+    opacity: 0.75;
+}
+
+#searchbox input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+    outline: none;
+}
+
+#searchResults li {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--entry);
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+}
+
+#searchResults li:hover,
+#searchResults li.focus {
+    border-color: var(--accent);
+}
+
+.search-results mark,
+#searchResults mark {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+/* --------------------------------------------------------------------------
+   9. 页脚 · 归档 · 术语页
+   -------------------------------------------------------------------------- */
+.footer {
+    font-size: 0.8rem;
+    color: var(--secondary);
+    border-top: 1px solid var(--border);
+}
+
+.footer a {
+    color: var(--secondary);
+}
+
+.footer a:hover {
+    color: var(--accent);
+}
+
+.archive-year {
+    font-size: 1.15rem;
+    font-weight: 620;
+    color: var(--primary);
+}
+
+.archive-month {
+    color: var(--secondary);
+    font-size: 0.8rem;
+}
+
+.archive-entry {
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+}
+
+.archive-entry:hover {
+    background: var(--accent-soft);
+}
+
+.archive-entry-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   10. 修正主题自带的排版缺陷
+   --------------------------------------------------------------------------
+   以下规则针对 PaperMod post-single.css 中实测到的具体问题：
+
+   a) `.post-content h1 { margin: 40px auto 32px }` 与
+      `.post-content { margin: 30px 0 }` 叠加，导致正文首个标题上方多出约
+      70px 空洞——实测截图中面包屑与正文标题之间出现明显断层。
+   b) `.post-content a { box-shadow: 0 1px 0 }` 是以阴影伪装的假下划线，
+      与 30-ui.css 中真正的 text-decoration 叠加后出现"双层下划线"。
+   c) `.post-content blockquote { border-inline-start: 3px solid var(--primary) }`
+      使用近白色的 primary，把本文件定义的 accent 青色左边线压掉了。
+   d) `.post-content pre code { word-break: break-all }` 会把代码单词
+      从中间截断，对长标识符极不友好。
+   -------------------------------------------------------------------------- */
+
+/* a) 正文首元素不吃上边距 —— 消除顶部断层 */
+.post-content > :first-child {
+    margin-top: 0;
+}
+
+.post-content > :first-child > .anchor,
+.post-content > h1:first-child .anchor,
+.post-content > h2:first-child .anchor,
+.post-content > h3:first-child .anchor {
+    display: none;
+}
+
+/* 收紧正文 h1（主题给到 40px，在 768px 版心里过重） */
+.post-content h1 {
+    font-size: 1.85rem;
+    margin: 1.9em 0 0.9em;
+}
+
+/* b) 去掉伪装下划线，统一交给 text-decoration */
+.post-content a,
+.post-meta .i18n_list li a,
+.toc a:hover {
+    box-shadow: none;
+}
+
+/* 链接内的行内代码保持自身配色，不跟随链接色 */
+.post-content a code,
+.post-content a:not(.anchor) code {
+    color: var(--code-inline-fg);
+    box-shadow: none;
+    text-decoration: none;
+}
+
+/* c) 引用块左边线统一为 accent */
+.post-content blockquote {
+    border-inline-start-color: var(--accent) !important;
+}
+
+/* 主题给 pre code 的硬编码浅色在前景上不安全，交回给令牌控制 */
+.post-content pre code {
+    color: var(--code-block-fg);
+}
+
+/* d) 代码块内允许换行但不得从单词中间断开 */
+.post-content pre code {
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: pre;
+}
+
+/* 行内代码去掉主题的 4px 外边距，避免中英混排时行距被撑开 */
+.post-content :not(pre) > code {
+    margin: 0 1px;
+}
+
+/* --------------------------------------------------------------------------
+   11. 移动端修正
+   -------------------------------------------------------------------------- */
+@media screen and (max-width: 768px) {
+    :root {
+        --gap: 18px;
+        --radius-lg: 14px;
+        --entry-padding: 18px 18px;
+    }
+
+    .post-title {
+        font-size: 1.6rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.7rem;
+    }
+
+    .post-content h2 {
+        font-size: 1.35rem;
+    }
+
+    .post-content h3 {
+        font-size: 1.15rem;
+    }
+
+    .first-entry .entry-header h1 {
+        font-size: 1.4rem;
+    }
+
+    #menu a {
+        font-size: 13px;
+    }
+
+    .logo a {
+        font-size: 18px;
+    }
+}

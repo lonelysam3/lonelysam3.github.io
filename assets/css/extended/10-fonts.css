@@ -1,0 +1,163 @@
+/* ==========================================================================
+   10-fonts.css — 字体体系
+   --------------------------------------------------------------------------
+   编码字体（JetBrains Mono）由 layouts/partials/extend_head.html 以 fontsource
+   CSS 形式注入，此处只负责声明字体栈与排版度量。
+
+   关键点：JetBrains Mono 不含 CJK 字形。博客正文与代码注释大量使用中文，
+   因此每个字体栈都必须显式给出中文兜底，否则中文会回退到浏览器默认衬线体。
+   ========================================================================== */
+
+:root {
+    /* 等宽 / 编码字体栈：UI 骨架与所有代码使用 */
+    --font-mono:
+        "JetBrains Mono",
+        "JetBrainsMono Nerd Font",
+        "Cascadia Code",
+        "Cascadia Mono",
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        Menlo,
+        monospace,
+        "Microsoft YaHei Mono",
+        "Sarasa Mono SC",
+        "Noto Sans Mono CJK SC",
+        "Microsoft YaHei",
+        "PingFang SC",
+        "Hiragino Sans GB",
+        "Noto Sans CJK SC",
+        sans-serif;
+
+    /* 正文：优先人文无衬线（更适合中文长文阅读），逐级降级 */
+    --font-body:
+        "PingFang SC",
+        "HarmonyOS Sans SC",
+        "MiSans",
+        "Source Han Sans SC",
+        "Noto Sans CJK SC",
+        "Microsoft YaHei UI",
+        "Microsoft YaHei",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI Variable Text",
+        "Segoe UI",
+        Roboto,
+        "Helvetica Neue",
+        Arial,
+        "Noto Sans",
+        sans-serif,
+        "Apple Color Emoji",
+        "Segoe UI Emoji";
+
+    /* 标题：与正文同族但更紧凑，靠字重与字距建立层级 */
+    --font-display:
+        "PingFang SC",
+        "HarmonyOS Sans SC",
+        "MiSans",
+        "Source Han Sans SC",
+        "Noto Sans CJK SC",
+        "Microsoft YaHei UI",
+        "Microsoft YaHei",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI Variable Display",
+        "Segoe UI",
+        Roboto,
+        "Helvetica Neue",
+        Arial,
+        "Noto Sans",
+        sans-serif;
+
+    /* 排版度量 */
+    --leading-body: 1.78;
+    --leading-tight: 1.32;
+    --measure: 46rem;
+}
+
+/* 阻止浏览器合成伪粗体/斜体——中文合成粗体会糊成一团 */
+body {
+    font-family: var(--font-body);
+    font-synthesis-style: none;
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code,
+kbd,
+samp,
+pre,
+tt {
+    font-family: var(--font-mono);
+    font-variant-ligatures: contextual;
+    font-feature-settings: "calt" 1, "liga" 1;
+}
+
+/* 行内代码：字号略小于正文，避免等宽字体视觉偏大 */
+:not(pre) > code {
+    font-size: 0.875em;
+    letter-spacing: 0;
+}
+
+/* 代码块基准字号——Hugo 会把语言 class 挂在 .highlight 上 */
+.highlight,
+.highlight pre,
+pre.chroma,
+pre code {
+    font-size: 0.875rem;
+    line-height: 1.72;
+    letter-spacing: 0;
+    -webkit-font-smoothing: auto;
+    tab-size: 4;
+}
+
+/* UI 骨架统一使用编码字体：导航、元信息、按钮、表单、标签 */
+.nav,
+.logo,
+.logo-switches,
+#menu,
+#menu a,
+.menu,
+.post-meta,
+.entry-footer,
+.breadcrumbs,
+.paginav,
+.pagination a,
+.top-link,
+#searchbox input,
+#searchbox button,
+.search-results mark,
+.post-tags a,
+.terms-tags a,
+.toc,
+.chroma .lnt,
+.chroma .ln {
+    font-family: var(--font-mono);
+}
+
+/* 中文排版优化（hasCJKLanguage: true） */
+.post-content,
+.entry-content,
+.md-content,
+article {
+    text-align: justify;
+    text-justify: inter-ideograph;
+    overflow-wrap: break-word;
+    word-break: normal;
+    line-break: strict;
+}
+
+/* 规避中英混排时的孤行与标点悬挂问题 */
+.post-content p,
+.entry-content p {
+    text-wrap: pretty;
+}
+
+.post-title,
+.entry-header h2,
+.page-header h1 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+}
