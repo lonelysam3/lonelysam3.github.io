@@ -9,11 +9,11 @@
 
 /* --------------------------------------------------------------------------
    1. 首页简介区
-   -------------------------------------------------------------------------- */
+   --------------------------------------------------------------------------
+   只定义外观，列宽与居中一律交给 20-layout.css，避免多处重复声明后
+   互相覆盖导致左边缘错位。 */
 .home-info {
     width: 100%;
-    max-width: var(--w-read);
-    margin-inline: auto;
     margin-bottom: var(--s-12);
     padding: var(--s-10);
     background: var(--c-surface-sunken);
@@ -90,8 +90,6 @@
     position: relative;
     display: block;
     width: 100%;
-    max-width: var(--w-read);
-    margin-inline: auto;
     padding: var(--s-8) 0;
     background: none;
     border: none;
@@ -154,13 +152,14 @@
     color: var(--c-text-faint);
 }
 
-/* 首页首篇：轻底色区块突出，不使用大卡片 */
+/* 首页首篇：轻底色区块突出，不使用大卡片
+   注意：列宽与居中由 20-layout.css 统一定义，这里不再重复声明。
+   本文件早期版本在多处写了 max-width: var(--w-read) + margin-inline: auto，
+   会覆盖布局层的 --col-main 约束，导致各区块宽度不一致、左边缘错位。 */
 .first-entry {
     display: block;
     width: 100%;
-    max-width: var(--w-read);
     min-height: 0;
-    margin-inline: auto;
     margin-bottom: var(--s-6);
     padding: var(--s-10);
     background: var(--c-surface-sunken);
@@ -517,17 +516,17 @@
     background: var(--c-accent-soft);
 }
 
-/* 分类 / 标签索引页 */
+/* 分类 / 标签索引页
+   注意：这里【不能】写 margin: 0 —— 该属性会覆盖 20-layout.css 里的
+   margin-inline: auto（两文件同权重，本文件后加载故胜出），
+   结果是列表贴在容器左边缘、与页头错位 72px。实测确认过。 */
 .terms-tags {
     display: flex;
     flex-wrap: wrap;
     gap: var(--s-3);
-    margin: 0;
     padding: 0;
     list-style: none;
     width: 100%;
-    max-width: var(--w-read);
-    margin-inline: auto;
 }
 
 .terms-tags a {
@@ -638,8 +637,7 @@
     display: flex;
     gap: var(--s-3);
     width: 100%;
-    max-width: var(--w-read);
-    margin: var(--s-10) auto 0;
+    margin-block: var(--s-10) 0;
 }
 
 .pagination a {
@@ -674,8 +672,6 @@
    -------------------------------------------------------------------------- */
 .archive-posts {
     width: 100%;
-    max-width: var(--w-read);
-    margin-inline: auto;
     font-size: var(--fs-sm);
 }
 
@@ -736,8 +732,7 @@
 #tw-comment,
 .giscus {
     width: 100%;
-    max-width: var(--w-read);
-    margin: var(--s-16) auto 0;
+    margin-block: var(--s-16) 0;
 }
 
 /* ==========================================================================

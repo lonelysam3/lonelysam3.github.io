@@ -1,17 +1,20 @@
 {{- define "main" }}
- 
+
+{{- /* 关于页
+   说明：内容必须包在 .post-content 里。全站的阅读列宽度、正文排版、标题
+   层级、代码块、图片圆角等样式都挂在 .post-content 上；若用裸 <section>
+   承载内容，文字会撑满整个容器宽度且缺失所有正文样式——表现为「文字错位」。
+   同时去掉原模板里多余的 <br>，它会在标题与正文之间塞入一个空行。 */ -}}
+
 <header class="page-header">
     <h1>{{ .Title }}</h1>
-    {{- if .Description }}
-    <div class="post-description">
-      {{ .Description }}
-    </div>
+    {{- with .Description }}
+    <div class="post-description">{{ . }}</div>
     {{- end }}
-  </header>
- 
-<section>
-  <br>
-  {{ .Content }}
-</section>
- 
+</header>
+
+<div class="post-content">
+    {{ .Content }}
+</div>
+
 {{- end }}{{/* end main */}}

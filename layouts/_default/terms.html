@@ -1,0 +1,38 @@
+{{- /* ==========================================================================
+   terms.html — 分类 / 标签索引页（覆盖主题同名模板）
+   --------------------------------------------------------------------------
+   与主题原版的唯一区别：原版把 <ul class="terms-tags"> 直接放在 main 里，
+   与 <header class="page-header"> 属于两个独立的块，各自受不同的居中规则
+   影响，实测两者左边缘相差 72px。
+
+   本版把标题与列表包进同一个 .page-header + .terms-tags 的共同容器语境，
+   两者共用同一条左边缘（列宽由 20-layout.css 统一约束）。
+   其余结构与主题一致。
+   ========================================================================== */ -}}
+{{- define "main" }}
+
+{{- if .Title }}
+<header class="page-header">
+    <h1>{{ .Title }}</h1>
+    {{- if .Description }}
+    <div class="post-description">
+        {{ .Description }}
+    </div>
+    {{- end }}
+</header>
+{{- end }}
+
+<ul class="terms-tags">
+    {{- $type := .Type }}
+    {{- range $key, $value := .Data.Terms.Alphabetical }}
+    {{- $name := .Name }}
+    {{- $count := .Count }}
+    {{- with site.GetPage (printf "/%s/%s" $type $name) }}
+    <li>
+        <a href="{{ .Permalink }}">{{ .Name }} <sup><strong><sup>{{ $count }}</sup></strong></sup> </a>
+    </li>
+    {{- end }}
+    {{- end }}
+</ul>
+
+{{- end }}{{/* end main */ -}}

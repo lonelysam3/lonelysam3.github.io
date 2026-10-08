@@ -1,8 +1,14 @@
 /* ==========================================================================
    20-layout.css — 页面骨架
    --------------------------------------------------------------------------
-   职责：容器、页面栅格、正文/目录双栏、页脚、回到顶部、打印。
-   不定义任何组件外观（顶栏见 30-header.css，内容见 40-content.css）。
+   【版式】
+   内容居中于与阅读列相称的容器内。早前试过把内容左对齐在宽容器里，
+   结果右侧留出大片空白，观感像页面没做完，已改回居中——
+   观感问题的根源不是「居中」，而是阅读列太窄（旧值 44rem 在 1600px 屏上
+   仅占 45%）。现在阅读列 52rem / 容器 61rem，比例相当，留白均衡。
+
+   关键约束：正文列（--w-read）不宽于主内容列（--col-main），
+   因此正文、标题、列表三者的左边缘永远落在同一条竖线上，不会互相错位。
 
    【桌面优先】基础样式即桌面布局，窄屏在文件末尾用 max-width 收窄。
    ========================================================================== */
@@ -11,9 +17,9 @@
    1. 容器
    --------------------------------------------------------------------------
    PaperMod 把 .main 的 max-width 直接绑在阅读列宽度上，容器与正文同宽，
-   导致大屏上正文永远是同一个窄列、两侧大片死区。这里把两者解耦：
-     · .main / .footer  → 页面容器，负责居中与横向留白
-     · 正文元素          → 各自限制阅读列宽度
+   导致大屏上永远只有一条窄列。这里把两者解耦：
+     · .main / .footer → 页面容器，负责居中与横向留白
+     · 具体内容        → 各自限制列宽
    -------------------------------------------------------------------------- */
 .main {
     display: block;
@@ -33,47 +39,29 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. 文章页：正文 + 目录 双栏
-   --------------------------------------------------------------------------
-   .post-single 内的布局由 JS 根据是否存在 .toc 动态切换：
-     有目录 → grid 两列（正文 | 目录）
-     无目录 → 单列，正文居中
-   JS 不可用时退化为单列（正文仍居中可用），不影响可读性。
+   2. 主内容列：所有页面区块的共同左边缘
+   -------------------------------------------------------------------------- */
+.home-info,
+.post-entry,
+.first-entry,
+.page-header,
+.post-single,
+.archive-posts,
+.terms-tags,
+.pagination {
+    max-width: var(--col-main);
+    margin-inline: auto;
+}
+
+/* --------------------------------------------------------------------------
+   3. 文章页
    -------------------------------------------------------------------------- */
 .post-single {
     display: block;
     width: 100%;
-    margin-inline: auto;
 }
 
-/* 有目录时启用两栏 */
-.post-single.has-toc {
-    display: grid;
-    grid-template-columns: minmax(0, var(--w-read)) 15rem;
-    justify-content: center;
-    align-items: start;
-    column-gap: var(--s-12);
-}
-
-/* 目录参与文档流并随滚动吸附，避免绝对定位压住正文 */
-.post-single.has-toc .toc {
-    grid-column: 2;
-    grid-row: 1 / span 4;
-    position: sticky;
-    top: calc(var(--h-header) + var(--s-6));
-    max-height: calc(100vh - var(--h-header) - var(--s-12));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    /* 侧栏形态：去掉卡片背景与边框，只留左侧引导线 */
-    max-width: none;
-    margin: 0;
-    padding: 0;
-    background: none;
-    border: none;
-    border-radius: 0;
-}
-
-/* 文章各区块固定在阅读列内 */
+/* 正文、文章头、页脚统一收在阅读列内，左边缘与主内容列一致 */
 .post-header,
 .post-content,
 .post-footer,
@@ -83,7 +71,34 @@
     margin-inline: auto;
 }
 
-/* 两栏模式下由 grid 列宽控制，去掉额外的 max-width 干扰 */
+/* 有目录时切两栏：正文｜目录，目录吸附在右侧 */
+.post-single.has-toc {
+    display: grid;
+    grid-template-columns: minmax(0, var(--w-read)) 15rem;
+    align-items: start;
+    justify-content: center;
+    column-gap: var(--s-12);
+    max-width: var(--col-main);
+}
+
+.post-single.has-toc .toc {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    position: sticky;
+    top: calc(var(--h-header) + var(--s-6));
+    max-height: calc(100vh - var(--h-header) - var(--s-12));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* 侧栏形态：去掉卡片背景与边框 */
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+}
+
+/* 两栏模式下各区块交给栅格列宽控制 */
 .post-single.has-toc .post-header,
 .post-single.has-toc .post-content,
 .post-single.has-toc .post-footer,
@@ -92,12 +107,9 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. 列表页与文字页
+   4. 页面标题
    -------------------------------------------------------------------------- */
 .page-header {
-    width: 100%;
-    max-width: var(--w-read);
-    margin-inline: auto;
     margin-bottom: var(--s-10);
 }
 
@@ -107,13 +119,12 @@
     gap: var(--s-3);
     font-size: var(--fs-2xl);
     font-weight: var(--fw-bold);
-    letter-spacing: -0.028em;
+    letter-spacing: -0.03em;
 }
 
-/* 标题右侧的 RSS 图标 */
 .page-header h1 svg {
     width: auto;
-    height: 0.62em;
+    height: 0.6em;
     color: var(--c-text-faint);
     transition: color var(--dur-fast) var(--ease);
 }
@@ -123,12 +134,8 @@
 }
 
 /* --------------------------------------------------------------------------
-   4. 目录（仅在文章启用 ShowToc 时渲染）
+   5. 目录（默认形态：正文上方折叠卡片）
    -------------------------------------------------------------------------- */
-/* 目录默认外观（正文上方、卡片式）。
-   .post-single.has-toc 下由更高权重的规则覆盖为右侧吸附栏。
-   注意：不要写 `:not(.post-single.has-toc .toc)` —— 那是选择器 4 级语法，
-   旧浏览器会丢弃整条规则。 */
 .toc {
     width: 100%;
     max-width: var(--w-read);
@@ -143,7 +150,7 @@
 
 .toc details summary {
     cursor: pointer;
-    padding: var(--s-2) 0;
+    padding: var(--s-1) 0;
     font-size: var(--fs-xs);
     font-weight: var(--fw-semi);
     letter-spacing: 0.06em;
@@ -157,7 +164,7 @@
 }
 
 .toc .inner {
-    margin: 0;
+    margin: var(--s-2) 0 0;
     padding-inline-start: var(--s-4);
     border-inline-start: 1px solid var(--c-border);
 }
@@ -166,10 +173,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-}
-
-.toc li {
-    margin: 0;
 }
 
 .toc li ul {
@@ -189,7 +192,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   5. 回到顶部
+   6. 回到顶部
    -------------------------------------------------------------------------- */
 .top-link {
     position: fixed;
@@ -224,7 +227,7 @@
 }
 
 /* ==========================================================================
-   6. 桌面优先 · 向下适配
+   7. 桌面优先 · 向下适配
    ========================================================================== */
 
 /* 小笔记本：目录栏收窄 */
@@ -235,7 +238,7 @@
     }
 }
 
-/* 平板横屏：取消两栏，目录回到正文上方并收起 */
+/* 平板：取消两栏，目录回到正文上方 */
 @media (max-width: 60rem) {
     .main {
         padding-block: var(--s-8) var(--s-12);
@@ -276,7 +279,7 @@
     }
 }
 
-/* 手机：进一步收紧留白 */
+/* 手机 */
 @media (max-width: 45rem) {
     .main {
         padding-block: var(--s-6) var(--s-10);
@@ -295,7 +298,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   7. 打印：只留正文
+   8. 打印：只留正文
    -------------------------------------------------------------------------- */
 @media print {
     .header,
