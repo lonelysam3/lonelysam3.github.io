@@ -4,12 +4,20 @@
    编码字体（JetBrains Mono）由 layouts/partials/extend_head.html 以 fontsource
    CSS 形式注入，此处只负责声明字体栈与排版度量。
 
-   关键点：JetBrains Mono 不含 CJK 字形。博客正文与代码注释大量使用中文，
-   因此每个字体栈都必须显式给出中文兜底，否则中文会回退到浏览器默认衬线体。
+   【重要】JetBrains Mono 不含 CJK 字形，中文必然要逐级下坠。
+   字体匹配是"逐字符逐字体"的：一个汉字会从栈首开始，跳过所有不含该字形
+   的字体，命中第一个包含它的字体为止。因此：
+
+   · 任何 generic 关键字（monospace / sans-serif）都必须放在栈的【最末尾】。
+     Windows 会把 generic sans-serif 解析为中易宋体，monospace 解析为宋体或
+     等宽宋体——一旦 generic 排在 CJK 字体前面，后面声明的中文字体永远不会
+     被用到，中文就会全站变宋体。
+   · 不支持中文等宽的系统上，中文宁愿退成黑体（雅黑 / 苹方），也不要退成宋体。
    ========================================================================== */
 
 :root {
-    /* 等宽 / 编码字体栈：UI 骨架与所有代码使用 */
+    /* 等宽 / 编码字体栈：UI 骨架与所有代码使用
+       顺序要点：拉丁等宽字体 → CJK 等宽字体 → CJK 黑体 → generic 兜底 */
     --font-mono:
         "JetBrains Mono",
         "JetBrainsMono Nerd Font",
@@ -19,15 +27,17 @@
         Consolas,
         "Liberation Mono",
         Menlo,
-        monospace,
-        "Microsoft YaHei Mono",
         "Sarasa Mono SC",
+        "Sarasa Fixed SC",
         "Noto Sans Mono CJK SC",
+        "Microsoft YaHei Mono",
+        "Microsoft YaHei UI",
         "Microsoft YaHei",
         "PingFang SC",
         "Hiragino Sans GB",
         "Noto Sans CJK SC",
-        sans-serif;
+        "Source Han Sans SC",
+        monospace;
 
     /* 正文：优先人文无衬线（更适合中文长文阅读），逐级降级 */
     --font-body:
@@ -46,9 +56,9 @@
         "Helvetica Neue",
         Arial,
         "Noto Sans",
-        sans-serif,
         "Apple Color Emoji",
-        "Segoe UI Emoji";
+        "Segoe UI Emoji",
+        sans-serif;
 
     /* 标题：与正文同族但更紧凑，靠字重与字距建立层级 */
     --font-display:

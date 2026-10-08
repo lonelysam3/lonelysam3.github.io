@@ -1,0 +1,294 @@
+/* ==========================================================================
+   50-layout.css — 桌面端排版
+   --------------------------------------------------------------------------
+   【问题背景】
+   主题 core/zmedia.css 在 max-width:768px 把 --gap 压到 14px，而 --gap 是
+   全局变量、不随视口恢复，于是桌面宽度下也在用手机端留白；同时 .main 直接
+   吃 --main-width，无论视口多宽正文都只有一个固定窄列。
+
+   实测（修复前）：
+     1440px 视口 → 内容 768px，占视口 53%
+     1920px 视口 → 内容 768px，占视口 40%（越宽越难看）
+
+   【本文件的分工】
+   · 断点分级，用 --pad-x / --gap 控制外层留白
+   · .main 作为「容器」放宽，阅读列宽度交还正文元素自己持有
+   · .main 的目标宽度按【内容列 +  侧栏槽位】计算；本站在 hugo.yaml 中
+     showtoc 为 false，侧栏槽位多数页面用不上，因此正文列本身取值偏宽，
+     即使没有侧栏也能撑满视觉重心，不会留下空洞。
+   ========================================================================== */
+
+:root {
+    /* 外层最小留白：随断点递增 */
+    --pad-x: 18px;
+    /* 正文阅读列上限 */
+    --read-width: 768px;
+    /* 大纲栏槽位（仅在文章启用 ShowToc 时才有实际内容） */
+    --toc-width: 208px;
+    --toc-gap: 32px;
+}
+
+/* 手机：收紧留白（覆盖主题压到 14px 的 --gap） */
+@media (max-width: 768px) {
+    :root {
+        --gap: 16px;
+        --content-gap: 18px;
+        --pad-x: 16px;
+        --read-width: 100%;
+    }
+}
+
+@media (min-width: 640px) {
+    :root {
+        --pad-x: 28px;
+    }
+}
+
+/* 笔记本：正文进入舒适阅读宽度，留白显著加大 */
+@media (min-width: 900px) {
+    :root {
+        --gap: 32px;
+        --content-gap: 26px;
+        --pad-x: 40px;
+        --entry-padding: 24px 26px;
+        --header-height: 68px;
+        --read-width: 820px;
+    }
+}
+
+/* 桌面：留白继续放大，正文列达到上限后不再随视口变宽 */
+@media (min-width: 1280px) {
+    :root {
+        --gap: 40px;
+        --content-gap: 30px;
+        --pad-x: 48px;
+        --entry-padding: 26px 30px;
+        --read-width: 860px;
+    }
+}
+
+@media (min-width: 1600px) {
+    :root {
+        --read-width: 900px;
+        --nav-width: 1400px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   1. 主容器与导航的横向留白
+   --------------------------------------------------------------------------
+   注意：不要把 .header 纳入 .main / .footer 的留白改写，也不要用
+   .page-header 这类关键词去限制它——主题的顶部容器就是 <header class="header">，
+   一旦被限制成阅读列宽度，导航内部（logo + 搜索框 + 菜单）会立刻换行塌掉。
+   .header 必须保持整宽，仅由内部 .nav 控制留白与居中。
+   -------------------------------------------------------------------------- */
+.main,
+.footer {
+    padding-inline: var(--pad-x);
+    padding-block: var(--gap);
+}
+
+.nav {
+    margin-inline: auto;
+    padding-inline: var(--pad-x);
+}
+
+/* --------------------------------------------------------------------------
+   2. 容器 / 阅读列分离
+   --------------------------------------------------------------------------
+   主题把 .main 的 max-width 直接绑在 --main-width 上，容器与阅读列同宽，
+   导致大屏两侧出现巨大死区。
+
+   这里让 .main 成为更宽的「容器」（额外预留侧栏槽位），阅读列宽度由正文
+   元素自己持有，于是大屏多出来的宽度被用于留白与侧栏，而不是继续堆在两侧。
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+    .main {
+        max-width: calc(var(--read-width) + var(--pad-x) * 2);
+    }
+}
+
+@media (min-width: 1280px) {
+    /* 容器放宽到「阅读列 + 侧栏槽位」 */
+    .main {
+        max-width: calc(var(--read-width) + var(--toc-width) + var(--toc-gap) + var(--pad-x) * 2);
+    }
+
+    /* 文章正文列固定在舒适宽度并居中，避免被容器拉宽 */
+    .post-single {
+        max-width: calc(var(--read-width) + var(--toc-width) + var(--toc-gap));
+        margin-inline: auto;
+    }
+
+    .post-header,
+    .post-content,
+    .post-footer {
+        max-width: var(--read-width);
+    }
+
+    /* 列表卡片保持窄栏观感，卡片不被拉成横幅。
+       【不要】在这里写 .list —— PaperMod 在列表页给 <body> 就加了
+       class="list"，`.list{max-width}` 会把整个 body（含顶部导航与页脚）
+       一起压窄，实测会让首页导航塌成三行。只约束卡片本身即可。 */
+    .post-entry,
+    .first-entry,
+    .page-header {
+        max-width: var(--read-width);
+        margin-inline: auto;
+    }
+
+    /* 顶部容器与页脚始终整宽 */
+    .header {
+        max-width: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. 排版尺度：桌面端字号与间距
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+    .post-title {
+        font-size: 2.25rem;
+        line-height: 1.25;
+    }
+
+    .page-header h1 {
+        font-size: 2.35rem;
+    }
+
+    .post-content {
+        font-size: 1.0625rem;
+        line-height: 1.82;
+    }
+
+    .post-content h1 {
+        font-size: 1.9rem;
+    }
+
+    .post-content h2 {
+        font-size: 1.575rem;
+    }
+
+    .post-content h3 {
+        font-size: 1.28rem;
+    }
+
+    /* 首段略作强调，形成阅读进入感 */
+    .post-content > p:first-of-type {
+        font-size: 1.12rem;
+        color: var(--primary);
+    }
+}
+
+@media (min-width: 1280px) {
+    .post-content {
+        font-size: 1.0875rem;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   4. 列表卡片
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+    .first-entry {
+        padding: calc(var(--entry-padding) + 6px);
+    }
+
+    .first-entry .entry-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .entry-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .entry-content {
+        font-size: 0.97rem;
+        max-width: 70ch;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   5. 代码块：桌面加大内边距
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+    .highlight pre,
+    pre.chroma {
+        padding: 22px 22px 20px;
+    }
+
+    .highlight > pre > code[data-lang]::before {
+        inset-inline-start: 24px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   6. 宽屏导航：消除首页导航换行
+   --------------------------------------------------------------------------
+   首页导航由三块组成：logo（约 303px，含 margin 左右各 40px）、
+   首页搜索框（约 239px）、菜单（约 299px，含 margin 左右各 40px）。
+   三者相加再加上导航间距超过容器宽度，flex 又是 wrap，于是菜单被挤到第二行。
+
+   主题给 .logo / #menu 的 margin: auto var(--gap) 在桌面属于纯浪费，
+   这里在宽屏收紧它们，并把搜索框改紧凑，使三块能排进一行。
+   只在 ≥900px 生效，移动端布局与用户此前调好的搜索框尺寸不受影响。
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+    .logo {
+        margin-inline: 0;
+        margin-block: auto;
+    }
+
+    #menu {
+        margin-inline: 0 8px;
+        margin-block: auto;
+    }
+
+    #menu li + li {
+        margin-inline-start: 20px;
+    }
+
+    .logo a {
+        font-size: 1.15rem;
+    }
+
+    .logo a img,
+    .logo a svg {
+        height: 32px;
+    }
+
+    /* 首页搜索框：紧凑到不与菜单争抢同一行 */
+    .home .header .nav #searchbox.home-top-search {
+        flex: 0 0 168px;
+        max-width: 168px;
+        margin: 0 12px;
+    }
+
+    .home .header .nav #searchbox.home-top-search #searchInput {
+        height: 36px;
+        border-radius: 10px;
+        font-size: 0.86rem;
+    }
+}
+
+/* 窄一些的桌面：再收一档，保证仍然单行 */
+@media (min-width: 900px) and (max-width: 1120px) {
+    #menu li + li {
+        margin-inline-start: 14px;
+    }
+
+    #menu a {
+        font-size: 0.82rem;
+    }
+
+    .home .header .nav #searchbox.home-top-search {
+        flex: 0 0 140px;
+        max-width: 140px;
+    }
+
+    .logo a {
+        font-size: 1.02rem;
+    }
+}
+
+
