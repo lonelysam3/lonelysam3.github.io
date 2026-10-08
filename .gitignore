@@ -6,3 +6,8 @@ hugo.exe
 # 本地视觉验证取证（无头浏览器截图与探测页），不入库
 .shots/
 .probe/
+
+# 与本站无关的本机排障脚本 / 日志，误落到仓库根目录，不入库
+*.ps1
+*.bat
+pua-delivery-log.md

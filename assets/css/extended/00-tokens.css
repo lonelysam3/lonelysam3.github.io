@@ -1,33 +1,35 @@
 /* ==========================================================================
    00-tokens.css — 设计令牌（全站唯一的视觉决策来源）
    --------------------------------------------------------------------------
-   规则：其它任何样式文件都不得出现字面量颜色、魔法数字间距。
-   需要调色或调间距时，只改本文件。
+   【书写基准：桌面优先】
+   本文件与后续各层的「基础样式」均按桌面尺寸书写，窄屏在文件末尾用
+   max-width 媒体查询逐级下调（1200 / 960 / 720px）。
 
-   命名约定：
-     --c-*      颜色      --s-*   间距（space）
-     --fs-*     字号      --r-*   圆角（radius）
-     --sh-*     阴影      --d-*   动效时长（duration）
-     --fw-*     字重      --lh-*  行高
+   【命名约定】
+     --c-*   颜色        --fs-*  字号        --s-*   间距
+     --r-*   圆角        --sh-*  阴影        --dur-* 动效时长
+
+   【硬性约束】
+   除本文件外，任何层都不得出现字面量颜色（#hex / rgb()）与魔法数字间距。
+   调色或调间距只改这里。
    ========================================================================== */
 
 :root {
-    /* ---------------------------------------------------------------- 字体
-       JetBrains Mono 由 layouts/partials/extend_head.html 注入，仅覆盖
-       拉丁字符集；中文必须显式兜底，否则会下坠到系统中易宋体。
-       字体匹配是逐字符的：generic 关键字（monospace / sans-serif）必须
-       放在栈的最末尾，否则前面声明的中文字体永远不会被用到。 */
+    /* ================================================================ 字体
+       JetBrains Mono 由 extend_head.html 注入，仅覆盖拉丁字符集。
+       字体匹配是逐字符进行的：汉字会跳过所有不含该字形的字体，命中第一个
+       包含它的为止。因此 generic 关键字（monospace / sans-serif）必须放在
+       字体栈最末位，否则前面声明的中文字体永远不会被用到——Windows 对
+       generic 的中文兜底正是中易宋体。 */
     --font-mono:
         "JetBrains Mono",
         "JetBrainsMono Nerd Font",
-        "Cascadia Code",
-        "Cascadia Mono",
         "SFMono-Regular",
         Consolas,
         "Liberation Mono",
         Menlo,
+        "Cascadia Code",
         "Sarasa Mono SC",
-        "Sarasa Fixed SC",
         "Noto Sans Mono CJK SC",
         "Microsoft YaHei Mono",
         "Microsoft YaHei UI",
@@ -35,7 +37,6 @@
         "PingFang SC",
         "Hiragino Sans GB",
         "Noto Sans CJK SC",
-        "Source Han Sans SC",
         monospace;
 
     --font-sans:
@@ -57,167 +58,184 @@
         "Segoe UI Emoji",
         sans-serif;
 
-    /* ---------------------------------------------------------------- 字阶
-       移动优先：默认即手机尺寸，宽屏在 20-layout.css 中上调 */
-    --fs-xs:    0.75rem;   /* 12px 标签、极小注脚 */
-    --fs-sm:    0.8125rem; /* 13px 元信息 */
-    --fs-base:  1.0625rem; /* 17px 正文 */
-    --fs-md:    1.1875rem; /* 19px 列表标题 */
-    --fs-lg:    1.4375rem; /* 23px 小节标题 */
-    --fs-xl:    1.875rem;  /* 30px 文章标题 */
-    --fs-2xl:   2.25rem;   /* 36px 页面标题 */
+    /* ================================================================ 字阶
+       桌面基准。标题用 clamp() 做流式缩放，正文在窄屏下调一档。 */
+    --fs-2xs:  0.6875rem;  /* 11px 极小角标 */
+    --fs-xs:   0.75rem;    /* 12px 元信息、标签 */
+    --fs-sm:   0.875rem;   /* 14px 列表摘要、辅助文字 */
+    --fs-base: 1.125rem;   /* 18px 正文（桌面基准） */
+    --fs-md:   1.3125rem;  /* 21px 列表标题 */
+    --fs-lg:   1.5rem;     /* 24px 小节标题 */
+    --fs-xl:   clamp(1.875rem, 1.4rem + 1.6vw, 2.375rem);  /* 文章标题 */
+    --fs-2xl:  clamp(2.125rem, 1.5rem + 2.2vw, 2.875rem);  /* 页面标题 */
 
-    --lh-tight: 1.25;
+    --lh-tight: 1.2;
     --lh-snug:  1.45;
-    --lh-base:  1.78;
+    --lh-base:  1.75;
 
     --fw-normal: 400;
     --fw-medium: 500;
     --fw-semi:   600;
     --fw-bold:   700;
 
-    /* -------------------------------------------------------------- 间距刻度
-       4px 基准的等比刻度，避免出现 13px / 17px 这类随手值 */
-    --s-1:  0.25rem;  /*  4px */
-    --s-2:  0.5rem;   /*  8px */
-    --s-3:  0.75rem;  /* 12px */
-    --s-4:  1rem;     /* 16px */
-    --s-5:  1.25rem;  /* 20px */
-    --s-6:  1.5rem;   /* 24px */
-    --s-8:  2rem;     /* 32px */
-    --s-10: 2.5rem;   /* 40px */
-    --s-12: 3rem;     /* 48px */
-    --s-16: 4rem;     /* 64px */
+    /* ============================================================== 间距刻度
+       4px 基准等比刻度，杜绝 13px / 17px 这类随手值 */
+    --s-1:  0.25rem;   /*  4px */
+    --s-2:  0.5rem;    /*  8px */
+    --s-3:  0.75rem;   /* 12px */
+    --s-4:  1rem;      /* 16px */
+    --s-5:  1.25rem;   /* 20px */
+    --s-6:  1.5rem;    /* 24px */
+    --s-8:  2rem;      /* 32px */
+    --s-10: 2.5rem;    /* 40px */
+    --s-12: 3rem;      /* 48px */
+    --s-16: 4rem;      /* 64px */
+    --s-20: 5rem;      /* 80px */
 
-    /* ---------------------------------------------------------------- 圆角 */
+    /* ================================================================ 圆角 */
+    --r-xs: 4px;
     --r-sm: 6px;
     --r-md: 10px;
     --r-lg: 14px;
-    --r-xl: 20px;
+    --r-xl: 18px;
     --r-full: 999px;
 
-    /* ---------------------------------------------------------------- 动效 */
+    /* ================================================================ 动效 */
     --dur-fast: 120ms;
     --dur-base: 200ms;
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 
-    /* ------------------------------------------------------------ 布局尺寸 */
-    --w-read: 44rem;    /* 正文阅读列上限（约 704px） */
-    --w-wide: 72rem;    /* 宽容器 */
-    --h-header: 3.5rem; /* 顶部栏高度 */
-    --pad-x: var(--s-4);
+    /* ============================================================ 布局尺寸 */
+    --w-container: 68rem;   /* 1088px 页面容器 */
+    --w-read: 46rem;        /* 736px  正文阅读列 */
+    --h-header: 4rem;       /* 顶部栏高度 */
+    --pad-x: var(--s-8);    /* 容器横向留白（桌面基准） */
 
     color-scheme: light;
 
-    /* ================================================================ 亮色 */
-    --c-bg:             #ffffff;
-    --c-surface:        #ffffff;
-    --c-surface-raised: #ffffff;
-    --c-surface-sunken: #f5f7fa;
-    --c-surface-muted:  #eef2f7;
+    /* ============================================================== 亮色主题 */
+    --c-bg:              #fbfcfd;
+    --c-surface:         #ffffff;
+    --c-surface-raised:  #ffffff;
+    --c-surface-sunken:  #f4f6f9;
+    --c-surface-muted:   #eef1f5;
 
-    --c-text:           #10151d;
-    --c-text-soft:      #38424f;
-    --c-text-muted:     #667180;
-    --c-text-faint:     #8b95a3;
+    --c-text:            #0d1219;
+    --c-text-soft:       #333d4b;
+    --c-text-muted:      #5c6675;
+    --c-text-faint:      #8a94a3;
 
-    --c-border:         #e4e9ef;
-    --c-border-strong:  #ccd5e0;
+    --c-border:          #e3e8ee;
+    --c-border-strong:   #c9d2dd;
 
-    --c-accent:         #0b7a91;
-    --c-accent-hover:   #076276;
-    --c-accent-soft:    rgba(11, 122, 145, 0.08);
-    --c-accent-ring:    rgba(11, 122, 145, 0.30);
-    --c-on-accent:      #ffffff;
+    --c-accent:          #0a6e85;
+    --c-accent-hover:    #075666;
+    --c-accent-soft:     rgba(10, 110, 133, 0.075);
+    --c-accent-ring:     rgba(10, 110, 133, 0.28);
+    --c-on-accent:       #ffffff;
 
-    --c-code-bg:        #f6f8fb;
-    --c-code-inline-bg: rgba(11, 122, 145, 0.075);
-    --c-code-inline-fg: #0a6a7e;
-    --c-code-text:      #2b3440;
+    --c-code-bg:         #f6f8fa;
+    --c-code-inline-bg:  rgba(10, 110, 133, 0.07);
+    --c-code-inline-fg:  #08606f;
+    --c-code-text:       #2a333f;
+    --c-code-copy-bg:    #ffffff;
 
-    --c-selection-bg:   #0b7a91;
-    --c-selection-fg:   #ffffff;
+    --c-selection-bg:    #0a6e85;
+    --c-selection-fg:    #ffffff;
 
-    --sh-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
-    --sh-md: 0 2px 6px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
-    --sh-lg: 0 12px 28px rgba(16, 24, 40, 0.10), 0 4px 10px rgba(16, 24, 40, 0.05);
+    --sh-xs: 0 1px 2px rgba(13, 18, 25, 0.04);
+    --sh-sm: 0 1px 3px rgba(13, 18, 25, 0.06), 0 1px 2px rgba(13, 18, 25, 0.04);
+    --sh-md: 0 4px 12px rgba(13, 18, 25, 0.07), 0 1px 3px rgba(13, 18, 25, 0.04);
+    --sh-lg: 0 16px 40px rgba(13, 18, 25, 0.12), 0 4px 12px rgba(13, 18, 25, 0.05);
 
-    /* ------------------------------------------------------------ 图标遮罩
-       用 currentColor + mask 绘制，颜色随文字色自动变化，
-       比内联 SVG 更易统一色调。 */
-    --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/svg%3E");
+    /* 图标遮罩：用 currentColor 上色，随文字色自动变化 */
+    --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.5 16.5 21 21'/%3E%3C/svg%3E");
 }
 
-/* ================================================================ 暗色 */
+/* ================================================================ 暗色主题 */
 :root[data-theme="dark"] {
     color-scheme: dark;
 
-    --c-bg:             #0e1117;
-    --c-surface:        #151a23;
-    --c-surface-raised: #1a212c;
-    --c-surface-sunken: #11151c;
-    --c-surface-muted:  #1e2530;
+    --c-bg:              #0b0e14;
+    --c-surface:         #121722;
+    --c-surface-raised:  #171d29;
+    --c-surface-sunken:  #0e121a;
+    --c-surface-muted:   #1b2230;
 
-    --c-text:           #e7ecf3;
-    --c-text-soft:      #c3ccd9;
-    --c-text-muted:     #8d99a9;
-    --c-text-faint:     #66717f;
+    --c-text:            #e9eef6;
+    --c-text-soft:       #c2cbd9;
+    --c-text-muted:      #8996a8;
+    --c-text-faint:      #5f6b7c;
 
-    --c-border:         #232b37;
-    --c-border-strong:  #33405280;
+    --c-border:          #1f2735;
+    --c-border-strong:   #2f3b4d;
 
-    --c-accent:         #3ad4e8;
-    --c-accent-hover:   #78e6f5;
-    --c-accent-soft:    rgba(58, 212, 232, 0.10);
-    --c-accent-ring:    rgba(58, 212, 232, 0.30);
-    --c-on-accent:      #06222a;
+    --c-accent:          #35d0e6;
+    --c-accent-hover:    #6ee2f2;
+    --c-accent-soft:     rgba(53, 208, 230, 0.10);
+    --c-accent-ring:     rgba(53, 208, 230, 0.28);
+    --c-on-accent:       #04212a;
 
-    --c-code-bg:        #131922;
-    --c-code-inline-bg: rgba(58, 212, 232, 0.10);
-    --c-code-inline-fg: #8ce8f7;
-    --c-code-text:      #c9d4e2;
+    --c-code-bg:         #0f141d;
+    --c-code-inline-bg:  rgba(53, 208, 230, 0.10);
+    --c-code-inline-fg:  #8ae4f2;
+    --c-code-text:       #c6d2e2;
+    --c-code-copy-bg:    #171d29;
 
-    --c-selection-bg:   #3ad4e8;
-    --c-selection-fg:   #06222a;
+    --c-selection-bg:    #35d0e6;
+    --c-selection-fg:    #04212a;
 
-    --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
-    --sh-md: 0 2px 8px rgba(0, 0, 0, 0.36);
-    --sh-lg: 0 14px 32px rgba(0, 0, 0, 0.46);
+    --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.30);
+    --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.36);
+    --sh-md: 0 4px 14px rgba(0, 0, 0, 0.42);
+    --sh-lg: 0 16px 44px rgba(0, 0, 0, 0.52);
 }
 
-/* --------------------------------------------------------------------------
-   宽屏上调字阶与留白（移动优先的增强方向）
-   -------------------------------------------------------------------------- */
-@media (min-width: 48rem) {
+/* ==========================================================================
+   桌面优先 · 向下适配
+   --------------------------------------------------------------------------
+   依次下调：1200px（小笔记本）→ 960px（平板横屏）→ 720px（平板竖屏 / 手机）
+   只调令牌，组件样式无需各自写媒体查询。
+   ========================================================================== */
+
+/* 小笔记本：容器与留白略收 */
+@media (max-width: 75rem) {
     :root {
-        --fs-base: 1.0625rem;
-        --fs-md:   1.25rem;
-        --fs-lg:   1.5rem;
-        --fs-xl:   2.125rem;
-        --fs-2xl:  2.5rem;
+        --w-container: 62rem;
         --pad-x: var(--s-6);
-        --h-header: 3.75rem;
     }
 }
 
-@media (min-width: 64rem) {
+/* 平板横屏：正文列收窄，字阶降一档 */
+@media (max-width: 60rem) {
     :root {
-        --fs-xl:  2.375rem;
-        --fs-2xl: 2.75rem;
-        --pad-x: var(--s-8);
+        --w-container: 100%;
+        --w-read: 40rem;
+        --fs-base: 1.0625rem;
+        --fs-md: 1.25rem;
+        --fs-lg: 1.375rem;
+        --h-header: 3.5rem;
+        --pad-x: var(--s-5);
     }
 }
 
-@media (min-width: 90rem) {
+/* 平板竖屏 / 手机：单列，留白继续收 */
+@media (max-width: 45rem) {
     :root {
-        --w-read: 46rem;
-        --pad-x: var(--s-10);
+        --w-read: 100%;
+        --fs-base: 1rem;
+        --fs-md: 1.1875rem;
+        --fs-lg: 1.3125rem;
+        --fs-xl: 1.625rem;
+        --fs-2xl: 1.875rem;
+        --h-header: 3.25rem;
+        --pad-x: var(--s-4);
+        --s-16: 2.5rem;
+        --s-20: 3rem;
     }
 }
 
-/* --------------------------------------------------------------------------
-   尊重系统的减少动效设置
-   -------------------------------------------------------------------------- */
+/* 尊重系统的减少动效设置 */
 @media (prefers-reduced-motion: reduce) {
     :root {
         --dur-fast: 1ms;

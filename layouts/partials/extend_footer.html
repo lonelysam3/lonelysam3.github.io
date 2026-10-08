@@ -1,37 +1,49 @@
 {{- /* ==========================================================================
    extend_footer.html — 全局页脚自定义区（覆盖主题同名 partial）
    --------------------------------------------------------------------------
-   导航滚动提示：使用 IntersectionObserver 监听顶部哨兵元素，而不是监听
-   scroll 事件——滚动回调每次触发都会参与布局计算，用观察器把成本降到零。
+   两件事：
 
-   说明：sticky 定位在 .header 上（见 30-ui.css 的说明），但状态类仍然打在
-   .nav 上，CSS 侧通过 html.js .nav.is-scrolled 生效。
+   1. 导航滚动提示
+      用 IntersectionObserver 监听顶部哨兵元素，而不是监听 scroll 事件——
+      滚动回调每次触发都要参与布局计算，用观察器可把成本降到零。
+      sticky 定位落在 .header 上（见 20-layout/30-header 的说明），
+      状态类仍然打在 .nav 上，CSS 侧由 html.js .nav.is-scrolled 生效。
+
+   2. 文章页目录双栏
+      文章页有 .toc 时，给 .post-single 加 has-toc，由 20-layout.css 切成
+      「正文 | 目录侧栏」两栏。无目录的页面保持单列居中。
+      放在 JS 里而不是纯 CSS :has()，是为了兼容尚未支持 :has 的浏览器：
+      不支持时退化为单列，正文依然完整可读，不会出现半截布局。
    ========================================================================== */ -}}
 
 <script>
     (function () {
+        /* ---- 1. 导航滚动提示 ---- */
         var nav = document.querySelector('.nav');
         var header = document.querySelector('.header');
-        if (!nav || !header) { return; }
 
-        var sentinel = document.createElement('div');
-        sentinel.setAttribute('aria-hidden', 'true');
-        sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;';
+        if (nav && header && 'IntersectionObserver' in window) {
+            var sentinel = document.createElement('div');
+            sentinel.setAttribute('aria-hidden', 'true');
+            sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;';
 
-        if (header.parentNode) {
-            header.parentNode.insertBefore(sentinel, header);
-        }
-
-        if (!('IntersectionObserver' in window)) {
-            return;
-        }
-
-        var observer = new IntersectionObserver(function (entries) {
-            for (var i = 0; i < entries.length; i++) {
-                nav.classList.toggle('is-scrolled', !entries[i].isIntersecting);
+            if (header.parentNode) {
+                header.parentNode.insertBefore(sentinel, header);
             }
-        }, { threshold: 0 });
 
-        observer.observe(sentinel);
+            var observer = new IntersectionObserver(function (entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    nav.classList.toggle('is-scrolled', !entries[i].isIntersecting);
+                }
+            }, { threshold: 0 });
+
+            observer.observe(sentinel);
+        }
+
+        /* ---- 2. 文章目录双栏切换 ---- */
+        var post = document.querySelector('.post-single');
+        if (post && post.querySelector('.toc')) {
+            post.classList.add('has-toc');
+        }
     })();
 </script>

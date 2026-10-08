@@ -1,28 +1,30 @@
 /* ==========================================================================
-   30-header.css — 顶部栏组件
+   30-header.css — 顶部栏
    --------------------------------------------------------------------------
-   结构（由 layouts/partials/header.html 渲染）：
+   结构（layouts/partials/header.html 渲染）：
      <header class="header">
        <nav class="nav">
-         <div class="logo">…</div>                ① 品牌
-         <div id="searchbox" class="top-search">…</div>  ② 常驻搜索框
-         <ul id="menu">…</ul>                     ③ 导航
+         <div class="logo">…</div>                        ① 品牌
+         <div id="searchbox" class="top-search">…</div>   ② 常驻搜索框
+         <ul id="menu">…</ul>                             ③ 导航
          （.logo-switches 含主题切换，绝对定位到右端）
        </nav>
      </header>
 
    栅格：品牌(auto) │ 搜索(auto) │ 导航(1fr)
-   `.logo-switches` 是 .logo 的子节点，若留在栅格流中会额外占一列并把导航
-   挤歪；但也不能 display:none——那等于砍掉明暗主题切换功能。因此桌面端绝对
-   定位到右端，窄屏则回落为文档流中的普通元素。
+
+   .logo-switches 是 .logo 的子节点。留在栅格流中会额外占一列把导航挤歪，
+   但也不能 display:none —— 那等于砍掉明暗主题切换功能。因此绝对定位到右端。
+
+   【桌面优先】基础样式为桌面观感；窄屏在文件末尾收窄。
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
    1. 吸顶容器
    --------------------------------------------------------------------------
-   注意 sticky 必须落在 .header 上而不是 .nav：
-   .nav 的父块与自身等高，sticky 元素只在包含块范围内吸附，父块等高时等于
-   没有吸附空间（实测滚动后 nav.top 会跟随滚成负值）。
+   sticky 必须落在 .header 而不是 .nav：.nav 的父块与自身等高，sticky 元素
+   只在包含块范围内吸附，父块等高时等于没有吸附空间（实测滚动后 nav.top
+   会跟随滚成负值，导航直接消失）。
    -------------------------------------------------------------------------- */
 .header {
     position: sticky;
@@ -34,34 +36,33 @@
     display: grid;
     grid-template-columns: auto auto minmax(0, 1fr);
     align-items: center;
-    column-gap: var(--s-3);
+    column-gap: var(--s-6);
     width: 100%;
-    max-width: calc(var(--w-wide) + var(--pad-x) * 2);
+    max-width: calc(var(--w-container) + var(--pad-x) * 2);
     min-height: var(--h-header);
     margin-inline: auto;
     padding-inline: var(--pad-x);
     line-height: normal;
-    /* 毛玻璃：滚动时正文从下方穿过仍可辨识 */
-    background: color-mix(in srgb, var(--c-bg) 82%, transparent);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    background: var(--c-bg);
     border-bottom: 1px solid transparent;
     transition:
         border-color var(--dur-base) var(--ease),
         box-shadow var(--dur-base) var(--ease);
 }
 
-/* 不支持 color-mix 的旧浏览器给不透明兜底 */
-@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+/* 支持 color-mix 时改为半透明 + 毛玻璃，滚动时正文从下方穿过仍可辨识 */
+@supports (background: color-mix(in srgb, red 50%, transparent)) {
     .nav {
-        background: var(--c-bg);
+        background: color-mix(in srgb, var(--c-bg) 80%, transparent);
+        backdrop-filter: saturate(180%) blur(16px);
+        -webkit-backdrop-filter: saturate(180%) blur(16px);
     }
 }
 
-/* 滚动后出现分隔与轻阴影，由 extend_footer.html 的观察器切换 */
+/* 滚动后出现分隔线与轻阴影，由 extend_footer.html 的观察器切换 */
 html.js .nav.is-scrolled {
     border-bottom-color: var(--c-border);
-    box-shadow: var(--sh-sm);
+    box-shadow: var(--sh-xs);
 }
 
 /* --------------------------------------------------------------------------
@@ -78,20 +79,25 @@ html.js .nav.is-scrolled {
     display: inline-flex;
     align-items: center;
     font-family: var(--font-mono);
-    font-size: 0.95rem;
+    font-size: 1.0625rem;
     font-weight: var(--fw-semi);
     letter-spacing: -0.02em;
     color: var(--c-text);
     white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.nav .logo a:hover {
+    color: var(--c-accent);
 }
 
 .nav .logo a img,
 .nav .logo a svg {
-    height: 26px;
     width: auto;
-    margin-inline-end: var(--s-2);
-    border-radius: var(--r-sm);
-    /* 覆盖主题的 translate(0,-10%)，在 flex 布局里不需要 */
+    height: 32px;
+    margin-inline-end: var(--s-3);
+    border-radius: var(--r-md);
+    /* 覆盖主题的 translate(0,-10%)，flex 布局下不需要 */
     transform: none;
     pointer-events: none;
 }
@@ -99,32 +105,30 @@ html.js .nav.is-scrolled {
 /* --------------------------------------------------------------------------
    3. 常驻搜索框
    --------------------------------------------------------------------------
-   该元素在 layouts/partials/header.html 中渲染，因此所有页面（含归档、
-   分类、标签）都有。搜索索引路径已在 extend_head.html 中修补为站点根的
-   绝对地址——主题原版用相对路径 "../index.json"，在文章页会解析成
-   /posts/index.json 而 404，这正是搜索框原本只能用于首页的根因。
+   该元素在 header.html 中渲染，因此所有页面（含归档/分类/标签）都有。
+   索引路径已在 extend_head.html 中由相对路径 "../index.json" 修补为根相对
+   路径 —— 原写法在文章页会解析成 /posts/index.json 而 404，这正是该搜索框
+   原本只能用于首页的根因。
    -------------------------------------------------------------------------- */
 .nav #searchbox.top-search {
     position: relative;
-    justify-self: end;
+    justify-self: start;
     margin: 0;
     min-width: 0;
 }
 
 .nav #searchbox.top-search #searchInput {
-    width: 6rem;
-    height: 2rem;
-    padding: 0 var(--s-8) 0 var(--s-2);
+    width: 15rem;
+    height: 2.375rem;
+    padding: 0 var(--s-10) 0 var(--s-4);
     font-family: var(--font-mono);
-    font-size: var(--fs-base);
-    font-weight: var(--fw-normal);
+    font-size: var(--fs-sm);
     color: var(--c-text);
     background: var(--c-surface-muted);
-    border: 1px solid var(--c-border);
+    border: 1px solid transparent;
     border-radius: var(--r-md);
     transition:
         width var(--dur-base) var(--ease),
-        padding var(--dur-base) var(--ease),
         background-color var(--dur-fast) var(--ease),
         border-color var(--dur-fast) var(--ease),
         box-shadow var(--dur-fast) var(--ease);
@@ -132,31 +136,28 @@ html.js .nav.is-scrolled {
 
 .nav #searchbox.top-search #searchInput::placeholder {
     color: var(--c-text-faint);
-    /* 窄屏提示文字只留「搜索」二字，宽屏再显示快捷键提示 */
-    font-size: 0.7rem;
 }
 
 .nav #searchbox.top-search #searchInput:focus {
-    width: min(56vw, 13rem);
-    padding-inline-end: var(--s-8);
+    width: 17.5rem;
     background: var(--c-surface);
     border-color: var(--c-accent);
     box-shadow: 0 0 0 3px var(--c-accent-ring);
     outline: none;
 }
 
-/* 放大镜图标：用遮罩绘制，颜色跟随令牌 */
+/* 放大镜：用遮罩绘制，颜色跟随令牌 */
 .nav #searchbox.top-search::after {
     content: "";
     position: absolute;
-    inset-inline-end: 0.6rem;
+    inset-inline-end: var(--s-3);
     top: 50%;
-    width: 13px;
-    height: 13px;
+    width: 15px;
+    height: 15px;
     transform: translateY(-50%);
     pointer-events: none;
     background: currentColor;
-    color: var(--c-text-muted);
+    color: var(--c-text-faint);
     -webkit-mask: var(--icon-search) center / contain no-repeat;
     mask: var(--icon-search) center / contain no-repeat;
     transition: color var(--dur-fast) var(--ease);
@@ -166,13 +167,13 @@ html.js .nav.is-scrolled {
     color: var(--c-accent);
 }
 
-/* 搜索结果浮层：定位于输入框下方并右对齐 */
+/* 结果浮层：位于输入框正下方，右对齐 */
 .nav #searchbox.top-search #searchResults {
     position: absolute;
     top: calc(100% + var(--s-2));
-    inset-inline-end: 0;
-    width: min(22rem, calc(100vw - var(--pad-x) * 2));
-    max-height: min(60vh, 26rem);
+    inset-inline-start: 0;
+    width: min(26rem, calc(100vw - var(--pad-x) * 2));
+    max-height: min(64vh, 30rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     margin: 0;
@@ -185,6 +186,7 @@ html.js .nav.is-scrolled {
     z-index: 60;
 }
 
+/* 无结果时不显示空浮层 */
 .nav #searchbox.top-search #searchResults:empty {
     display: none;
 }
@@ -192,12 +194,12 @@ html.js .nav.is-scrolled {
 .nav #searchbox.top-search #searchResults li {
     position: relative;
     margin: 0;
-    padding: var(--s-2) var(--s-3);
-    border-radius: var(--r-md);
+    padding: var(--s-3);
     font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
     line-height: var(--lh-snug);
     color: var(--c-text);
+    border-radius: var(--r-md);
     box-shadow: none;
     transition: background-color var(--dur-fast) var(--ease);
 }
@@ -223,10 +225,9 @@ html.js .nav.is-scrolled {
     align-items: center;
     gap: var(--s-1);
     margin: 0;
-    /* 右侧为绝对定位的主题切换按钮让位。
-       实测按钮宽 34.4px 且紧贴 padding 边界，留 32px 会差 2.4px 造成压字，
-       这里给 2.75rem(44px) 留出余量；窄屏按钮更小，给 2.5rem 即可。 */
-    padding: 0 2.5rem 0 0;
+    /* 右侧为主题切换按钮让位：该按钮绝对定位在容器右端，宽约 34px。
+       实测留 32px 会让按钮压住末个菜单项，故给 2.75rem(44px)。 */
+    padding: 0 2.75rem 0 0;
     list-style: none;
     overflow-x: auto;
     scrollbar-width: none;
@@ -243,9 +244,9 @@ html.js .nav.is-scrolled {
 
 .nav #menu a {
     display: block;
-    padding: var(--s-1) var(--s-2);
+    padding: var(--s-2) var(--s-3);
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     color: var(--c-text-muted);
     border-radius: var(--r-sm);
     transition:
@@ -264,7 +265,7 @@ html.js .nav.is-scrolled {
     font-weight: var(--fw-medium);
 }
 
-/* 旧版的下划线装饰在新栅格下不再需要 */
+/* 旧版的下划线装饰在栅格布局下不再需要 */
 .nav #menu .active::after {
     content: none;
 }
@@ -276,10 +277,10 @@ html.js .nav.is-scrolled {
     position: absolute;
     inset-inline-end: var(--pad-x);
     top: 50%;
-    transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
     margin: 0;
+    transform: translateY(-50%);
     z-index: 3;
 }
 
@@ -287,9 +288,7 @@ html.js .nav.is-scrolled {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: var(--s-1);
-    font-size: 1rem;
-    line-height: 1;
+    padding: var(--s-2);
     color: var(--c-text-muted);
     border-radius: var(--r-sm);
     transition:
@@ -307,54 +306,110 @@ html.js .nav.is-scrolled {
     height: 1.15rem;
 }
 
-/* --------------------------------------------------------------------------
-   6. 宽屏：搜索框展开为完整输入框
-   -------------------------------------------------------------------------- */
-@media (min-width: 48rem) {
+/* ==========================================================================
+   6. 桌面优先 · 向下适配
+   ========================================================================== */
+
+/* 小笔记本：搜索框收窄，栏距收紧 */
+@media (max-width: 75rem) {
     .nav {
         column-gap: var(--s-4);
     }
 
+    .nav #searchbox.top-search #searchInput {
+        width: 12rem;
+    }
+
+    .nav #searchbox.top-search #searchInput:focus {
+        width: 14rem;
+    }
+
+    .nav #menu a {
+        padding: var(--s-2) var(--s-2);
+    }
+}
+
+/* 平板或更窄：搜索框收成图标按钮，聚焦后再展开 */
+@media (max-width: 60rem) {
+    .nav {
+        column-gap: var(--s-3);
+    }
+
     .nav .logo a {
-        font-size: 1.0625rem;
+        font-size: 0.9375rem;
     }
 
     .nav .logo a img,
     .nav .logo a svg {
-        height: 30px;
-        margin-inline-end: var(--s-3);
+        height: 26px;
+        margin-inline-end: var(--s-2);
     }
 
-    /* 宽屏下搜索框常驻展开，提示文字可见 */
-    .nav #searchbox.top-search #searchInput,
-    .nav #searchbox.top-search #searchInput:focus {
-        width: 13.5rem;
-        height: 2.125rem;
-        padding: 0 var(--s-8) 0 var(--s-3);
-        font-size: var(--fs-sm);
+    .nav #searchbox.top-search #searchInput {
+        width: 2.375rem;
+        padding: 0;
+        background: transparent;
+        border-color: transparent;
+    }
+
+    /* 图标居中：宽度收窄后右侧内边距不再适用 */
+    .nav #searchbox.top-search::after {
+        inset-inline-end: 50%;
+        transform: translate(50%, -50%);
     }
 
     .nav #searchbox.top-search #searchInput::placeholder {
+        color: transparent;
+    }
+
+    .nav #searchbox.top-search #searchInput:focus {
+        width: min(48vw, 14rem);
+        padding: 0 var(--s-10) 0 var(--s-3);
+        background: var(--c-surface);
+        border-color: var(--c-accent);
+    }
+
+    .nav #searchbox.top-search #searchInput:focus::placeholder {
         color: var(--c-text-faint);
     }
 
-    .nav #menu a {
-        font-size: var(--fs-sm);
-        padding: var(--s-1) var(--s-3);
+    .nav #searchbox.top-search:focus-within::after {
+        inset-inline-end: var(--s-3);
+        transform: translateY(-50%);
     }
 
-    .nav #menu {
-        padding-inline-end: 2.75rem;
+    .nav #menu a {
+        font-size: var(--fs-xs);
+        padding: var(--s-2) var(--s-2);
     }
 }
 
-@media (min-width: 64rem) {
-    .nav #searchbox.top-search #searchInput,
-    .nav #searchbox.top-search #searchInput:focus {
-        width: 15rem;
+/* 手机：字号与留白继续收，导航可横向滑动 */
+@media (max-width: 45rem) {
+    .nav {
+        column-gap: var(--s-2);
+    }
+
+    .nav .logo a {
+        font-size: 0.875rem;
+    }
+
+    .nav .logo a img,
+    .nav .logo a svg {
+        height: 22px;
+        margin-inline-end: var(--s-2);
+    }
+
+    .nav #menu {
+        padding-inline-end: 2.25rem;
+        gap: 0;
     }
 
     .nav #menu a {
-        padding: var(--s-1) var(--s-4);
+        padding: var(--s-2) var(--s-1);
+    }
+
+    .nav #searchbox.top-search #searchInput:focus {
+        width: min(56vw, 12rem);
     }
 }

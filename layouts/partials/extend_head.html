@@ -46,34 +46,24 @@
    B. 常驻顶部搜索框的脚本与索引
    ---------------------------------------------------------------------
    搜索框 markup 由 layouts/partials/header.html 渲染，所有页面都有，
-   因此 fastsearch 资源改为【全站加载】。索引 index.json 只在站点根目录
-   生成一处（见 hugo.yaml 的 outputs.home），故用 absURL 指向首页的
-   index.json，而不是相对路径 ./index.json —— 后者在文章页会解析成
-   文章目录下的 index.json，直接 404。
+   因此 fastsearch 资源改为【全站加载】。
 
-   提示：如需关闭搜索，只要不加载本段脚本即可，搜索框会自动降级为
-   不响应输入的空框（可自行补 CSS 隐藏）。
+   索引 index.json 只在站点根生成一处（见 hugo.yaml 的 outputs.home），
+   故用 absURL 预加载站点根的那一个，而不是相对路径 ./index.json ——
+   后者在文章页会解析到文章目录下，直接 404。
+
+   关于 fastsearch.js 的两处必要修改（索引路径、加载时机），
+   不再以字符串替换方式修改主题资源，而是用根目录的
+   assets/js/fastsearch.js 整体覆盖主题同名文件
+   （Hugo 资源查找优先根目录 assets/，其次才是主题）。
+   这样更清晰也更稳定，不会被上游实现细节变化打断。
    --------------------------------------------------------------------- */ -}}
 <link crossorigin="anonymous" rel="preload" as="fetch" href="{{ "index.json" | absURL }}">
-{{- $fastsearch := resources.Get "js/fastsearch.js" | js.Build (dict "params" (dict "fuseOpts" site.Params.fuseOpts)) }}
-{{- /* ---------------------------------------------------------------------
-   修补 fastsearch.js 的索引路径
-   ---------------------------------------------------------------------
-   主题原版里索引地址写死为相对路径 "../index.json"：
-     · 首页   /            → /index.json        ✓
-     · 文章页 /posts/xxx/   → /posts/index.json ✗ 404
-   这正是该搜索框原本只能用于首页的原因。既然现在要让它在所有页面常驻，
-   必须把路径改掉，否则文章页的搜索框形同摆设。
-
-   这里用「根相对路径」而不是绝对 URL：绝对 URL 会把索引地址与当前域名绑定，
-   换域名、或本地用其他端口预览时都会跨域取不到索引（实测搜索直接返回 0 条）。
-   根相对路径在任何域名下都指向本站根目录。
-   --------------------------------------------------------------------- */ -}}
-{{- $idxURL := "index.json" | relURL -}}
-{{- $patched := $fastsearch.Content | replaceRE `\.\./index\.json` $idxURL -}}
-{{- $fastsearch = $patched | resources.FromString "assets/js/fastsearch-patched.js" | resources.Minify -}}
+{{- $fastsearch := resources.Get "js/fastsearch.js" | js.Build (dict "params" (dict "fuseOpts" site.Params.fuseOpts)) | resources.Minify }}
 {{- $fusejs := resources.Get "js/fuse.basic.min.js" }}
 {{- $license_js := resources.Get "js/license.js" }}
+{{- /* 注：concat 的各分片必须已 minify。未 minify 的 js.Build 结果通常
+       以换行结尾，concat 时会与下一片粘连成非法语句。 */ -}}
 {{- if not site.Params.assets.disableFingerprinting }}
 {{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-global.js" | fingerprint }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}" integrity="{{ $search.Data.Integrity }}"></script>
