@@ -24,7 +24,11 @@
 .main {
     display: block;
     width: 100%;
-    max-width: calc(var(--w-container) + var(--pad-x) * 2);
+    /* 用 min(100%, 上限) 而不是 calc(max-width + padding)：
+       前者是单一表达式，可以自行把「容器上限 + 两侧留白」一起算进去；
+       后者在 --w-container 本身已是 min() 时属于 calc 嵌 min，属无效 CSS，
+       浏览器会丢弃整条声明。 */
+    max-width: min(100%, calc(var(--w-container) + var(--pad-x) * 2));
     margin-inline: auto;
     padding: var(--s-12) var(--pad-x) var(--s-20);
     min-height: calc(100vh - var(--h-header) - 4rem);
@@ -32,7 +36,7 @@
 
 .footer {
     width: 100%;
-    max-width: calc(var(--w-container) + var(--pad-x) * 2);
+    max-width: min(100%, calc(var(--w-container) + var(--pad-x) * 2));
     margin-inline: auto;
     padding: var(--s-6) var(--pad-x);
     border-top: 1px solid var(--c-border);
@@ -65,16 +69,24 @@
    -------------------------------------------------------------------------- */
 .main.with-sidebar {
     display: grid;
-    grid-template-columns: minmax(0, var(--col-main)) var(--w-side);
+    /* 主列 1fr（占据剩余空间，上限由子元素的 max-width 控制），
+       侧栏 minmax(下限, 目标值)：既保证不会把主列挤扁，
+       也允许在空间不足时收到下限，再由更窄的断点改为堆叠。 */
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, var(--w-side));
     justify-content: center;
     align-items: start;
     column-gap: var(--w-gap-col);
 }
 
-/* 栅格内主列元素占满列宽，不再各自居中 */
+/* 栅格内主列元素占满列宽，不再各自居中。
+   主列是 1fr 会无限撑开，故这里用 --col-main 作为上限：
+   视口足够宽时主列停在 --col-main，多余空间由 justify-content: center
+   分配到两侧；视口变窄时 1fr 小于上限，主列随之连续收缩。 */
 .main.with-sidebar > .main-column,
 .main.with-sidebar > .post-single {
     grid-column: 1;
+    width: 100%;
+    max-width: var(--col-main);
     min-width: 0;
 }
 
