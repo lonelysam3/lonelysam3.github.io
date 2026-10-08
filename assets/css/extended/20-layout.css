@@ -54,6 +54,249 @@
 }
 
 /* --------------------------------------------------------------------------
+   2b. 分栏版面（首页与文章页）
+   --------------------------------------------------------------------------
+   .main 有侧栏时由 JS 加上 with-sidebar，切成「主列 ｜ 侧栏」两栏。
+   容器宽度已按 主列 + 间距 + 侧栏 计算，见 00-tokens.css 的宽度账。
+
+   注意第 2 组规则里的 max-width 必须在这里覆盖掉：栅格列已经限定了宽度，
+   若子元素仍保留自己的 max-width + margin-inline: auto，内容会在列内再次
+   居中，与列左边缘错开——这正是之前内页「文字错位」的同一类成因。
+   -------------------------------------------------------------------------- */
+.main.with-sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, var(--col-main)) var(--w-side);
+    justify-content: center;
+    align-items: start;
+    column-gap: var(--w-gap-col);
+}
+
+/* 栅格内主列元素占满列宽，不再各自居中 */
+.main.with-sidebar > .main-column,
+.main.with-sidebar > .post-single {
+    grid-column: 1;
+    min-width: 0;
+}
+
+.main.with-sidebar .main-column > .home-info,
+.main.with-sidebar .main-column > .first-entry,
+.main.with-sidebar .main-column > .post-entry,
+.main.with-sidebar .main-column > .page-header,
+.main.with-sidebar .main-column > .post-content,
+.main.with-sidebar .main-column > .pagination,
+.main.with-sidebar .post-header,
+.main.with-sidebar .post-content,
+.main.with-sidebar .post-footer,
+.main.with-sidebar #tw-comment,
+.main.with-sidebar .toc {
+    max-width: none;
+    margin-inline: 0;
+}
+
+/* 侧栏：随滚动吸附，自身可滚动 */
+.sidebar {
+    grid-column: 2;
+    position: sticky;
+    top: calc(var(--h-header) + var(--s-6));
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
+    max-height: calc(100vh - var(--h-header) - var(--s-12));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: var(--s-4);
+    font-size: var(--fs-sm);
+}
+
+/* 侧栏滚动条收细，避免视觉噪音 */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    border-width: 2px;
+}
+
+.sb-block {
+    display: block;
+}
+
+.sb-title {
+    margin: 0 0 var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text-faint);
+}
+
+/* --- 侧栏：最近文章列表 --- */
+.sb-posts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sb-posts li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-2);
+    padding: var(--s-2) 0;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.sb-posts li:last-child {
+    border-bottom: none;
+}
+
+.sb-posts a {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+    color: var(--c-text-soft);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.sb-posts a:hover {
+    color: var(--c-accent);
+}
+
+.sb-posts time {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-faint);
+}
+
+/* --- 侧栏：标签云 --- */
+.sb-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sb-tags a {
+    display: inline-block;
+    padding: 0.15em 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.sb-tags a:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+.sb-tags sup {
+    margin-inline-start: 0.25em;
+    font-size: 0.85em;
+    color: var(--c-text-faint);
+}
+
+/* --- 侧栏：社交 --- */
+.sb-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+}
+
+.sb-social a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s-2);
+    color: var(--c-text-muted);
+    border-radius: var(--r-md);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.sb-social a:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+.sb-social svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+/* --- 侧栏：本页信息表 --- */
+.sb-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--s-1) var(--s-3);
+    margin: 0;
+    font-size: var(--fs-xs);
+}
+
+.sb-meta dt {
+    font-family: var(--font-mono);
+    color: var(--c-text-faint);
+}
+
+.sb-meta dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    color: var(--c-text-soft);
+}
+
+.sb-edit {
+    display: inline-block;
+    margin-top: var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+    border-bottom: 1px solid var(--c-border-strong);
+    transition:
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
+}
+
+.sb-edit:hover {
+    color: var(--c-accent);
+    border-color: var(--c-accent);
+}
+
+/* --- 侧栏：目录 --- */
+.sb-toc nav ul,
+.sb-toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sb-toc li ul {
+    padding-inline-start: var(--s-3);
+}
+
+.sb-toc a {
+    display: block;
+    padding: 0.2em 0;
+    font-size: var(--fs-xs);
+    line-height: var(--lh-snug);
+    color: var(--c-text-muted);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.sb-toc a:hover {
+    color: var(--c-accent);
+}
+
+/* --------------------------------------------------------------------------
    3. 文章页
    -------------------------------------------------------------------------- */
 .post-single {
@@ -240,6 +483,33 @@
 
 /* 平板：取消两栏，目录回到正文上方 */
 @media (max-width: 60rem) {
+    /* 分栏在窄屏无意义：宽度不足以放下侧栏，硬留会把主列挤窄。
+       改为单列，并将侧栏内容顺次排到正文之后。 */
+    .main.with-sidebar {
+        display: block;
+    }
+
+    .sidebar {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        width: 100%;
+        max-width: var(--w-read);
+        margin: var(--s-12) auto 0;
+        padding-top: var(--s-8);
+        border-top: 1px solid var(--c-border);
+    }
+
+    /* 单列时主列子元素恢复各自的居中约束 */
+    .main.with-sidebar .post-header,
+    .main.with-sidebar .post-content,
+    .main.with-sidebar .post-footer,
+    .main.with-sidebar #tw-comment,
+    .main.with-sidebar .toc {
+        max-width: var(--w-read);
+        margin-inline: auto;
+    }
+
     .main {
         padding-block: var(--s-8) var(--s-12);
     }

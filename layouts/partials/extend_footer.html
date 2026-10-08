@@ -1,19 +1,18 @@
 {{- /* ==========================================================================
    extend_footer.html — 全局页脚自定义区（覆盖主题同名 partial）
    --------------------------------------------------------------------------
-   两件事：
-
    1. 导航滚动提示
       用 IntersectionObserver 监听顶部哨兵元素，而不是监听 scroll 事件——
       滚动回调每次触发都要参与布局计算，用观察器可把成本降到零。
-      sticky 定位落在 .header 上（见 20-layout/30-header 的说明），
-      状态类仍然打在 .nav 上，CSS 侧由 html.js .nav.is-scrolled 生效。
+      sticky 定位落在 .header 上（见 30-header.css 的说明），
+      状态类打在 .nav 上，CSS 侧由 html.js .nav.is-scrolled 生效。
 
-   2. 文章页目录双栏
-      文章页有 .toc 时，给 .post-single 加 has-toc，由 20-layout.css 切成
-      「正文 | 目录侧栏」两栏。无目录的页面保持单列居中。
-      放在 JS 里而不是纯 CSS :has()，是为了兼容尚未支持 :has 的浏览器：
-      不支持时退化为单列，正文依然完整可读，不会出现半截布局。
+   2. 分栏版面开关
+      侧栏 markup 由 layouts/partials/sidebar.html 静态渲染（在 baseof 里），
+      这里只负责：存在侧栏时给 .main 加上 with-sidebar，由布局层切成两栏。
+      之所以不在模板里直接写 class：baseof 的 <main> 没有可用于切换的上下文，
+      而侧栏 partial 可能因页面类型返回空，用 JS 判断「侧栏是否有实际内容」
+      比在模板里重复条件更可靠。
    ========================================================================== */ -}}
 
 <script>
@@ -40,10 +39,11 @@
             observer.observe(sentinel);
         }
 
-        /* ---- 2. 文章目录双栏切换 ---- */
-        var post = document.querySelector('.post-single');
-        if (post && post.querySelector('.toc')) {
-            post.classList.add('has-toc');
+        /* ---- 2. 分栏版面开关 ---- */
+        var main = document.querySelector('main.main');
+        var sidebar = main && main.querySelector('.sidebar');
+        if (main && sidebar && sidebar.children.length > 0) {
+            main.classList.add('with-sidebar');
         }
     })();
 </script>

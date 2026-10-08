@@ -1,0 +1,110 @@
+{{- /* ==========================================================================
+   sidebar.html — 右侧栏
+   --------------------------------------------------------------------------
+   分栏版面（见 20-layout.css 的 .main.with-sidebar）中位于右侧。
+
+   设计取舍：
+   · 内容在模板里【静态渲染】，不用 JS 抓取 DOM。JS 只负责给 .main 加
+     with-sidebar 类。静态渲染的好处是无闪烁、无布局抖动、可被搜索引擎读；
+     JS 抓 DOM 则依赖选择器顺序，主题一变就崩。
+   · 首页显示「最近文章 / 标签 / 社交」；
+     文章页显示「目录（若启用）/ 本页信息 / 本页标签」；
+     其余页面（归档、分类、标签索引）不渲染侧栏，用单列更合适。
+   · 通过 .Params.sidebar 可单页关闭侧栏。
+   ========================================================================== */ -}}
+
+{{- $isHome := .IsHome }}
+{{- $isPost := and .IsPage (eq .Section "posts") }}
+{{- $show := or $isHome $isPost }}
+{{- if and $show (ne .Params.sidebar false) }}
+
+<aside class="sidebar" aria-label="侧栏">
+
+    {{- if $isPost }}
+    {{- /* ------------------------------------------------ 文章页侧栏 */ -}}
+
+    {{- if .Param "ShowToc" }}
+    {{- with .TableOfContents }}
+    <div class="sb-block sb-toc">
+        <h2 class="sb-title">本页目录</h2>
+        {{ . }}
+    </div>
+    {{- end }}
+    {{- end }}
+
+    <div class="sb-block">
+        <h2 class="sb-title">本页信息</h2>
+        <dl class="sb-meta">
+            <dt>发布</dt>
+            <dd>{{ .Date.Format "2006-01-02" }}</dd>
+            {{- if not .Lastmod.IsZero }}
+            <dt>更新</dt>
+            <dd>{{ .Lastmod.Format "2006-01-02" }}</dd>
+            {{- end }}
+            <dt>字数</dt>
+            <dd>{{ .WordCount }} 字</dd>
+            <dt>阅读</dt>
+            <dd>约 {{ .ReadingTime }} 分钟</dd>
+        </dl>
+        {{- if and (site.Params.editPost.URL) (not .Params.hideEdit) }}
+        <a class="sb-edit" href="{{ site.Params.editPost.URL }}/{{ .File.Path }}" target="_blank" rel="noopener noreferrer">
+            在 GitHub 上编辑
+        </a>
+        {{- end }}
+    </div>
+
+    {{- with .GetTerms "tags" }}
+    <div class="sb-block">
+        <h2 class="sb-title">标签</h2>
+        <ul class="sb-tags">
+            {{- range . }}
+            <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
+            {{- end }}
+        </ul>
+    </div>
+    {{- end }}
+
+    {{- else }}
+    {{- /* ------------------------------------------------ 首页侧栏 */ -}}
+
+    <div class="sb-block">
+        <h2 class="sb-title">最近文章</h2>
+        <ul class="sb-posts">
+            {{- range first 6 (where site.RegularPages "Type" "in" site.Params.mainSections) }}
+            <li>
+                <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+                <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "01-02" }}</time>
+            </li>
+            {{- end }}
+        </ul>
+    </div>
+
+    {{- with site.Taxonomies.tags }}
+    <div class="sb-block">
+        <h2 class="sb-title">标签</h2>
+        <ul class="sb-tags">
+            {{- range first 12 .ByCount }}
+            <li><a href="{{ .Page.RelPermalink }}">{{ .Page.LinkTitle }}<sup>{{ .Count }}</sup></a></li>
+            {{- end }}
+        </ul>
+    </div>
+    {{- end }}
+
+    {{- with site.Params.socialIcons }}
+    <div class="sb-block">
+        <h2 class="sb-title">联系</h2>
+        <div class="sb-social">
+            {{- range . }}
+            <a href="{{ trim .url " " | safeURL }}" target="_blank" rel="noopener noreferrer me"
+                title="{{ (.title | default .name) | title }}">
+                {{- partial "svg.html" . -}}
+            </a>
+            {{- end }}
+        </div>
+    </div>
+    {{- end }}
+
+    {{- end }}
+
+</aside>
+{{- end }}

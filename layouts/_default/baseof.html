@@ -1,0 +1,46 @@
+{{- /* ==========================================================================
+   baseof.html — 全站骨架（覆盖主题同名模板）
+   --------------------------------------------------------------------------
+   与主题原版的唯一区别：在 </main> 之前插入侧栏 partial，用于分栏版面。
+
+   【为什么不能写 partialCached】
+   主题对 header / footer 用 partialCached 是合理的（内容与页面无关）。
+   但侧栏在首页渲染「最近文章 + 标签云」、在文章页渲染「目录 + 本页信息 +
+   本页标签」，内容随页面变化。若用 partialCached，Hugo 会按缓存键复用第一次
+   的结果，导致所有页面都显示首页的侧栏。因此这里必须用 partial。
+
+   侧栏自身通过 .IsHome / .IsPage 判断是否渲染，非首页/文章页返回空内容，
+   不会产生多余的空 <aside>。
+   ========================================================================== */ -}}
+{{- if lt hugo.Version "0.146.0" }}
+{{- errorf "=> hugo v0.146.0 or greater is required for hugo-PaperMod to build " }}
+{{- end -}}
+
+<!DOCTYPE html>
+{{- $theme := site.Params.defaultTheme | default "auto" }}
+{{- if eq $theme "dark" }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" data-theme="dark">
+{{- else if eq $theme "light" }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" data-theme="light">
+{{- else }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" data-theme="auto">
+{{- end }}
+
+<head>
+    {{- partial "head.html" . }}
+</head>
+
+{{- if (or (ne .Kind `page` ) (eq .Layout `archives`) (eq .Layout `search`)) }}
+<body class="list" id="top">
+{{- else }}
+<body id="top">
+{{- end }}
+    {{ partialCached "header.html" . .Page -}}
+    <main class="main">
+        {{- block "main" . }}{{ end }}
+        {{- partial "sidebar.html" . -}}
+    </main>
+    {{ partialCached "footer.html" . .Layout .Kind (.Param "hideFooter") (.Param "ShowCodeCopyButtons") -}}
+</body>
+
+</html>
