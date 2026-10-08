@@ -45,5 +45,63 @@
         if (main && sidebar && sidebar.children.length > 0) {
             main.classList.add('with-sidebar');
         }
+
+        /* ---- 3. 侧栏实时时钟 ----
+           只在首页侧栏存在该元素时运行。要点：
+           · 用 toLocaleTimeString 按【访问者本地时区】显示，而不是硬编码某个
+             时区——读者在世界任何地方看到的都是自己的时间。
+           · 页面切到后台（visibilitychange）时停掉定时器，避免无意义的唤醒。
+           · 每秒刷新，秒数变化让"此刻"有实感；这也避免了整分钟才跳动一次的
+             突兀感。 */
+        var clockTime = document.getElementById('sb-clock-time');
+        if (clockTime) {
+            var clockDate = document.getElementById('sb-clock-date');
+            var clockZone = document.getElementById('sb-clock-zone');
+            var timerId = null;
+
+            var render = function () {
+                var now = new Date();
+                clockTime.textContent = now.toLocaleTimeString('zh-CN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                if (clockDate) {
+                    clockDate.textContent = now.toLocaleDateString('zh-CN', {
+                        month: 'long',
+                        day: 'numeric',
+                        weekday: 'long'
+                    });
+                }
+                if (clockZone) {
+                    /* 显示访问者实际所在时区，而不是配置里的默认值 */
+                    try {
+                        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                        if (tz) { clockZone.textContent = tz; }
+                    } catch (e) { /* 老浏览器保留静态兜底值 */ }
+                }
+            };
+
+            var start = function () {
+                if (timerId !== null) { return; }
+                render();
+                timerId = window.setInterval(render, 1000);
+            };
+
+            var stop = function () {
+                if (timerId === null) { return; }
+                window.clearInterval(timerId);
+                timerId = null;
+            };
+
+            start();
+
+            if ('visibilityState' in document) {
+                document.addEventListener('visibilitychange', function () {
+                    if (document.visibilityState === 'visible') { start(); } else { stop(); }
+                });
+            }
+        }
     })();
 </script>

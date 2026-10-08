@@ -143,150 +143,172 @@
     color: var(--c-text-faint);
 }
 
-/* --- 侧栏：最近文章列表 --- */
-.sb-posts {
+/* --------------------------------------------------------------------------
+   侧栏组件
+   --------------------------------------------------------------------------
+   组件集合刻意保持精简，因为侧栏的设计原则是「只放主内容没有的信息」
+   （见 layouts/partials/sidebar.html 的说明）。因此这里没有：
+     · 文章元信息表  → 文章页页头的 .post-meta 已有
+     · 标签云        → 首页 hero / 文章页脚已有
+     · 社交图标      → 首页 hero 已有
+   -------------------------------------------------------------------------- */
+
+/* --- 实时时钟 --- */
+.sb-clock {
+    padding: var(--s-4) var(--s-5);
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+}
+
+.clock-time {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    font-weight: var(--fw-semi);
+    font-variant-numeric: tabular-nums;   /* 数字等宽，秒跳动时不抖动 */
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    color: var(--c-text);
+}
+
+.clock-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2);
+    margin-top: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-faint);
+}
+
+#sb-clock-zone {
+    padding: 0.1em 0.5em;
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+}
+
+/* --- 链接列表（最近文章 / 相关文章 / 最新文章共用）--- */
+.sb-links {
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.sb-posts li {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--s-2);
-    padding: var(--s-2) 0;
-    border-bottom: 1px solid var(--c-border);
+.sb-links li + li {
+    margin-top: var(--s-2);
 }
 
-.sb-posts li:last-child {
-    border-bottom: none;
-}
-
-.sb-posts a {
-    flex: 1 1 auto;
-    min-width: 0;
+.sb-links a {
+    display: block;
     font-size: var(--fs-sm);
     line-height: var(--lh-snug);
     color: var(--c-text-soft);
     transition: color var(--dur-fast) var(--ease);
 }
 
-.sb-posts a:hover {
+.sb-links a:hover {
     color: var(--c-accent);
 }
 
-.sb-posts time {
+/* --- 上下篇导航（卡片式，与页脚版本形成位置互补）--- */
+.sb-nav {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sb-nav li + li {
+    margin-top: var(--s-2);
+}
+
+.sb-nav a {
+    display: block;
+    padding: var(--s-3);
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    transition:
+        background-color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
+}
+
+.sb-nav a:hover {
+    background: var(--c-accent-soft);
+    border-color: var(--c-accent);
+}
+
+.sb-nav-label {
+    display: block;
+    margin-bottom: 0.15em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.04em;
+    color: var(--c-text-faint);
+}
+
+.sb-nav-title {
+    display: block;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+    color: var(--c-text);
+}
+
+/* --- 分类计数 --- */
+.sb-counts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sb-counts a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-2);
+    padding: var(--s-2) 0;
+    border-bottom: 1px solid var(--c-border);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.sb-counts li:last-child a {
+    border-bottom: none;
+}
+
+.sb-counts a:hover {
+    color: var(--c-accent);
+}
+
+.sb-count-name {
+    font-size: var(--fs-sm);
+    color: var(--c-text-soft);
+}
+
+.sb-counts a:hover .sb-count-name {
+    color: var(--c-accent);
+}
+
+.sb-count-num {
     flex: 0 0 auto;
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
     color: var(--c-text-faint);
 }
 
-/* --- 侧栏：标签云 --- */
-.sb-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+/* --- 目录（可选，折叠）--- */
+.sb-toc details summary {
+    cursor: pointer;
+    user-select: none;
 }
 
-.sb-tags a {
-    display: inline-block;
-    padding: 0.15em 0.7em;
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--c-text-muted);
-    background: var(--c-surface-muted);
-    border-radius: var(--r-full);
-    transition:
-        color var(--dur-fast) var(--ease),
-        background-color var(--dur-fast) var(--ease);
-}
-
-.sb-tags a:hover {
+.sb-toc details summary:hover {
     color: var(--c-accent);
-    background: var(--c-accent-soft);
 }
 
-.sb-tags sup {
-    margin-inline-start: 0.25em;
-    font-size: 0.85em;
-    color: var(--c-text-faint);
-}
-
-/* --- 侧栏：社交 --- */
-.sb-social {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-}
-
-.sb-social a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--s-2);
-    color: var(--c-text-muted);
-    border-radius: var(--r-md);
-    transition:
-        color var(--dur-fast) var(--ease),
-        background-color var(--dur-fast) var(--ease);
-}
-
-.sb-social a:hover {
-    color: var(--c-accent);
-    background: var(--c-accent-soft);
-}
-
-.sb-social svg {
-    width: 1.15rem;
-    height: 1.15rem;
-}
-
-/* --- 侧栏：本页信息表 --- */
-.sb-meta {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--s-1) var(--s-3);
-    margin: 0;
-    font-size: var(--fs-xs);
-}
-
-.sb-meta dt {
-    font-family: var(--font-mono);
-    color: var(--c-text-faint);
-}
-
-.sb-meta dd {
-    margin: 0;
-    font-family: var(--font-mono);
-    color: var(--c-text-soft);
-}
-
-.sb-edit {
-    display: inline-block;
-    margin-top: var(--s-3);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--c-text-muted);
-    border-bottom: 1px solid var(--c-border-strong);
-    transition:
-        color var(--dur-fast) var(--ease),
-        border-color var(--dur-fast) var(--ease);
-}
-
-.sb-edit:hover {
-    color: var(--c-accent);
-    border-color: var(--c-accent);
-}
-
-/* --- 侧栏：目录 --- */
 .sb-toc nav ul,
 .sb-toc ul {
-    margin: 0;
+    margin: var(--s-3) 0 0;
     padding: 0;
     list-style: none;
 }

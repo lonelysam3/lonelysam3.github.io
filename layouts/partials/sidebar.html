@@ -1,106 +1,160 @@
 {{- /* ==========================================================================
    sidebar.html — 右侧栏
    --------------------------------------------------------------------------
-   分栏版面（见 20-layout.css 的 .main.with-sidebar）中位于右侧。
+   【设计原则：只放主内容里没有的信息】
+   侧栏的价值在于互补，不是把左侧已有的东西换个位置再放一遍。以下内容
+   一律【不】放进侧栏，因为主内容区已经有了：
 
-   设计取舍：
-   · 内容在模板里【静态渲染】，不用 JS 抓取 DOM。JS 只负责给 .main 加
-     with-sidebar 类。静态渲染的好处是无闪烁、无布局抖动、可被搜索引擎读；
-     JS 抓 DOM 则依赖选择器顺序，主题一变就崩。
-   · 首页显示「最近文章 / 标签 / 社交」；
-     文章页显示「目录（若启用）/ 本页信息 / 本页标签」；
-     其余页面（归档、分类、标签索引）不渲染侧栏，用单列更合适。
-   · 通过 .Params.sidebar 可单页关闭侧栏。
+     · 标题 / 发布日期 / 阅读时间 / 字数  → 文章页页头的 .post-meta 已有
+     · 本页标签                          → 文章页脚 .post-tags 已有
+     · 社交链接                          → 首页 hero 的 .social-icons 已有
+
+   据此各页侧栏组成：
+
+     首页   当前时间（实时时钟，主内容没有）
+             分类统计（主内容只在导航里给入口，没有计数）
+             最近文章（主内容是分页列表，侧栏给不翻页的最新几篇）
+
+     文章页 文章目录（仅当 ShowToc 开启）
+             上下篇导航（页脚虽有，但读者在长文任一位置都需要，
+                     与页脚版本构成重复但位置互补，是刻意保留的）
+             同标签文章（主内容没有）
+             最新文章（同上）
+
+   归档 / 分类 / 标签索引 / 关于页不渲染侧栏——这些页本身就是索引，
+   再加一层索引只是重复。
    ========================================================================== */ -}}
 
 {{- $isHome := .IsHome }}
 {{- $isPost := and .IsPage (eq .Section "posts") }}
-{{- $show := or $isHome $isPost }}
-{{- if and $show (ne .Params.sidebar false) }}
+{{- if and (or $isHome $isPost) (ne .Params.sidebar false) }}
 
 <aside class="sidebar" aria-label="侧栏">
 
     {{- if $isPost }}
-    {{- /* ------------------------------------------------ 文章页侧栏 */ -}}
+    {{- /* ==================================================== 文章页侧栏 */ -}}
 
+    {{- /* 文章目录：仅当该文开启 ShowToc。默认折叠以避免长目录挤压正文视线 */ -}}
     {{- if .Param "ShowToc" }}
     {{- with .TableOfContents }}
     <div class="sb-block sb-toc">
-        <h2 class="sb-title">本页目录</h2>
-        {{ . }}
+        <details>
+            <summary class="sb-title">本页目录</summary>
+            {{ . }}
+        </details>
     </div>
     {{- end }}
     {{- end }}
 
+    {{- /* 上下篇：与页脚版本位置互补——读者读到长文中段也能直接翻页 */ -}}
+    {{- $pages := where site.RegularPages "Type" "in" site.Params.mainSections }}
+    {{- if and (gt (len $pages) 1) (in $pages .) }}
     <div class="sb-block">
-        <h2 class="sb-title">本页信息</h2>
-        <dl class="sb-meta">
-            <dt>发布</dt>
-            <dd>{{ .Date.Format "2006-01-02" }}</dd>
-            {{- if not .Lastmod.IsZero }}
-            <dt>更新</dt>
-            <dd>{{ .Lastmod.Format "2006-01-02" }}</dd>
+        <h2 class="sb-title">上下篇</h2>
+        <ul class="sb-nav">
+            {{- with $pages.Next . }}
+            <li>
+                <a href="{{ .Permalink }}">
+                    <span class="sb-nav-label">← 上一篇</span>
+                    <span class="sb-nav-title">{{ .LinkTitle }}</span>
+                </a>
+            </li>
             {{- end }}
-            <dt>字数</dt>
-            <dd>{{ .WordCount }} 字</dd>
-            <dt>阅读</dt>
-            <dd>约 {{ .ReadingTime }} 分钟</dd>
-        </dl>
-        {{- if and (site.Params.editPost.URL) (not .Params.hideEdit) }}
-        <a class="sb-edit" href="{{ site.Params.editPost.URL }}/{{ .File.Path }}" target="_blank" rel="noopener noreferrer">
-            在 GitHub 上编辑
-        </a>
-        {{- end }}
+            {{- with $pages.Prev . }}
+            <li>
+                <a href="{{ .Permalink }}">
+                    <span class="sb-nav-label">下一篇 →</span>
+                    <span class="sb-nav-title">{{ .LinkTitle }}</span>
+                </a>
+            </li>
+            {{- end }}
+        </ul>
     </div>
+    {{- end }}
 
+    {{- /* 相关文章 / 最新文章：二选一，不同时出现。
+           本站文章数少时，「同标签的相关文章」往往恰好就是「最新的几篇」，
+           两块并排会把同一批链接列两遍——这正是要避免的重复。
+           有相关文章就只给相关，没有才回退到最新。 */ -}}
+    {{- $related := slice }}
     {{- with .GetTerms "tags" }}
+    {{- range $i, $t := . }}
+    {{- if lt $i 3 }}
+    {{- range first 4 $t.Pages }}
+    {{- if ne .Permalink $ }}
+    {{- $related = $related | append . }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- $related = uniq (where $related "Permalink" "!=" .Permalink) }}
+
+    {{- if $related }}
     <div class="sb-block">
-        <h2 class="sb-title">标签</h2>
-        <ul class="sb-tags">
+        <h2 class="sb-title">相关文章</h2>
+        <ul class="sb-links">
+            {{- range first 5 $related }}
+            <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
+            {{- end }}
+        </ul>
+    </div>
+    {{- else }}
+    {{- $latest := where site.RegularPages "Type" "in" site.Params.mainSections }}
+    {{- $latest = where $latest "Permalink" "!=" .Permalink }}
+    {{- with first 5 $latest }}
+    <div class="sb-block">
+        <h2 class="sb-title">最新文章</h2>
+        <ul class="sb-links">
             {{- range . }}
             <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
             {{- end }}
         </ul>
     </div>
     {{- end }}
+    {{- end }}
 
     {{- else }}
-    {{- /* ------------------------------------------------ 首页侧栏 */ -}}
+    {{- /* ==================================================== 首页侧栏 */ -}}
 
-    <div class="sb-block">
-        <h2 class="sb-title">最近文章</h2>
-        <ul class="sb-posts">
-            {{- range first 6 (where site.RegularPages "Type" "in" site.Params.mainSections) }}
-            <li>
-                <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
-                <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "01-02" }}</time>
-            </li>
-            {{- end }}
-        </ul>
+    {{- /* 实时时钟。时间由 extend_footer.html 用本地时区每秒刷新；
+           此处给出静态兜底内容，JS 不可用时也不会出现空白块。 */ -}}
+    <div class="sb-block sb-clock" aria-live="off">
+        <h2 class="sb-title">此刻</h2>
+        <time class="clock-time" id="sb-clock-time"
+              data-tz="{{ site.Params.timeZone | default "Asia/Shanghai" }}">--:--:--</time>
+        <div class="clock-meta">
+            <span id="sb-clock-date">—</span>
+            <span id="sb-clock-zone">{{ site.Params.timeZone | default "Asia/Shanghai" }}</span>
+        </div>
     </div>
 
-    {{- with site.Taxonomies.tags }}
+    {{- /* 分类统计：主内容只在导航提供入口，没有计数与概览 */ -}}
+    {{- with site.Taxonomies.categories }}
     <div class="sb-block">
-        <h2 class="sb-title">标签</h2>
-        <ul class="sb-tags">
-            {{- range first 12 .ByCount }}
-            <li><a href="{{ .Page.RelPermalink }}">{{ .Page.LinkTitle }}<sup>{{ .Count }}</sup></a></li>
+        <h2 class="sb-title">分类</h2>
+        <ul class="sb-counts">
+            {{- range .ByCount }}
+            <li>
+                <a href="{{ .Page.RelPermalink }}">
+                    <span class="sb-count-name">{{ .Page.LinkTitle }}</span>
+                    <span class="sb-count-num">{{ .Count }}</span>
+                </a>
+            </li>
             {{- end }}
         </ul>
     </div>
     {{- end }}
 
-    {{- with site.Params.socialIcons }}
+    {{- /* 最近文章：主内容区是分页列表，侧栏给不翻页的最新几篇 */ -}}
+    {{- with first 5 (where site.RegularPages "Type" "in" site.Params.mainSections) }}
     <div class="sb-block">
-        <h2 class="sb-title">联系</h2>
-        <div class="sb-social">
+        <h2 class="sb-title">最近文章</h2>
+        <ul class="sb-links">
             {{- range . }}
-            <a href="{{ trim .url " " | safeURL }}" target="_blank" rel="noopener noreferrer me"
-                title="{{ (.title | default .name) | title }}">
-                {{- partial "svg.html" . -}}
-            </a>
+            <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
             {{- end }}
-        </div>
+        </ul>
     </div>
     {{- end }}
 
