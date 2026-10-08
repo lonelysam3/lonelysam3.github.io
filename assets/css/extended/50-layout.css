@@ -223,72 +223,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   6. 宽屏导航：消除首页导航换行
+   6. 关于顶部搜索框与导航收紧
    --------------------------------------------------------------------------
-   首页导航由三块组成：logo（约 303px，含 margin 左右各 40px）、
-   首页搜索框（约 239px）、菜单（约 299px，含 margin 左右各 40px）。
-   三者相加再加上导航间距超过容器宽度，flex 又是 wrap，于是菜单被挤到第二行。
-
-   主题给 .logo / #menu 的 margin: auto var(--gap) 在桌面属于纯浪费，
-   这里在宽屏收紧它们，并把搜索框改紧凑，使三块能排进一行。
-   只在 ≥900px 生效，移动端布局与用户此前调好的搜索框尺寸不受影响。
+   这两部分的样式统一由 60-redesign.css 定义（该文件最后加载，避免同一元素
+   在多个层里被反复覆盖）。此文件不再重复声明，避免层叠冲突与排查困难。
    -------------------------------------------------------------------------- */
-@media (min-width: 900px) {
-    .logo {
-        margin-inline: 0;
-        margin-block: auto;
-    }
 
-    #menu {
-        margin-inline: 0 8px;
-        margin-block: auto;
-    }
-
-    #menu li + li {
-        margin-inline-start: 20px;
-    }
-
-    .logo a {
-        font-size: 1.15rem;
-    }
-
-    .logo a img,
-    .logo a svg {
-        height: 32px;
-    }
-
-    /* 首页搜索框：紧凑到不与菜单争抢同一行 */
-    .home .header .nav #searchbox.home-top-search {
-        flex: 0 0 168px;
-        max-width: 168px;
-        margin: 0 12px;
-    }
-
-    .home .header .nav #searchbox.home-top-search #searchInput {
-        height: 36px;
-        border-radius: 10px;
-        font-size: 0.86rem;
-    }
-}
-
-/* 窄一些的桌面：再收一档，保证仍然单行 */
-@media (min-width: 900px) and (max-width: 1120px) {
-    #menu li + li {
-        margin-inline-start: 14px;
-    }
-
-    #menu a {
-        font-size: 0.82rem;
-    }
-
-    .home .header .nav #searchbox.home-top-search {
-        flex: 0 0 140px;
-        max-width: 140px;
-    }
-
-    .logo a {
-        font-size: 1.02rem;
-    }
-}
 
 

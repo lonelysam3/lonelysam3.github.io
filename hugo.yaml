@@ -1,6 +1,6 @@
-baseURL: "https://lonelysam3.github.io" # 主站的 URL
+baseURL: "https://blog.lonelysam8.me" # 主站的 URL（线上实际域名；改这里才能让 og:url / RSS / sitemap 用对域名）
 title: lonelysam3's Blog # 站点标题
-copyright: "[©2025 lonelysam3's Blog](https://lonelysam3.github.io/)" # 网站的版权声明，通常显示在页脚
+copyright: "[©2026 lonelysam3's Blog](https://blog.lonelysam8.me/)" # 网站的版权声明，通常显示在页脚
 theme: PaperMod # 主题
 languageCode: zh-cn # 语言
 
@@ -92,14 +92,16 @@ params:
     # disableFingerprinting: true
 
     # 网站 Favicon 图标相关信息
-    # 可在 https://realfavicongenerator.net/ 生成
-    # 将图片复制到 /static 目录下
-    # 然后修改下面代码中的文件名
-    favicon: "feather.png"
-    favicon16x16: "feather.png"
-    favicon32x32: "feather.png"
-    apple_touch_icon: "feather.png"
-    safari_pinned_tab: "feather.png"
+    # 可在 https://realfavicongenerator.net/ 生成多尺寸版本后放入 /static
+    # 说明：原先五个字段都指向 static/feather.png，但该文件并不存在，
+    # 实测线上 /feather.png 返回 404，浏览器标签页图标始终是空白。
+    # 这里统一改指向确实存在的 r-c.jpg（1080x1080 正方形，可缩放）。
+    # 若要更规整，建议自行生成 favicon.ico / 32x32 / 180x180 后替换下列值。
+    favicon: "r-c.jpg"
+    favicon16x16: "r-c.jpg"
+    favicon32x32: "r-c.jpg"
+    apple_touch_icon: "r-c.jpg"
+    safari_pinned_tab: "r-c.jpg"
     disableHLJS: true # to disable highlight.js
 
   label:
@@ -140,22 +142,27 @@ params:
       url: "https://github.com/lonelysam3"
 
   analytics:
+    # 说明：以下三处原为站点模板自带的占位值 "XYZabc"，
+    # 始终渲染成假的验证 meta 标签。未实际使用该服务，予以清空。
+    # 将来接入时填入真实验证串即可恢复。
     google:
-      SiteVerificationTag: "XYZabc"
+      SiteVerificationTag: ""
     bing:
-      SiteVerificationTag: "XYZabc"
+      SiteVerificationTag: ""
     yandex:
-      SiteVerificationTag: "XYZabc"
+      SiteVerificationTag: ""
 
   # 文章封面设置
   cover:
     hidden: true # hide everywhere but not in structured data
     hiddenInList: true # hide on list pages and home
     hiddenInSingle: true # hide on single page
-  # 关联编辑
+  # 关联编辑：此处 URL 原先残留占位符 <path_to_repo>，
+  # 导致每篇文章的 “Suggest Changes” 都指向一个 404 链接（实测生成
+  # https://github.com/%3cpath_to_repo%3e/... ）。已改为真实仓库地址。
   editPost:
-    URL: "https://github.com/<path_to_repo>/content"
-    Text: "Suggest Changes" # edit text
+    URL: "https://github.com/lonelysam3/lonelysam3.github.io/blob/main/content"
+    Text: "在 GitHub 上编辑" # edit text
     appendFilePath: true # to append file path to Edit link
 
   # for search

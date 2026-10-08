@@ -43,64 +43,37 @@
 {{- end }}
 
 {{- /* ---------------------------------------------------------------------
-   B. 首页顶部搜索框
+   B. 常驻顶部搜索框的脚本与索引
+   ---------------------------------------------------------------------
+   搜索框 markup 由 layouts/partials/header.html 渲染，所有页面都有，
+   因此 fastsearch 资源改为【全站加载】。索引 index.json 只在站点根目录
+   生成一处（见 hugo.yaml 的 outputs.home），故用 absURL 指向首页的
+   index.json，而不是相对路径 ./index.json —— 后者在文章页会解析成
+   文章目录下的 index.json，直接 404。
+
+   提示：如需关闭搜索，只要不加载本段脚本即可，搜索框会自动降级为
+   不响应输入的空框（可自行补 CSS 隐藏）。
    --------------------------------------------------------------------- */ -}}
-{{- if .IsHome -}}
-<link crossorigin="anonymous" rel="preload" as="fetch" href="./index.json">
-<style>
-    .home .header .nav {
-        gap: 16px;
-    }
-
-    .home .header .nav #searchbox.home-top-search {
-        flex: 0 1 120px;
-        max-width: 120px;
-        margin: 0 0 0 8px;
-    }
-
-    .home .header .nav #searchbox.home-top-search #searchInput {
-        width: 100%;
-        height: 48px;
-        padding: 0 12px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: var(--entry);
-        color: var(--primary);
-        font-size: 0.92rem;
-        transition: border-color 0.2s ease;
-    }
-
-    .home .header .nav #searchbox.home-top-search #searchInput::placeholder {
-        color: var(--secondary);
-    }
-
-    .home .header .nav #searchbox.home-top-search #searchInput:focus {
-        outline: 2px solid var(--primary);
-        outline-offset: 1px;
-        border-color: var(--secondary);
-    }
-
-    @media (max-width: 1024px) {
-        .home .header .nav #searchbox.home-top-search {
-            flex-basis: 120px;
-            max-width: 120px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .home .header .nav #searchbox.home-top-search {
-            display: none;
-        }
-    }
-</style>
-{{- $fastsearch := resources.Get "js/fastsearch.js" | js.Build (dict "params" (dict "fuseOpts" site.Params.fuseOpts)) | resources.Minify }}
+<link crossorigin="anonymous" rel="preload" as="fetch" href="{{ "index.json" | absURL }}">
+{{- $fastsearch := resources.Get "js/fastsearch.js" | js.Build (dict "params" (dict "fuseOpts" site.Params.fuseOpts)) }}
+{{- /* ---------------------------------------------------------------------
+   修补 fastsearch.js 的索引路径
+   ---------------------------------------------------------------------
+   主题原版里索引地址写死为相对路径 "../index.json"：
+     · 首页   /            → /index.json        ✓
+     · 文章页 /posts/xxx/   → /posts/index.json ✗ 404
+   这正是该搜索框原本只能用于首页的原因。既然现在要让它在所有页面常驻，
+   必须把路径改成站点根的绝对地址，否则文章页的搜索框形同摆设。
+   --------------------------------------------------------------------- */ -}}
+{{- $idxURL := "index.json" | absURL -}}
+{{- $patched := $fastsearch.Content | replaceRE `\.\./index\.json` $idxURL -}}
+{{- $fastsearch = $patched | resources.FromString "assets/js/fastsearch-patched.js" | resources.Minify -}}
 {{- $fusejs := resources.Get "js/fuse.basic.min.js" }}
 {{- $license_js := resources.Get "js/license.js" }}
 {{- if not site.Params.assets.disableFingerprinting }}
-{{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-home.js" | fingerprint }}
+{{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-global.js" | fingerprint }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}" integrity="{{ $search.Data.Integrity }}"></script>
 {{- else }}
-{{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-home.js" }}
+{{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-global.js" }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}"></script>
 {{- end }}
-{{- end -}}
