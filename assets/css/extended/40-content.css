@@ -1,0 +1,751 @@
+/* ==========================================================================
+   40-content.css — 文章列表与正文
+   --------------------------------------------------------------------------
+   涵盖：首页简介区、文章列表、文章头部、正文排版、
+         元信息、标签、上下篇导航、归档、分类/标签页、分页
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 首页简介区
+   -------------------------------------------------------------------------- */
+.home-info {
+    width: 100%;
+    max-width: var(--w-read);
+    margin-inline: auto;
+    margin-bottom: var(--s-10);
+    padding: var(--s-6);
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-xl);
+}
+
+.home-info .entry-header h1 {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.022em;
+    margin-bottom: var(--s-3);
+}
+
+.home-info .entry-content {
+    font-size: var(--fs-sm);
+    line-height: var(--lh-base);
+    color: var(--c-text-muted);
+    text-align: start;
+}
+
+.home-info .entry-content p {
+    margin: 0;
+}
+
+.home-info .entry-footer {
+    margin-top: var(--s-5);
+}
+
+/* 社交图标 */
+.social-icons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s-2);
+    color: var(--c-text-muted);
+    border-radius: var(--r-md);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease),
+        transform var(--dur-fast) var(--ease);
+}
+
+.social-icons a:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+    transform: translateY(-2px);
+}
+
+.social-icons a svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   2. 文章列表
+   --------------------------------------------------------------------------
+   采用「发丝分隔的连续列表」而非「每篇一张卡片」：同屏多篇时，
+   重复的卡片边框会形成大量视觉噪音，列表更适合阅读型博客。
+   -------------------------------------------------------------------------- */
+.post-entry {
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: var(--w-read);
+    margin-inline: auto;
+    padding: var(--s-5) 0;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--c-border);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.post-entry:last-of-type {
+    border-bottom: 1px solid var(--c-border);
+}
+
+/* 去掉旧层的左侧强调条与悬浮位移 */
+.post-entry::before {
+    content: none;
+}
+
+.post-entry:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 整卡点击热区（PaperMod 注入的覆盖链接），保持可聚焦 */
+.post-entry .entry-link:focus-visible {
+    outline: 2px solid var(--c-accent-ring);
+    outline-offset: 6px;
+    border-radius: var(--r-sm);
+}
+
+.post-entry .entry-header h2 {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-semi);
+    line-height: var(--lh-snug);
+    letter-spacing: -0.014em;
+    margin: 0 0 var(--s-2);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.post-entry:hover .entry-header h2 {
+    color: var(--c-accent);
+}
+
+.post-entry .entry-content {
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-base);
+    color: var(--c-text-muted);
+    text-align: start;
+    /* 摘要最多两行，保持列表节奏一致 */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+.post-entry .entry-footer {
+    margin-top: var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-faint);
+}
+
+/* 首页首篇：以轻底色区块突出，不再使用大卡片 */
+.first-entry {
+    display: block;
+    width: 100%;
+    max-width: var(--w-read);
+    min-height: 0;
+    margin-inline: auto;
+    margin-bottom: var(--s-4);
+    padding: var(--s-6);
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-xl);
+    box-shadow: none;
+}
+
+.first-entry .entry-header {
+    overflow: visible;
+    display: block;
+}
+
+.first-entry .entry-header h1 {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-snug);
+    letter-spacing: -0.018em;
+    margin: 0 0 var(--s-2);
+}
+
+.first-entry .entry-content {
+    -webkit-line-clamp: 3;
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--c-text-muted);
+}
+
+.first-entry .entry-footer {
+    margin-top: var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   3. 文章头部
+   -------------------------------------------------------------------------- */
+.post-header {
+    margin-bottom: var(--s-8);
+}
+
+.breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1);
+    margin-bottom: var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-faint);
+}
+
+.breadcrumbs a {
+    color: var(--c-text-faint);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.breadcrumbs a:hover {
+    color: var(--c-accent);
+}
+
+.post-title {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    letter-spacing: -0.026em;
+    color: var(--c-text);
+    margin: 0;
+}
+
+.post-description {
+    margin-top: var(--s-3);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-base);
+    color: var(--c-text-muted);
+}
+
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1) var(--s-2);
+    margin-top: var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+}
+
+.post-meta a {
+    color: var(--c-text-muted);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.post-meta a:hover {
+    color: var(--c-accent);
+}
+
+/* --------------------------------------------------------------------------
+   4. 正文排版
+   -------------------------------------------------------------------------- */
+.post-content {
+    font-size: var(--fs-base);
+    line-height: var(--lh-base);
+    color: var(--c-text-soft);
+}
+
+.post-content > p {
+    margin: 0 0 1.3em;
+}
+
+/* 首段略作强调，形成阅读进入感 */
+.post-content > p:first-of-type {
+    font-size: 1.05em;
+    color: var(--c-text);
+}
+
+/* ---- 标题层级 ----------------------------------------------------------
+   h2 用底线分节；h3 用左侧强调竖线区分层级，避免全站只有一种标题观感 */
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6 {
+    color: var(--c-text);
+    font-weight: var(--fw-semi);
+}
+
+.post-content h1 {
+    font-size: var(--fs-lg);
+    margin: 2em 0 0.8em;
+}
+
+.post-content h2 {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-snug);
+    margin: 2.2em 0 0.9em;
+    padding-bottom: 0.4em;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.post-content h3 {
+    font-size: var(--fs-md);
+    line-height: var(--lh-snug);
+    margin: 1.9em 0 0.7em;
+    padding-inline-start: var(--s-3);
+    border-inline-start: 3px solid var(--c-accent);
+}
+
+.post-content h4 {
+    font-size: 1.05em;
+    margin: 1.6em 0 0.6em;
+}
+
+.post-content h5,
+.post-content h6 {
+    font-size: 0.95em;
+    margin: 1.5em 0 0.5em;
+    color: var(--c-text-muted);
+}
+
+/* 正文首个元素不吃上边距（主题会给 h1 加 40px，导致顶部出现断层） */
+.post-content > :first-child {
+    margin-top: 0;
+}
+
+/* 标题锚点：hover 时才提示 */
+.post-content .anchor {
+    margin-inline-start: var(--s-2);
+    color: var(--c-text-faint);
+    font-weight: var(--fw-normal);
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease);
+}
+
+.post-content h1:hover .anchor,
+.post-content h2:hover .anchor,
+.post-content h3:hover .anchor,
+.post-content h4:hover .anchor,
+.post-content h5:hover .anchor,
+.post-content h6:hover .anchor,
+.post-content .anchor:focus-visible {
+    opacity: 0.5;
+}
+
+/* ---- 行内元素 ---- */
+.post-content a:not(.anchor) {
+    color: var(--c-accent);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--c-accent) 40%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition:
+        color var(--dur-fast) var(--ease),
+        text-decoration-color var(--dur-fast) var(--ease);
+}
+
+.post-content a:not(.anchor):hover {
+    color: var(--c-accent-hover);
+    text-decoration-color: currentColor;
+}
+
+/* 主题用 box-shadow 伪装下划线，会和真正的 text-decoration 叠成双层 */
+.post-content a {
+    box-shadow: none;
+}
+
+.post-content strong {
+    font-weight: var(--fw-semi);
+    color: var(--c-text);
+}
+
+.post-content mark {
+    background: var(--c-accent-soft);
+    color: var(--c-accent);
+    padding: 0 0.2em;
+    border-radius: var(--r-sm);
+}
+
+.post-content del {
+    color: var(--c-text-faint);
+}
+
+/* ---- 列表 ---- */
+.post-content ul,
+.post-content ol {
+    margin: 0 0 1.3em;
+    padding-inline-start: 1.5em;
+}
+
+.post-content li {
+    margin-bottom: 0.45em;
+}
+
+.post-content li::marker {
+    color: var(--c-accent);
+}
+
+.post-content li > p:last-child {
+    margin-bottom: 0;
+}
+
+/* ---- 引用 ---- */
+.post-content blockquote {
+    margin: 1.8em 0;
+    padding: var(--s-4) var(--s-5);
+    background: var(--c-surface-sunken);
+    border: none;
+    border-inline-start: 3px solid var(--c-accent);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    color: var(--c-text-muted);
+}
+
+.post-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* ---- 分隔线 ---- */
+.post-content hr {
+    height: 1px;
+    margin: 2.6em 0;
+    background: var(--c-border);
+    border: 0;
+}
+
+/* ---- 表格 ---- */
+.post-content table,
+.md-content table {
+    display: block;
+    width: 100%;
+    margin: 1.6em 0;
+    overflow-x: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    font-size: 0.94em;
+}
+
+.post-content table th,
+.post-content table td {
+    padding: 0.6em 0.9em;
+    border-bottom: 1px solid var(--c-border);
+    text-align: start;
+}
+
+.post-content table thead th {
+    background: var(--c-surface-sunken);
+    font-weight: var(--fw-semi);
+    color: var(--c-text);
+    white-space: nowrap;
+}
+
+.post-content table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.post-content table tbody tr:hover {
+    background: var(--c-accent-soft);
+}
+
+/* ---- 图片 ---- */
+.post-content img {
+    margin-inline: auto;
+    margin-block: 1.6em;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+}
+
+/* ---- 键盘按键 ---- */
+.post-content kbd {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    padding: 0.12em 0.4em;
+    color: var(--c-text);
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border-strong);
+    border-bottom-width: 2px;
+    border-radius: var(--r-sm);
+}
+
+/* --------------------------------------------------------------------------
+   5. 标签
+   -------------------------------------------------------------------------- */
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.post-tags a,
+.terms-tags a {
+    display: inline-block;
+    padding: 0.15em 0.75em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+    background: var(--c-surface-muted);
+    border: none;
+    border-radius: var(--r-full);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.post-tags a:hover,
+.terms-tags a:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+/* 分类/标签索引页：数量徽标 */
+.terms-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.terms-tags a {
+    padding: 0.4em 1em;
+    font-size: var(--fs-sm);
+}
+
+/* --------------------------------------------------------------------------
+   6. 文章页脚（标签 + 上下篇 + 分享）
+   -------------------------------------------------------------------------- */
+.post-footer {
+    margin-top: var(--s-10);
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--c-border);
+}
+
+.post-footer > * {
+    margin-bottom: var(--s-4);
+}
+
+.paginav {
+    display: flex;
+    gap: var(--s-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.paginav a {
+    display: block;
+    width: 50%;
+    padding: var(--s-4);
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    transition:
+        border-color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.paginav a:hover {
+    background: var(--c-accent-soft);
+    border-color: var(--c-accent);
+}
+
+.paginav .title {
+    display: block;
+    margin-bottom: var(--s-1);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-text-faint);
+}
+
+.paginav .prev,
+.paginav .next {
+    font-size: var(--fs-sm);
+    color: var(--c-text);
+    line-height: var(--lh-snug);
+}
+
+.paginav .next {
+    text-align: end;
+}
+
+/* 分享按钮 */
+.share-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-2);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    background: none;
+    border: none;
+}
+
+.share-buttons a {
+    display: inline-flex;
+    padding: var(--s-2);
+    color: var(--c-text-muted);
+    border-radius: var(--r-md);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.share-buttons a:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+.share-buttons svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+/* --------------------------------------------------------------------------
+   7. 分页
+   -------------------------------------------------------------------------- */
+.pagination {
+    display: flex;
+    gap: var(--s-3);
+    width: 100%;
+    max-width: var(--w-read);
+    margin: var(--s-8) auto 0;
+}
+
+.pagination a {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-on-accent);
+    background: var(--c-accent);
+    border-radius: var(--r-full);
+    transition:
+        background-color var(--dur-fast) var(--ease),
+        transform var(--dur-fast) var(--ease);
+}
+
+.pagination a:hover {
+    background: var(--c-accent-hover);
+    transform: translateY(-1px);
+}
+
+.pagination .next {
+    margin-inline-start: auto;
+}
+
+/* --------------------------------------------------------------------------
+   8. 归档页
+   --------------------------------------------------------------------------
+   [重要] 不要给 .archive-year 设置 display:flex。
+   其子元素不是「年份 + 计数」，而是 <h2>年份</h2> 加上每一个 .archive-month
+   月份块。一旦设为 flex，所有月份会被横排挤到一行（实测：年份下方单独出现
+   一个数字）。主题原本是普通块级，这里只做字体与颜色修饰。
+
+   同理 .archive-month 的 display 由主题控制（宽屏为横向 flex、窄屏改纵向），
+   保持不动即可。
+   -------------------------------------------------------------------------- */
+.archive-posts {
+    width: 100%;
+    max-width: var(--w-read);
+    margin-inline: auto;
+    font-size: var(--fs-sm);
+}
+
+.archive-year-header,
+.archive-month-header {
+    font-family: var(--font-mono);
+}
+
+.archive-year-header {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-semi);
+    color: var(--c-accent);
+}
+
+.archive-month-header {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-normal);
+    color: var(--c-text-faint);
+}
+
+.archive-count {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-faint);
+}
+
+.archive-entry {
+    display: block;
+    padding: var(--s-3) var(--s-4);
+    border-radius: var(--r-md);
+    transition: background-color var(--dur-fast) var(--ease);
+}
+
+.archive-entry:hover {
+    background: var(--c-accent-soft);
+}
+
+.archive-entry-title {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--c-text);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.archive-entry:hover .archive-entry-title {
+    color: var(--c-accent);
+}
+
+.archive-meta {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   9. 讨论区（giscus 容器）
+   -------------------------------------------------------------------------- */
+#tw-comment,
+.giscus {
+    width: 100%;
+    max-width: var(--w-read);
+    margin: var(--s-10) auto 0;
+}
+
+/* --------------------------------------------------------------------------
+   10. 宽屏增强
+   -------------------------------------------------------------------------- */
+@media (min-width: 48rem) {
+    .post-entry {
+        padding: var(--s-6) 0;
+    }
+
+    .first-entry,
+    .home-info {
+        padding: var(--s-8);
+    }
+
+    .post-content blockquote {
+        padding: var(--s-5) var(--s-6);
+    }
+}

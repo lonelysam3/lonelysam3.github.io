@@ -1,0 +1,221 @@
+/* ==========================================================================
+   20-layout.css — 页面骨架（容器、间距、页脚）
+   --------------------------------------------------------------------------
+   职责边界：本层只管「页面级」的骨架与留白，不定义任何组件外观
+   （导航在 30-header.css，正文与列表在 40-content.css，代码在 50-code.css）。
+
+   移动优先：默认样式即手机布局，一律用 min-width 向上增强。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 容器
+   --------------------------------------------------------------------------
+   PaperMod 把 .main 的 max-width 直接绑定阅读列宽度，导致大屏上正文只有
+   固定窄列、两侧留出大片死区。这里把「容器」与「阅读列」解耦：
+     · .main / .footer  → 宽容器，负责居中与横向留白
+     · .post-content    → 阅读列，由 40-content.css 限制宽度
+   -------------------------------------------------------------------------- */
+.main {
+    display: block;
+    width: 100%;
+    max-width: calc(var(--w-wide) + var(--pad-x) * 2);
+    margin-inline: auto;
+    padding: var(--s-6) var(--pad-x) var(--s-10);
+    /* 内容不足一屏时页脚仍贴底 */
+    min-height: calc(100vh - var(--h-header) - var(--footer-height));
+}
+
+.footer {
+    width: 100%;
+    max-width: calc(var(--w-wide) + var(--pad-x) * 2);
+    margin-inline: auto;
+    padding: var(--s-6) var(--pad-x);
+    border-top: 1px solid var(--c-border);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+}
+
+.footer a {
+    color: var(--c-text-muted);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.footer a:hover {
+    color: var(--c-accent);
+}
+
+@media (min-width: 48rem) {
+    .main {
+        padding-block: var(--s-10) var(--s-16);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   2. 阅读列
+   --------------------------------------------------------------------------
+   正文、文章头部、页脚工具区统一限制在舒适阅读宽度并居中。
+   704px 宽度配合 17px 字号，一行约 40–45 个汉字，是长文阅读的舒适区间。
+   -------------------------------------------------------------------------- */
+.post-content,
+.post-header,
+.post-footer {
+    width: 100%;
+    max-width: var(--w-read);
+    margin-inline: auto;
+}
+
+/* 列表页与文字型页面同样居中 */
+.list-container,
+.page-header {
+    width: 100%;
+    max-width: var(--w-read);
+    margin-inline: auto;
+}
+
+/* 文章主体：容器居中，内部各区块各自限制阅读宽度 */
+.post-single {
+    display: block;
+    width: 100%;
+    margin-inline: auto;
+}
+
+/* --------------------------------------------------------------------------
+   3. 页面标题区
+   -------------------------------------------------------------------------- */
+.page-header {
+    margin-bottom: var(--s-8);
+}
+
+.page-header h1 {
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.024em;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+}
+
+/* RSS 图标跟随标题基线 */
+.page-header h1 svg {
+    height: 0.7em;
+    width: auto;
+    color: var(--c-text-faint);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.page-header h1 a:hover svg {
+    color: var(--c-accent);
+}
+
+/* --------------------------------------------------------------------------
+   4. 文章目录（仅在文章启用 ShowToc 时渲染）
+   --------------------------------------------------------------------------
+   本站 hugo.yaml 中 showtoc 为 false，正常情况下不会出现该元素；
+   这里给出基础样式，避免将来启用后出现无样式裸列表。
+   若要在宽屏做右侧固定大纲，建议把 .post-single 改为两列 grid，
+   让目录参与文档流而非绝对定位，这样不易与正文重叠。
+   -------------------------------------------------------------------------- */
+.toc {
+    width: 100%;
+    max-width: var(--w-read);
+    margin: 0 auto var(--s-6);
+    padding: var(--s-4) var(--s-5);
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    font-size: var(--fs-sm);
+}
+
+.toc details summary {
+    cursor: pointer;
+    font-weight: var(--fw-medium);
+    color: var(--c-text);
+    user-select: none;
+}
+
+.toc .inner {
+    margin: var(--s-2) 0 0;
+    padding-inline-start: var(--s-4);
+}
+
+.toc li ul {
+    margin-inline-start: var(--s-3);
+}
+
+.toc a {
+    color: var(--c-text-muted);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.toc a:hover,
+.toc a.active {
+    color: var(--c-accent);
+}
+
+/* --------------------------------------------------------------------------
+   5. 回到顶部按钮（主题自带 .top-link）
+   -------------------------------------------------------------------------- */
+.top-link {
+    position: fixed;
+    right: var(--s-5);
+    bottom: var(--s-5);
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--r-full);
+    background: var(--c-surface-raised);
+    color: var(--c-text-muted);
+    border: 1px solid var(--c-border);
+    box-shadow: var(--sh-md);
+    font-size: 1rem;
+    transition:
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease),
+        transform var(--dur-fast) var(--ease);
+}
+
+.top-link:hover {
+    color: var(--c-accent);
+    border-color: var(--c-accent);
+    transform: translateY(-2px);
+}
+
+.top-link svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+@media (min-width: 64rem) {
+    .top-link {
+        right: var(--s-8);
+        bottom: var(--s-8);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   6. 打印：去掉导航与装饰，只留正文
+   -------------------------------------------------------------------------- */
+@media print {
+    .header,
+    .footer,
+    .top-link,
+    #searchbox,
+    .post-footer,
+    .paginav {
+        display: none !important;
+    }
+
+    .main {
+        max-width: none;
+        padding: 0;
+    }
+
+    body {
+        background: #fff;
+        color: #000;
+    }
+}

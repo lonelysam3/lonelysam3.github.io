@@ -63,9 +63,13 @@
      · 首页   /            → /index.json        ✓
      · 文章页 /posts/xxx/   → /posts/index.json ✗ 404
    这正是该搜索框原本只能用于首页的原因。既然现在要让它在所有页面常驻，
-   必须把路径改成站点根的绝对地址，否则文章页的搜索框形同摆设。
+   必须把路径改掉，否则文章页的搜索框形同摆设。
+
+   这里用「根相对路径」而不是绝对 URL：绝对 URL 会把索引地址与当前域名绑定，
+   换域名、或本地用其他端口预览时都会跨域取不到索引（实测搜索直接返回 0 条）。
+   根相对路径在任何域名下都指向本站根目录。
    --------------------------------------------------------------------- */ -}}
-{{- $idxURL := "index.json" | absURL -}}
+{{- $idxURL := "index.json" | relURL -}}
 {{- $patched := $fastsearch.Content | replaceRE `\.\./index\.json` $idxURL -}}
 {{- $fastsearch = $patched | resources.FromString "assets/js/fastsearch-patched.js" | resources.Minify -}}
 {{- $fusejs := resources.Get "js/fuse.basic.min.js" }}

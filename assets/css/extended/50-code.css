@@ -1,0 +1,342 @@
+/* ==========================================================================
+   50-code.css — 代码块与语法高亮
+   --------------------------------------------------------------------------
+   Chroma 输出结构（已从产物取证）：
+     <div class="highlight"><pre tabindex="0" class="chroma">
+       <code class="language-php" data-lang="php">
+         <span class="line"><span class="ln">1</span><span class="cl">token…</span></span>
+
+   主题自带 Catppuccin Macchiato 配色，与本设计系统的冷色调脱节。
+   这里重映射为自建调色板，并区分明暗两套：
+     · 暗色：深底 + 冷色高亮
+     · 亮色：浅底 + 可读性优先的配色
+   若只写一套深色令牌，亮色模式下代码块会与浅色页面严重失衡。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 行内代码
+   -------------------------------------------------------------------------- */
+.post-content :not(pre) > code,
+code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    padding: 0.12em 0.42em;
+    color: var(--c-code-inline-fg);
+    background: var(--c-code-inline-bg);
+    border: none;
+    border-radius: var(--r-sm);
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+}
+
+/* 链接内的行内代码保持自身配色，不跟随链接色 */
+.post-content a:not(.anchor) code {
+    color: var(--c-code-inline-fg);
+    text-decoration: none;
+    box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. 代码块容器
+   -------------------------------------------------------------------------- */
+.highlight {
+    position: relative;
+    margin: 1.8em 0;
+    background: var(--c-code-bg);
+    border: 1px solid var(--c-border);
+    border-inline-start: 3px solid var(--c-accent);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: none;
+}
+
+/* 去掉旧层的顶部渐变装饰 */
+.highlight::after {
+    content: none;
+}
+
+.highlight pre,
+pre.chroma {
+    margin: 0;
+    padding: var(--s-5) var(--s-4) var(--s-4);
+    font-size: 0.875rem;
+    line-height: 1.72;
+    letter-spacing: 0;
+    tab-size: 4;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 未指定语言的裸围栏代码块 */
+pre:not(.chroma) {
+    margin: 1.8em 0;
+    padding: var(--s-5) var(--s-4);
+    font-size: 0.875rem;
+    line-height: 1.72;
+    background: var(--c-code-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    overflow-x: auto;
+}
+
+/* 代码块内的 code 不应再套一层行内样式 */
+.highlight code,
+pre.chroma code,
+.highlight pre code,
+pre:not(.chroma) code {
+    padding: 0;
+    font-size: inherit;
+    color: var(--c-code-text);
+    background: none;
+    border: none;
+    border-radius: 0;
+    white-space: inherit;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
+/* --------------------------------------------------------------------------
+   3. 语言角标（取自 code[data-lang]，纯 CSS，无 JS 依赖）
+   -------------------------------------------------------------------------- */
+.highlight > pre > code[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 0;
+    inset-inline-start: var(--s-4);
+    padding: 1px 0.6em 2px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semi);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.5;
+    color: var(--c-accent);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-top: none;
+    border-radius: 0 0 var(--r-sm) var(--r-sm);
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+}
+
+/* 角标占用的首行空间 */
+.highlight > pre > code[data-lang] > .line:first-child {
+    padding-top: 1.2em;
+}
+
+/* --------------------------------------------------------------------------
+   4. 行号
+   -------------------------------------------------------------------------- */
+.chroma .ln,
+.chroma .lnt {
+    margin-inline-end: 1em;
+    padding-inline-end: 0.8em;
+    color: var(--c-text-faint);
+    border-inline-end: 1px solid var(--c-border);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.chroma .line.hl,
+.chroma .hl {
+    background: var(--c-accent-soft);
+    border-radius: 2px;
+}
+
+.chroma .lntable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* --------------------------------------------------------------------------
+   5. 复制按钮（主题注入的 .copy-code）
+   -------------------------------------------------------------------------- */
+.copy-code {
+    position: absolute;
+    top: var(--s-2);
+    inset-inline-end: var(--s-2);
+    display: block;
+    padding: 0.1em 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-full);
+    opacity: 0;
+    cursor: pointer;
+    z-index: 3;
+    transition:
+        opacity var(--dur-fast) var(--ease),
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
+}
+
+.highlight:hover .copy-code,
+.highlight:focus-within .copy-code,
+pre:hover .copy-code {
+    opacity: 1;
+}
+
+.copy-code:hover,
+.copy-code:focus-visible {
+    color: var(--c-accent);
+    border-color: var(--c-accent);
+    outline: none;
+}
+
+/* 触摸设备无法 hover，按钮常驻 */
+@media (hover: none) {
+    .copy-code {
+        opacity: 1;
+    }
+}
+
+/* ==========================================================================
+   6. 语法高亮 · 暗色（深色底）
+   ========================================================================== */
+:root[data-theme="dark"] .chroma,
+:root[data-theme="dark"] .bg {
+    color: var(--c-code-text);
+    background-color: transparent;
+}
+
+/* 注释 · 文档注释 */
+:root[data-theme="dark"] .chroma :is(.c, .ch, .cm, .c1, .cs, .cd, .cp, .cpf) {
+    color: #7b8ba3;
+    font-style: italic;
+}
+
+/* 关键字 · 控制流 · 类型 */
+:root[data-theme="dark"] .chroma :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .ow) {
+    color: #7ebef6;
+}
+
+/* 字符串 */
+:root[data-theme="dark"] .chroma :is(.s, .sa, .sb, .sc, .s1, .s2, .sh, .si, .sx, .ss, .dl) {
+    color: #8bd89e;
+}
+
+/* 字符串转义 · 正则 */
+:root[data-theme="dark"] .chroma :is(.se, .sr) {
+    color: #5dd6d0;
+}
+
+/* 数字 · 常量 */
+:root[data-theme="dark"] .chroma :is(.m, .mb, .mf, .mh, .mi, .mo, .no) {
+    color: #f0b476;
+}
+
+/* 函数 · 类 · 命名空间 */
+:root[data-theme="dark"] .chroma :is(.nf, .fm, .nc, .nn) {
+    color: #c4a8fa;
+}
+
+/* 属性 · 变量 · 内置名 */
+:root[data-theme="dark"] .chroma :is(.na, .nb, .bp, .nv, .vc, .vg, .vi, .vm, .nl) {
+    color: #c9d4e2;
+}
+
+/* 标签 · 装饰器 */
+:root[data-theme="dark"] .chroma :is(.nt, .nd, .ni, .ne) {
+    color: #5dd6d0;
+}
+
+/* 操作符 · 标点 */
+:root[data-theme="dark"] .chroma :is(.o, .p) {
+    color: #96a4b7;
+}
+
+/* 错误 · diff 增删 */
+:root[data-theme="dark"] .chroma .err {
+    color: #f88f8f;
+    background: transparent;
+}
+
+:root[data-theme="dark"] .chroma .gd {
+    color: #f88f8f;
+}
+
+:root[data-theme="dark"] .chroma .gi {
+    color: #8bd89e;
+}
+
+/* ==========================================================================
+   7. 语法高亮 · 亮色（浅色底）
+   ========================================================================== */
+:root[data-theme="light"] .chroma,
+:root[data-theme="light"] .bg {
+    color: var(--c-code-text);
+    background-color: transparent;
+}
+
+:root[data-theme="light"] .chroma :is(.c, .ch, .cm, .c1, .cs, .cd, .cp, .cpf) {
+    color: #8290a2;
+    font-style: italic;
+}
+
+:root[data-theme="light"] .chroma :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .ow) {
+    color: #145c9e;
+}
+
+:root[data-theme="light"] .chroma :is(.s, .sa, .sb, .sc, .s1, .s2, .sh, .si, .sx, .ss, .dl) {
+    color: #18744e;
+}
+
+:root[data-theme="light"] .chroma :is(.se, .sr) {
+    color: #0a7683;
+}
+
+:root[data-theme="light"] .chroma :is(.m, .mb, .mf, .mh, .mi, .mo, .no) {
+    color: #b06200;
+}
+
+:root[data-theme="light"] .chroma :is(.nf, .fm, .nc, .nn) {
+    color: #6e3cbe;
+}
+
+:root[data-theme="light"] .chroma :is(.na, .nb, .bp, .nv, .vc, .vg, .vi, .vm, .nl) {
+    color: #283444;
+}
+
+:root[data-theme="light"] .chroma :is(.nt, .nd, .ni, .ne) {
+    color: #0a7683;
+}
+
+:root[data-theme="light"] .chroma :is(.o, .p) {
+    color: #5a6676;
+}
+
+:root[data-theme="light"] .chroma .err {
+    color: #b42828;
+    background: transparent;
+}
+
+:root[data-theme="light"] .chroma .gd {
+    color: #b42828;
+}
+
+:root[data-theme="light"] .chroma .gi {
+    color: #18744e;
+}
+
+/* --------------------------------------------------------------------------
+   8. 窄屏：收紧内边距与字号，保证长行仍可读
+   -------------------------------------------------------------------------- */
+@media (max-width: 47.99rem) {
+    .highlight pre,
+    pre.chroma,
+    pre:not(.chroma) {
+        padding: var(--s-4) var(--s-3) var(--s-3);
+        font-size: 0.8125rem;
+    }
+
+    .highlight > pre > code[data-lang]::before {
+        inset-inline-start: var(--s-3);
+    }
+}
