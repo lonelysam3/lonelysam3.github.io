@@ -5,17 +5,17 @@ url: "/about/"
 summary: about
 ---
 
-LonelySam3，CQUPT大一废柴一个，正试图在内卷的哀嚎和恐怖的就业压力的夹缝中生存
+LonelySam3，CQUPT 网络空间安全专业大二在读。写着玩，也顺便练手。
 
-来自四川省成都市，绝对不是gay（成都能见到gay的地方只有男科肛肠医院，别被网络玩梗的带跑偏了）
+成都人。
 
-网络空间安全专业，专业知识半生不熟，有待打磨
+方向偏 Web 安全与渗透测试，水平一般，还在补基础。
 
-以下说几句心里话：
 
-劳累的高中成为过去式后，突然变得回味无穷
 
-如果你是高中生，在摸鱼时看到我的博客，那么请记住：
+
+
+给还在高中的朋友几句话：
 
 任何跟你说到了大学就轻松的人，一定是不想让你好的人
 
@@ -23,11 +23,12 @@ LonelySam3，CQUPT大一废柴一个，正试图在内卷的哀嚎和恐怖的�
 
 永远不要轻视水课和水课作业，它可能会让你某一天晚上疯狂开夜车补作业来防止挂科
 
-如果你是和我一样的大一废柴，那么希望你能多支持我的博客，在大学四年有个支撑
+这个博客记录我的学习笔记和一些想法，更新随缘。
 
-最后贴一张我高一的糖丸丑照
+最后贴一张高一时的照片。
 
-<img src='data:img/jpg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcU
+<img class="about-photo"
+     src="data:img/jpg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcU
 FhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgo
 KCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAMgAqYDASIA
 AhEBAxEB/8QAHAAAAQUBAQEAAAAAAAAAAAAABAECAwUGAAcI/8QASxAAAQMDAwIEBAQEBAUCBAIL
@@ -1181,7 +1182,8 @@ NCS7DMaucJzadmQcEH6lGwgkpGyDIc5rvUFSNj0sAySR3Kc2m8OR7g9xDuQU0wETNcHOaB27FFo0
 UApcKdkes7J7YN91OxoM0KVjS7ZFNpt91PDTgFTacUdXC5uRwfVBNgLnB7pX5HpwVr56Js8ZwPMO
 6zs9v8GoxhwDjvhLY0jpWujwNTjudyrikc4gbqKOAABF0zdJ4CjKnItKZpc3zAFTyQuMf5bQTncH
 0QsUMktRE6N7Wsb8wPKtI4qphOHxSR9sjBCi1SOKnaxoDW6VOyIgKaFkr3EPjAA4IPKc4mONztDg
-G85GFnaosbNtwuT2zxsY1zzpDuMhcgP/2Q=='/>
+G85GFnaosbNtwuT2zxsY1zzpDuMhcgP/2Q=="
+     alt="高一时的照片" loading="lazy" decoding="async">
 
 （各位都不是小孩子了吧）
 

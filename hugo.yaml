@@ -74,7 +74,10 @@ params:
   ShowReadingTime: true
   # 是都启用分享按钮
   ShowShareButtons: true
-  ShowPostNavLinks: true
+  # 文章底部的上/下篇：关闭。右侧边栏已有一份（见 layouts/partials/sidebar.html
+  # 的「上下篇」区块），两处并存会让读者在同一页看到重复的一对链接。
+  # 侧栏那份是粘性的，长文任意位置都能点到，故保留侧栏、去掉页脚这份。
+  ShowPostNavLinks: false
   # 是否启用面包屑导航
   ShowBreadCrumbs: true
   # 是否显示代码复制按钮
