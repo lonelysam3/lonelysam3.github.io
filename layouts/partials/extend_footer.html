@@ -301,13 +301,15 @@
         var palette = null, paletteInput = null, paletteList = null;
         var paletteItems = [], paletteIndex = -1, paletteData = null;
 
-        /* 静态页面不在 index.json 里，手动补上 */
+        /* 静态页面不在 index.json 里，需要单独补。
+           这里【从 Hugo 的菜单配置读取】，而不是写死一份数组——
+           写死过一次的后果是：把导航里的「分类」「标签」合并为「浏览」后，
+           命令面板里仍然是旧的分类/标签，且「浏览」「统计」缺失。
+           配置与硬编码两份清单必然失同步，所以直接以配置为唯一来源。 */
         var staticPages = [
-            { title: '首页', href: '/' },
-            { title: '归档', href: '/archives/' },
-            { title: '分类', href: '/categories/' },
-            { title: '标签', href: '/tags/' },
-            { title: '关于', href: '/about/' }
+            {{- range site.Menus.main }}
+            { title: {{ .Name | plainify | jsonify | safeJS }}, href: {{ .URL | relLangURL | jsonify | safeJS }} },
+            {{- end }}
         ];
 
         var loadPaletteData = function () {
