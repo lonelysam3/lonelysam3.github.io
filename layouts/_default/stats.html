@@ -91,23 +91,9 @@
     <noscript><p>热力图需要 JavaScript 才能绘制。</p></noscript>
   </div>
 
-  {{- /* ---- 标签排行 ---- */ -}}
-  {{- with site.Taxonomies.tags }}
-  <h2>标签使用排行</h2>
-  {{- $max := 0 }}
-  {{- range .ByCount }}{{ if gt .Count $max }}{{ $max = .Count }}{{ end }}{{ end }}
-  <ul class="bar-list">
-    {{- range .ByCount }}
-    <li>
-      <a href="{{ .Page.RelPermalink }}"><span class="bar-name">{{ .Page.LinkTitle }}</span></a>
-      <span class="bar-track" aria-hidden="true">
-        <span class="bar-fill" style="width: {{ div (mul .Count 100) $max }}%"></span>
-      </span>
-      <span class="bar-num">{{ .Count }}</span>
-    </li>
-    {{- end }}
-  </ul>
-  {{- end }}
+  {{- /* 标签排行已移除：与「浏览」页的标签区块功能重叠，且它的每条都是
+         /tags/ 链接，会让「分类/标签已整合」这件事在统计页留下例外。
+         「历年产出」保留——它只按年份聚合，不涉及 taxonomy。 */ -}}
 
   {{- /* ---- 历年产出 ---- */ -}}
   {{- if $byYear }}
