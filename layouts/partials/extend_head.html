@@ -74,8 +74,12 @@
    延后注入不会有事件已过期的风险。
    若浏览器不支持 requestIdleCallback（Safari 早期版本），退化为 1.5s 定时。 */
 (function () {
-  var src = {{ $search.RelPermalink | jsonify }};
-  var integrity = {{ $search.Data.Integrity | jsonify }};
+  /* 注意：Hugo 会对 .js 上下文里的模板输出自动做 JS 字符串转义，而 jsonify
+     本身已带引号，两层叠加会得到 "\"/assets/....js\""（引号被反斜杠转义），
+     浏览器按带引号的路径请求 → 500 → 脚本永不加载 → 搜索框毫无反应。
+     因此必须用 safeJS 声明「这段已经是合法 JS，不要再转义」。 */
+  var src = {{ $search.RelPermalink | jsonify | safeJS }};
+  var integrity = {{ $search.Data.Integrity | jsonify | safeJS }};
   var loaded = false;
   function inject() {
     if (loaded) { return; }
@@ -85,6 +89,14 @@
     s.crossOrigin = 'anonymous';
     s.src = src;
     if (integrity) { s.integrity = integrity; }
+    /* 加载失败时不要静默：搜索框看起来正常却毫无反应，最难排查。
+       这里在控制台给出明确线索，并把失败原因记到元素上便于排查。 */
+    s.onerror = function () {
+      if (window.console && console.warn) {
+        console.warn('[search] 搜索脚本加载失败，搜索功能不可用。src=' + src +
+                     (integrity ? '（若为 integrity 校验失败，说明资源与指纹不匹配）' : ''));
+      }
+    };
     document.head.appendChild(s);
   }
   /* 读者一旦聚焦搜索框，立刻加载，不等 idle */

@@ -206,8 +206,24 @@ html.js .nav.is-scrolled {
 
 .nav #searchbox.top-search #searchResults li a {
     position: static;
-    display: block;
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
     color: inherit;
+}
+
+/* 标题占满剩余宽度并允许省略，分类标签固定在右侧。
+   主题原版靠 `标题&nbsp;»` 里的 » 把行撑开，改用 flex 后不再需要那个符号。 */
+.nav #searchbox.top-search #searchResults li a .sr-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav #searchbox.top-search #searchResults li a .sr-cat {
+    flex: 0 0 auto;
 }
 
 .nav #searchbox.top-search #searchResults li:hover,

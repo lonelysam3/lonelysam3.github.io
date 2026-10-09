@@ -887,15 +887,18 @@ body.palette-open {
     border-radius: var(--r-xs);
 }
 
-/* 搜索结果里的分类标签 */
+/* 搜索结果里的分类标签。
+   间距交给 30-header.css 里 a 的 gap，这里不再重复加 margin-inline-start，
+   否则 flex 的 gap 与 margin 会叠加成两倍间距。 */
 .nav #searchbox.top-search #searchResults .sr-cat {
-    margin-inline-start: var(--s-2);
     padding: 0.05em 0.5em;
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
+    font-weight: var(--fw-normal);
     color: var(--c-text-faint);
     background: var(--c-surface-muted);
     border-radius: var(--r-full);
+    white-space: nowrap;
 }
 
 /* ==========================================================================
