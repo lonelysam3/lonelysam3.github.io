@@ -1,0 +1,53 @@
+{{- /* ==========================================================================
+   index.xml — RSS 全文输出（E4，覆盖主题 rss.xml）
+   --------------------------------------------------------------------------
+   主题默认只输出 .Summary（摘要），订阅者点进来才能读全文。
+   本版改为输出 .Content 全文，让 RSS 阅读器可以直接读完——这是技术博客
+   RSS 的通行做法，对读者更友好。
+
+   要点：
+     · 用 .Content 而非 .Summary，但仍是转义后的 HTML（RSS 规范要求
+       内容实体转义，由模板引擎自动处理）。
+     · 补上 <content:encoded> 命名空间，部分阅读器只认它。
+     · 保留 <description> 作为摘要，供只读摘要的客户端使用。
+     · 相对链接改为绝对地址：RSS 在站外阅读，相对路径会失效。
+   ========================================================================== */ -}}
+{{- printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>{{ if eq .Title site.Title }}{{ site.Title }}{{ else }}{{ with .Title }}{{ . }} | {{ end }}{{ site.Title }}{{ end }}</title>
+    <link>{{ .Permalink }}</link>
+    <description>Recent content {{ if ne .Title site.Title }}{{ with .Title }}in {{ . }} {{ end }}{{ end }}on {{ site.Title }}</description>
+    <generator>Hugo {{ hugo.Version }}</generator>
+    <language>{{ site.Language.LanguageCode | default site.Language.Lang }}</language>
+    {{ with site.Copyright }}<copyright>{{ . | plainify }}</copyright>{{ end }}
+    {{ if not .Date.IsZero }}<lastBuildDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</lastBuildDate>{{ end }}
+    {{- with .OutputFormats.Get "RSS" }}
+    {{ printf "<atom:link href=%q rel=\"self\" type=%q />" .Permalink .MediaType | safeHTML }}
+    {{- end }}
+    {{- range .Pages }}
+    {{- if and (ne .Kind "section") (ne .Kind "taxonomy") (ne .Kind "term") }}
+    <item>
+      <title>{{ .Title }}</title>
+      <link>{{ .Permalink }}</link>
+      <pubDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</pubDate>
+      <guid isPermaLink="true">{{ .Permalink }}</guid>
+      {{- with .Params.categories }}
+      {{- range . }}<category>{{ . }}</category>{{ end }}
+      {{- end }}
+      {{- with .Params.tags }}
+      {{- range . }}<category>{{ . }}</category>{{ end }}
+      {{- end }}
+      <description>{{ with .Description }}{{ . }}{{ else }}{{ .Summary | plainify }}{{ end }}</description>
+      {{- /* 全文输出。
+             踩过的坑：直接写 <![CDATA[ ... ]]> 会被 Hugo 的 XML 输出转义成
+             &lt;![CDATA[ ... ]]]&gt;，阅读器会把整段当纯文本显示。
+             正确做法是用 safeHTML 让 CDATA 标记原样输出。
+             正文里的相对链接同时补成绝对地址，否则站外阅读时全部失效。 */ -}}
+      {{- $abs := replaceRE `(href|src)="/([^"]*)"` (printf `$1="%s/$2"` (strings.TrimSuffix "/" site.BaseURL)) .Content }}
+      <content:encoded>{{ printf "<![CDATA[%s]]>" $abs | safeHTML }}</content:encoded>
+    </item>
+    {{- end }}
+    {{- end }}
+  </channel>
+</rss>

@@ -130,7 +130,16 @@ if (sInput) {
                 let resultSet = ''; // our results bucket
 
                 for (let item in results) {
-                    resultSet += `<li><a href="${results[item].item.permalink}" aria-label="${results[item].item.title}">${results[item].item.title}&nbsp;»</a></li>`
+                    const it = results[item].item;
+                    const hit = results[item].matches;
+                    // 标题按 Fuse 返回的匹配区间高亮；无匹配信息时原样输出
+                    const titleHtml = highlightField(it.title, hit, 'title');
+                    const cat = (it.categories && it.categories.length) ? it.categories[0] : '';
+                    resultSet += '<li>' +
+                        '<a href="' + it.permalink + '" aria-label="' + escapeHtml(it.title) + '">' +
+                        '<span class="sr-title">' + titleHtml + '</span>' +
+                        (cat ? '<span class="sr-cat">' + escapeHtml(cat) + '</span>' : '') +
+                        '</a></li>';
                 }
 
                 resList.innerHTML = resultSet;
@@ -148,6 +157,64 @@ if (sInput) {
         // clicked on x
         if (!this.value) reset()
     })
+}
+
+/* --------------------------------------------------------------------------
+   HTML 转义。
+   标题来自文章 front matter，直接拼进 innerHTML 会让标题里的 < > & 破坏
+   结构，必须先转义。
+   -------------------------------------------------------------------------- */
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
+/* --------------------------------------------------------------------------
+   按 Fuse 的匹配区间给字段加 <mark> 高亮。
+   要点：
+   · 转义与插标记同时进行——先按区间切分原文，逐段转义后再包 <mark>，
+     这样标题里的 & 之类不会破坏高亮结构。
+   · mergeRanges 合并重叠/相邻区间：开启 includeMatches 后同一字符可能被
+     多个 key 命中，区间会重叠，不合并会产出嵌套的 <mark>。
+   -------------------------------------------------------------------------- */
+function mergeRanges(ranges) {
+    if (!ranges || !ranges.length) return [];
+    const sorted = ranges.slice().sort(function (a, b) { return a[0] - b[0]; });
+    const out = [sorted[0].slice()];
+    for (let i = 1; i < sorted.length; i++) {
+        const last = out[out.length - 1];
+        if (sorted[i][0] <= last[1] + 1) {
+            last[1] = Math.max(last[1], sorted[i][1]);
+        } else {
+            out.push(sorted[i].slice());
+        }
+    }
+    return out;
+}
+
+function highlightField(text, matches, key) {
+    text = String(text == null ? '' : text);
+    if (!matches) return escapeHtml(text);
+
+    let ranges = [];
+    matches.forEach(function (m) {
+        if (m.key === key && m.indices) ranges = ranges.concat(m.indices);
+    });
+    ranges = mergeRanges(ranges);
+    if (!ranges.length) return escapeHtml(text);
+
+    let out = '';
+    let cursor = 0;
+    ranges.forEach(function (r) {
+        const start = Math.max(0, r[0]);
+        const end = Math.min(text.length - 1, r[1]);
+        if (start > cursor) out += escapeHtml(text.slice(cursor, start));
+        out += '<mark>' + escapeHtml(text.slice(start, end + 1)) + '</mark>';
+        cursor = end + 1;
+    });
+    if (cursor < text.length) out += escapeHtml(text.slice(cursor));
+    return out;
 }
 
 // kb bindings

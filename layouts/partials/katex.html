@@ -1,0 +1,44 @@
+{{- /* ==========================================================================
+   katex.html — 数学公式支持（D4）
+   --------------------------------------------------------------------------
+   用法：在 Markdown 里写
+     行内公式：$E = mc^2$
+     独立公式：$$\int_0^1 x^2 dx$$
+
+   【为什么按需加载】
+   KaTeX 的 CSS + 字体约 300KB，绝大多数文章用不到。因此这里先扫描页面内容，
+   只有确实出现公式语法时才注入资源，普通文章零开销。
+
+   【为什么用 CDN 而不是打包进仓库】
+   KaTeX 含大量 woff2 字体文件（每个字形一个文件），放进仓库会让体积失控。
+   jsDelivr 在国内可访问，且字体按需下载。
+   ========================================================================== */ -}}
+
+{{- $hasMath := false -}}
+{{- if .Content -}}
+{{- /* 匹配 $...$ 或 $$...$$，排除代码块内的美元符号：
+       先移除 <code>/<pre> 再判断，避免把代码里的 $ 误认为公式。 */ -}}
+{{- $stripped := .Content | replaceRE `(?s)<pre.*?</pre>` "" | replaceRE `(?s)<code.*?</code>` "" -}}
+{{- if or (findRE `\$\$[^$]+\$\$` $stripped) (findRE `\$[^$\n]+\$` $stripped) -}}
+{{- $hasMath = true -}}
+{{- end -}}
+{{- end -}}
+
+{{- if $hasMath -}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"
+        onload="renderMathInElement(document.querySelector('.post-content') || document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$',  right: '$',  display: false},
+                {left: '\\[', right: '\\]', display: true},
+                {left: '\\(', right: '\\)', display: false}
+            ],
+            throwOnError: false,
+            ignoredTags: ['script','noscript','style','textarea','pre','code','option']
+        });"></script>
+{{- end -}}

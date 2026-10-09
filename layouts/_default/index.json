@@ -1,0 +1,37 @@
+{{- /* ==========================================================================
+   index.json — 搜索索引（新增，覆盖主题同名模板）
+   --------------------------------------------------------------------------
+   与主题原版的差异：
+
+   1. 【只索引文章】用 site.Params.mainSections 过滤。主题索引 site.RegularPages
+      全部页面，于是「关于」「统计」这类单页也会进搜索结果——搜「统计」会命中
+      统计页本身，这不是读者想要的。命令面板同理，它复用同一份索引。
+
+   2. 【补上 categories 与 tags】主题只输出 title/content/permalink/summary，
+      导致搜索结果的分类标签无从渲染。这里补上两个分类字段。
+
+   3. 【content 截断到 3000 字符】content 用 .Plain 全文，只供 Fuse 做正文
+      匹配，不参与结果展示。截断后索引体积大幅下降，而正文开头 3000 字已足以
+      命中绝大多数查询。（需要全文检索时把 3000 调大即可。）
+
+   4. 【summary 去标签】summary 是 HTML，plainify 后更干净，也避免 Fuse 把
+      标签名当成可匹配内容。
+
+   字段命名需与 assets/js/fastsearch.js 及 extend_footer.html 的命令面板一致：
+     title / permalink / summary / content / categories / tags
+   ========================================================================== */ -}}
+{{- $.Scratch.Add "index" slice -}}
+{{- range where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) -}}
+    {{- if and (not .Params.searchHidden) (ne .Layout `archives`) (ne .Layout `search`) -}}
+    {{- $plain := .Plain | plainify | truncate 3000 "" -}}
+    {{- $.Scratch.Add "index" (dict
+        "title" .Title
+        "content" $plain
+        "permalink" .Permalink
+        "summary" (.Summary | plainify)
+        "categories" (.Params.categories | default slice)
+        "tags" (.Params.tags | default slice)
+    ) -}}
+    {{- end -}}
+{{- end -}}
+{{- $.Scratch.Get "index" | jsonify -}}

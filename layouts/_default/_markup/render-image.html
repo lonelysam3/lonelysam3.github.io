@@ -1,0 +1,88 @@
+{{- /* ==========================================================================
+   render-image.html — 图片渲染钩子（D5，覆盖主题同名模板）
+   --------------------------------------------------------------------------
+   Markdown 里的图片（含 shortcode 生成的）都会经过这里。
+
+   做四件事：
+     1. 用 Hugo 的资源管线处理：缩放 → 转 WebP → 生成多尺寸 srcset，
+        由浏览器按视口挑选最合适的一档，避免在手机上加载桌面大图。
+     2. 加 loading="lazy" 与 decoding="async"：视口外的图片延后加载，
+        解码不阻塞首屏渲染。首张图例外，改为 eager 以免拖慢最大内容绘制。
+     3. 保留原始宽高比，用 width/height 属性占位，防止图片加载完成后
+        页面跳动（CLS）。
+     4. 外部图片（http/https 开头）不做处理，原样输出，因为 Hugo 无法
+        取得远程资源；data: URI 同样跳过——关于页那张 base64 照片就走这条路。
+
+   【为什么跳过 data: URI 很重要】
+   关于页有一张 ~90KB 的 base64 内联图。若对它调用 resources.Get 会失败，
+   这里必须先判断来源类型再决定是否处理。
+   ========================================================================== */ -}}
+
+{{- $u := urls.Parse .Destination -}}
+{{- $src := .Destination -}}
+{{- $alt := .PlainText | default "" -}}
+{{- $title := .Title | default "" -}}
+{{- $isRemote := $u.IsAbs -}}
+{{- $isData := hasPrefix .Destination "data:" -}}
+
+{{- /* 只有页面 bundle 内的本地图片才走资源管线 */ -}}
+{{- $img := "" -}}
+{{- if and (not $isRemote) (not $isData) -}}
+{{- $img = .Page.Resources.GetMatch .Destination -}}
+{{- if not $img -}}
+{{- $img = resources.Get .Destination -}}
+{{- end -}}
+{{- end -}}
+
+{{- if $img -}}
+{{- /* ---- 走资源管线 ---- */ -}}
+{{- $isFirst := not (.Page.Scratch.Get "imgSeen") -}}
+{{- .Page.Scratch.Set "imgSeen" true -}}
+
+{{- /* 只对位图处理，SVG 这类矢量图缩放没有意义 */ -}}
+{{- $processable := in (slice "image/jpeg" "image/png" "image/tiff" "image/bmp" "image/webp") $img.MediaType.Type -}}
+
+{{- if $processable -}}
+{{- /* 生成三档宽度；原图更窄时不放大，避免虚糊 */ -}}
+{{- $w := $img.Width -}}
+{{- $sizes := slice 480 800 1200 -}}
+{{- $srcset := slice -}}
+{{- range $sizes -}}
+{{- if le . $w -}}
+{{- $r := $img.Resize (printf "%dx webp q82" .) -}}
+{{- $srcset = $srcset | append (printf "%s %dw" $r.RelPermalink $r.Width) -}}
+{{- end -}}
+{{- end -}}
+{{- $full := $img -}}
+{{- if $processable -}}
+{{- $full = $img.Resize (printf "%dx webp q86" $w) -}}
+{{- $srcset = $srcset | append (printf "%s %dw" $full.RelPermalink $full.Width) -}}
+{{- end -}}
+
+<img src="{{ $full.RelPermalink }}"
+     {{ with $srcset }}srcset="{{ delimit . ", " }}" sizes="(max-width: 45rem) 100vw, min(52rem, 90vw)"{{ end }}
+     width="{{ $full.Width }}" height="{{ $full.Height }}"
+     alt="{{ $alt }}"
+     {{ with $title }}title="{{ . }}"{{ end }}
+     {{ if $isFirst }}loading="eager" fetchpriority="high"{{ else }}loading="lazy"{{ end }}
+     decoding="async">
+
+{{- else -}}
+{{- /* 矢量图等：不转格式，只加懒加载与尺寸占位 */ -}}
+<img src="{{ $img.RelPermalink }}"
+     width="{{ $img.Width }}" height="{{ $img.Height }}"
+     alt="{{ $alt }}"
+     {{ with $title }}title="{{ . }}"{{ end }}
+     {{ if $isFirst }}loading="eager"{{ else }}loading="lazy"{{ end }}
+     decoding="async">
+
+{{- end -}}
+
+{{- else -}}
+{{- /* ---- 远程图 / data URI / 未找到资源：原样输出并补上懒加载 ---- */ -}}
+<img src="{{ $src | safeURL }}"
+     alt="{{ $alt }}"
+     {{ with $title }}title="{{ . }}"{{ end }}
+     loading="lazy" decoding="async">
+
+{{- end -}}

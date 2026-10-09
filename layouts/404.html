@@ -1,0 +1,53 @@
+{{- /* ==========================================================================
+   404.html — 自定义 404 页（E1）
+   --------------------------------------------------------------------------
+   Hugo 会把这个模板输出为 public/404.html，GitHub Pages 在找不到路径时
+   自动使用它。
+
+   比默认的「404 Not Found」多做三件事：
+     · 说明可能的原因，而不是丢一句错误码；
+     · 给出返回首页 / 归档 / 统计的出口；
+     · 提供站内搜索入口和最近文章，让读者有事可做而不是直接关掉。
+
+   页面用 .list 作为 body 类（见 baseof.html 的判断），因此沿用列表页的
+   排版；同时不渲染侧栏（.Kind 为 404 时 sidebar partial 会返回空）。
+   ========================================================================== */ -}}
+{{- define "main" }}
+
+<header class="page-header">
+  <h1>404</h1>
+  <div class="post-description">这个页面不存在</div>
+</header>
+
+<div class="post-content">
+  <p>可能的原因：</p>
+  <ul>
+    <li>链接拼错了，或者从别处复制时被截断</li>
+    <li>这篇文章被重命名或删除了</li>
+    <li>地址里的路径区分大小写，字母大小写不一致</li>
+  </ul>
+
+  <p>可以试试：</p>
+  <ul>
+    <li>用顶部搜索框搜关键词</li>
+    <li>去<a href="{{ "archives/" | relLangURL }}">归档</a>按时间翻一翻</li>
+    <li>在<a href="{{ "tags/" | relLangURL }}">标签</a>页找同类内容</li>
+  </ul>
+
+  <p>
+    <a class="sb-btn" href="{{ "" | relLangURL }}">← 返回首页</a>
+    <a class="sb-btn" href="{{ "stats/" | relLangURL }}">📊 统计</a>
+    <button type="button" class="sb-btn" data-random-post>🎲 随便看看</button>
+  </p>
+
+  {{- with first 5 (where site.RegularPages "Type" "in" site.Params.mainSections) }}
+  <h2>最近文章</h2>
+  <ul class="sb-links">
+    {{- range . }}
+    <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
+    {{- end }}
+  </ul>
+  {{- end }}
+</div>
+
+{{- end }}{{/* end main */}}

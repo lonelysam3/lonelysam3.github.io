@@ -1,20 +1,16 @@
 {{- /* ==========================================================================
-   archives.html — 归档页（覆盖主题同名模板）
+   archives.html — 归档页时间轴（C1，覆盖主题同名模板）
    --------------------------------------------------------------------------
-   与主题原版的区别与理由：
+   相对主题原版的变化：
 
-   1. 结构扁平化。主题把每个「年」渲染成一个块，内部再嵌套「月」，月份与
-      该月文章是 flex 两栏（左栏月份头固定 200px）。这导致月内文章天然右移
-      200px，与页面标题的左边缘对不齐——实测偏移 94px。
-      本版改为：年 → 月 → 文章依次纵向排列，全部落在同一条左边缘上。
+   1. 结构改为时间轴：左侧一条竖向主轴，年份为大节点、月份为小节点，
+      文章按日期排在其下。比主题原来的「年份块内嵌月份 flex 两栏」更直观，
+      也顺带解决了原来的对齐问题（月份头固定 200px 会把文章挤到右侧）。
 
-   2. 月份标签放在文章列表上方而非左侧。少一层缩进，窄屏也不需要横向改造。
+   2. 年份/月份节点自带 id，可作为锚点直接分享（#2026、#2026-三月）。
 
-   3. 保留主题原有的 class 名（archive-year / archive-month / archive-entry
-      / archive-meta / entry-link），CSS 继续有效，只调整布局。
-
-   4. 文章标题可点击：主题靠 .entry-link 绝对定位覆盖整块，这里保留该做法，
-      同时对标题链接做了去重保护（避免嵌套 <a>）。
+   3. 保留 .archive-entry / .entry-link / .entry-hint 等类名以复用既有样式，
+      同时挂上 .tl-* 类，由 60-components.css 负责时间轴外观。
    ========================================================================== */ -}}
 {{- define "main" }}
 
@@ -39,9 +35,7 @@
     {{- end }}
   </h1>
   {{- if .Description }}
-  <div class="post-description">
-    {{ .Description }}
-  </div>
+  <div class="post-description">{{ .Description }}</div>
   {{- end }}
 </header>
 
@@ -50,47 +44,36 @@
 {{- $pages = site.RegularPages }}
 {{- end }}
 
-<div class="archive-posts">
+<div class="timeline">
   {{- range $pages.GroupByPublishDate "2006" }}
   {{- if ne .Key "0001" }}
   {{- $year := replace .Key "0001" "" }}
-  <section class="archive-year">
-    <h2 class="archive-year-header" id="{{ $year }}">
-      <a class="archive-header-link" href="#{{ $year }}">{{ $year }}</a>
-      <sup class="archive-count">{{ len .Pages }}</sup>
-    </h2>
+  <h2 class="tl-year" id="{{ $year }}">
+    {{ $year }}<span class="tl-year-count">{{ len .Pages }}</span>
+  </h2>
 
-    {{- range .Pages.GroupByDate "January" }}
-    <div class="archive-month">
-      <h3 class="archive-month-header" id="{{ $year }}-{{ .Key }}">
-        <a class="archive-header-link" href="#{{ $year }}-{{ .Key }}">{{ .Key }}</a>
-        <sup class="archive-count">{{ len .Pages }}</sup>
-      </h3>
+  {{- range .Pages.GroupByDate "January" }}
+  <div class="tl-month">
+    <span class="tl-month-label" id="{{ $year }}-{{ .Key }}">
+      {{ .Key }}<span class="tl-year-count">{{ len .Pages }}</span>
+    </span>
 
-      {{- range .Pages }}
-      {{- if eq .Kind "page" }}
-      <div class="archive-entry">
-        <h4 class="archive-entry-title entry-hint-parent">
-          {{- .Title | markdownify }}
-          {{- if .Draft }}
-          <span class="entry-hint" title="Draft">
-            <svg xmlns="http://www.w3.org/2000/svg" height="15" viewBox="0 -960 960 960" fill="currentColor">
-              <path
-                d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
-            </svg>
-          </span>
-          {{- end }}
-        </h4>
-        <div class="archive-meta">
-          {{- partial "post_meta.html" . -}}
-        </div>
-        <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
-      </div>
-      {{- end }}
-      {{- end }}
+    {{- range .Pages }}
+    {{- if eq .Kind "page" }}
+    <div class="tl-entry archive-entry">
+      <span class="tl-date">{{ .Date.Format "01-02" }}</span>
+      <span class="tl-title archive-entry-title">
+        {{- .Title | markdownify }}
+        {{- if .Draft }}
+        <span class="entry-hint" title="Draft">· 草稿</span>
+        {{- end }}
+      </span>
+      <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
     </div>
     {{- end }}
-  </section>
+    {{- end }}
+  </div>
+  {{- end }}
   {{- end }}
   {{- end }}
 </div>

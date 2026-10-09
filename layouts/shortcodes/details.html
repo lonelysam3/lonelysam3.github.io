@@ -1,0 +1,29 @@
+{{- /* ==========================================================================
+   details.html — 可折叠内容块
+   --------------------------------------------------------------------------
+   用法：
+     {{< details title="展开看完整 Payload" >}}
+     这里写内容（支持 Markdown）。
+     {{< /details >}}
+
+     open: 传 "true" 时默认展开
+
+   实现要点：
+   · 用原生 <details>/<summary>，不依赖 JS，键盘可操作、打印时也能展开，
+     并且对屏幕阅读器友好。
+   · 章节标题（h2/h3）折叠在 <details> 内时，浏览器不会为隐藏内容建立锚点
+     定位——因此折叠块适合放补充材料，不适合放主要章节。
+   ========================================================================== */ -}}
+
+{{- $title := .Get "title" | default "展开查看" -}}
+{{- $open := eq (.Get "open") "true" -}}
+
+<details class="fold" {{ if $open }}open{{ end }}>
+    <summary class="fold-summary">
+        <span class="fold-chevron" aria-hidden="true"></span>
+        <span class="fold-title">{{ $title }}</span>
+    </summary>
+    <div class="fold-body">
+        {{- .InnerDeindent | markdownify -}}
+    </div>
+</details>

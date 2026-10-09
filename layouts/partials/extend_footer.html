@@ -1,105 +1,616 @@
 {{- /* ==========================================================================
    extend_footer.html — 全局页脚自定义区（覆盖主题同名 partial）
    --------------------------------------------------------------------------
-   1. 导航滚动提示
-      用 IntersectionObserver 监听顶部哨兵元素，而不是监听 scroll 事件——
-      滚动回调每次触发都要参与布局计算，用观察器可把成本降到零。
-      sticky 定位落在 .header 上（见 30-header.css 的说明），
-      状态类打在 .nav 上，CSS 侧由 html.js .nav.is-scrolled 生效。
+   本文件承担全部运行时交互。按块组织，每块都先判断目标元素是否存在，
+   不存在的页面直接跳过，不产生额外开销。
 
-   2. 分栏版面开关
-      侧栏 markup 由 layouts/partials/sidebar.html 静态渲染（在 baseof 里），
-      这里只负责：存在侧栏时给 .main 加上 with-sidebar，由布局层切成两栏。
-      之所以不在模板里直接写 class：baseof 的 <main> 没有可用于切换的上下文，
-      而侧栏 partial 可能因页面类型返回空，用 JS 判断「侧栏是否有实际内容」
-      比在模板里重复条件更可靠。
+     1. 导航滚动提示（IntersectionObserver）
+     2. 分栏版面开关
+     3. 侧栏实时时钟
+     4. 阅读进度条（B1）
+     5. 锚点点击高亮（B2）
+     6. 字号切换（B3）
+     7. 图片灯箱（B5）
+     8. 键盘快捷键（B6）
+     9. 命令面板（A1）
    ========================================================================== */ -}}
 
 <script>
     (function () {
-        /* ---- 1. 导航滚动提示 ---- */
-        var nav = document.querySelector('.nav');
-        var header = document.querySelector('.header');
+        'use strict';
+
+        var doc = document;
+
+        /* ==================================================================
+           1. 导航滚动提示
+           用 IntersectionObserver 而非 scroll 事件：滚动回调每次触发都要
+           参与布局计算，观察器可以把成本降到接近零。
+           ================================================================== */
+        var nav = doc.querySelector('.nav');
+        var header = doc.querySelector('.header');
 
         if (nav && header && 'IntersectionObserver' in window) {
-            var sentinel = document.createElement('div');
+            var sentinel = doc.createElement('div');
             sentinel.setAttribute('aria-hidden', 'true');
             sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;';
+            if (header.parentNode) { header.parentNode.insertBefore(sentinel, header); }
 
-            if (header.parentNode) {
-                header.parentNode.insertBefore(sentinel, header);
-            }
-
-            var observer = new IntersectionObserver(function (entries) {
+            new IntersectionObserver(function (entries) {
                 for (var i = 0; i < entries.length; i++) {
                     nav.classList.toggle('is-scrolled', !entries[i].isIntersecting);
                 }
-            }, { threshold: 0 });
-
-            observer.observe(sentinel);
+            }, { threshold: 0 }).observe(sentinel);
         }
 
-        /* ---- 2. 分栏版面开关 ---- */
-        var main = document.querySelector('main.main');
+        /* ==================================================================
+           2. 分栏版面开关
+           ================================================================== */
+        var main = doc.querySelector('main.main');
         var sidebar = main && main.querySelector('.sidebar');
         if (main && sidebar && sidebar.children.length > 0) {
             main.classList.add('with-sidebar');
         }
 
-        /* ---- 3. 侧栏实时时钟 ----
-           只在首页侧栏存在该元素时运行。要点：
-           · 用 toLocaleTimeString 按【访问者本地时区】显示，而不是硬编码某个
-             时区——读者在世界任何地方看到的都是自己的时间。
-           · 页面切到后台（visibilitychange）时停掉定时器，避免无意义的唤醒。
-           · 每秒刷新，秒数变化让"此刻"有实感；这也避免了整分钟才跳动一次的
-             突兀感。 */
-        var clockTime = document.getElementById('sb-clock-time');
+        /* ==================================================================
+           3. 侧栏实时时钟
+           ================================================================== */
+        var clockTime = doc.getElementById('sb-clock-time');
         if (clockTime) {
-            var clockDate = document.getElementById('sb-clock-date');
-            var clockZone = document.getElementById('sb-clock-zone');
+            var clockDate = doc.getElementById('sb-clock-date');
+            var clockZone = doc.getElementById('sb-clock-zone');
             var timerId = null;
 
-            var render = function () {
+            var renderClock = function () {
                 var now = new Date();
                 clockTime.textContent = now.toLocaleTimeString('zh-CN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
+                    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
                 });
                 if (clockDate) {
                     clockDate.textContent = now.toLocaleDateString('zh-CN', {
-                        month: 'long',
-                        day: 'numeric',
-                        weekday: 'long'
+                        month: 'long', day: 'numeric', weekday: 'long'
                     });
                 }
                 if (clockZone) {
-                    /* 显示访问者实际所在时区，而不是配置里的默认值 */
                     try {
                         var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
                         if (tz) { clockZone.textContent = tz; }
-                    } catch (e) { /* 老浏览器保留静态兜底值 */ }
+                    } catch (e) { /* 保留静态兜底值 */ }
                 }
             };
 
-            var start = function () {
+            var startClock = function () {
                 if (timerId !== null) { return; }
-                render();
-                timerId = window.setInterval(render, 1000);
+                renderClock();
+                timerId = window.setInterval(renderClock, 1000);
             };
-
-            var stop = function () {
+            var stopClock = function () {
                 if (timerId === null) { return; }
                 window.clearInterval(timerId);
                 timerId = null;
             };
 
-            start();
+            startClock();
+            if ('visibilityState' in doc) {
+                doc.addEventListener('visibilitychange', function () {
+                    if (doc.visibilityState === 'visible') { startClock(); } else { stopClock(); }
+                });
+            }
+        }
 
-            if ('visibilityState' in document) {
-                document.addEventListener('visibilitychange', function () {
-                    if (document.visibilityState === 'visible') { start(); } else { stop(); }
+        /* ==================================================================
+           4. 阅读进度条（B1）
+           ------------------------------------------------------------------
+           节流采用「双通道」：优先 requestAnimationFrame，同时挂一个 32ms 的
+           定时器兜底，谁先到谁执行，执行后取消另一个。
+
+           为什么不只用 rAF：rAF 在两类情况下不会回调——标签页转入后台，以及
+           某些无头/省电环境。若只在 rAF 里复位节流标志，回调一旦不来，标志位
+           就永久锁死，进度条从此不再更新（实测在 Chrome 无头 + 虚拟时间下
+           rAF 只回调 2 次，进度条卡在 25% 不动）。加定时器兜底后，任何环境下
+           都能正常更新。
+           ================================================================== */
+        var postContent = doc.querySelector('.post-content');
+        if (postContent) {
+            var bar = doc.createElement('div');
+            bar.className = 'read-progress';
+            bar.setAttribute('aria-hidden', 'true');
+            var barFill = doc.createElement('span');
+            barFill.className = 'read-progress-bar';
+            bar.appendChild(barFill);
+            doc.body.appendChild(bar);
+
+            var scheduled = false;
+            var rafId = null;
+            var timerHandle = null;
+
+            var updateProgress = function () {
+                scheduled = false;
+                if (rafId !== null) { window.cancelAnimationFrame(rafId); rafId = null; }
+                if (timerHandle !== null) { window.clearTimeout(timerHandle); timerHandle = null; }
+
+                var rect = postContent.getBoundingClientRect();
+                var total = rect.height - window.innerHeight;
+                var passed = -rect.top;
+                var ratio = total > 0 ? passed / total : (passed > 0 ? 1 : 0);
+                ratio = Math.max(0, Math.min(1, ratio));
+                barFill.style.width = (ratio * 100).toFixed(2) + '%';
+            };
+
+            var scheduleUpdate = function () {
+                if (scheduled) { return; }
+                scheduled = true;
+                rafId = window.requestAnimationFrame(updateProgress);
+                timerHandle = window.setTimeout(updateProgress, 32);
+            };
+
+            window.addEventListener('scroll', scheduleUpdate, { passive: true });
+            window.addEventListener('resize', scheduleUpdate, { passive: true });
+            updateProgress();
+        }
+
+        /* ==================================================================
+           5. 锚点点击高亮（B2）
+           ------------------------------------------------------------------
+           直接打开带 #hash 的链接由 CSS :target 处理；此处补的是「页内点击
+           目录或标题锚点」这条路径。
+           ================================================================== */
+        var flashAnchor = function (el) {
+            if (!el) { return; }
+            el.classList.remove('is-anchored');
+            void el.offsetWidth;   /* 强制回流，让连续点击同一目标时动画能重播 */
+            el.classList.add('is-anchored');
+            window.setTimeout(function () { el.classList.remove('is-anchored'); }, 1600);
+        };
+
+        doc.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[href^="#"]');
+            if (!a) { return; }
+            var id = decodeURIComponent(a.getAttribute('href').slice(1));
+            if (!id) { return; }
+            var target = doc.getElementById(id);
+            if (target) { flashAnchor(target); }
+        });
+
+        /* ==================================================================
+           6. 字号切换（B3）
+           ------------------------------------------------------------------
+           调整的是 CSS 变量 --user-scale，正文字号由它派生，因此不会影响
+           导航、侧栏等界面字号。选择写进 localStorage，跨页面保持。
+           ================================================================== */
+        var STEPS = [0.9, 1, 1.1, 1.22, 1.35];
+        var DEFAULT_STEP = 1;
+        var FS_KEY = 'reader-font-step';
+
+        var applyFontStep = function (step) {
+            step = Math.max(0, Math.min(STEPS.length - 1, step));
+            doc.documentElement.style.setProperty('--user-scale', String(STEPS[step]));
+            try { localStorage.setItem(FS_KEY, String(step)); } catch (e) { /* 隐私模式忽略 */ }
+
+            var btns = doc.querySelectorAll('.fs-switch button');
+            for (var i = 0; i < btns.length; i++) {
+                var act = btns[i].getAttribute('data-fs');
+                btns[i].setAttribute('aria-pressed', String(
+                    (act === 'reset' && step === DEFAULT_STEP) ||
+                    (act === 'inc' && step === STEPS.length - 1) ||
+                    (act === 'dec' && step === 0)
+                ));
+            }
+            return step;
+        };
+
+        var currentStep = DEFAULT_STEP;
+        try {
+            var saved = parseInt(localStorage.getItem(FS_KEY), 10);
+            if (!isNaN(saved) && saved >= 0 && saved < STEPS.length) { currentStep = saved; }
+        } catch (e) { /* 忽略 */ }
+        applyFontStep(currentStep);
+
+        doc.addEventListener('click', function (e) {
+            var btn = e.target.closest && e.target.closest('.fs-switch button');
+            if (!btn) { return; }
+            var act = btn.getAttribute('data-fs');
+            if (act === 'inc') { currentStep = applyFontStep(currentStep + 1); }
+            else if (act === 'dec') { currentStep = applyFontStep(currentStep - 1); }
+            else { currentStep = applyFontStep(DEFAULT_STEP); }
+        });
+
+        /* ==================================================================
+           7. 图片灯箱（B5）
+           ------------------------------------------------------------------
+           只处理正文图片；带 .no-zoom 的跳过（徽章、图标之类）。
+           关闭时把焦点还给原图，键盘用户不会丢失位置。
+           ================================================================== */
+        var zoomables = postContent ? postContent.querySelectorAll('img:not(.no-zoom)') : [];
+        if (zoomables.length) {
+            var lb = doc.createElement('div');
+            lb.className = 'lightbox';
+            lb.setAttribute('role', 'dialog');
+            lb.setAttribute('aria-modal', 'true');
+            lb.setAttribute('aria-label', '图片查看');
+            lb.dataset.open = 'false';
+            lb.innerHTML = '<button type="button" class="lightbox-close" aria-label="关闭">✕</button><img alt="">';
+            doc.body.appendChild(lb);
+
+            var lbImg = lb.querySelector('img');
+            var lbClose = lb.querySelector('.lightbox-close');
+            var lastFocus = null;
+
+            var openLb = function (src, alt) {
+                lastFocus = doc.activeElement;
+                lbImg.src = src;
+                lbImg.alt = alt || '';
+                lb.dataset.open = 'true';
+                doc.body.classList.add('lightbox-open');
+                lbClose.focus();
+            };
+
+            var closeLb = function () {
+                lb.dataset.open = 'false';
+                doc.body.classList.remove('lightbox-open');
+                /* 延迟清空 src，避免关闭动画期间图片突然消失 */
+                window.setTimeout(function () { lbImg.removeAttribute('src'); }, 220);
+                if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
+            };
+
+            for (var zi = 0; zi < zoomables.length; zi++) {
+                zoomables[zi].addEventListener('click', function () {
+                    openLb(this.currentSrc || this.src, this.alt);
+                });
+            }
+
+            lbClose.addEventListener('click', closeLb);
+            lb.addEventListener('click', function (e) {
+                if (e.target === lb) { closeLb(); }   /* 点背景关闭 */
+            });
+
+            /* 捕获阶段处理 Esc，阻止传播以免同一次按键又被搜索框处理 */
+            doc.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && lb.dataset.open === 'true') {
+                    e.stopPropagation();
+                    closeLb();
+                }
+            }, true);
+        }
+
+        /* ==================================================================
+           8. 键盘快捷键（B6）
+           9. 命令面板（A1）
+           ------------------------------------------------------------------
+           快捷键（输入框聚焦时不触发）：
+             /          聚焦顶部搜索框
+             t          切换明暗主题
+             j / k      下一篇 / 上一篇
+             g 然后 h   回到顶部（两段式，避免误触）
+             ?          打开命令面板
+             Ctrl/⌘ + K 打开命令面板
+           ================================================================== */
+
+        var isTyping = function () {
+            var ae = doc.activeElement;
+            if (!ae) { return false; }
+            var tag = ae.tagName;
+            return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || ae.isContentEditable;
+        };
+
+        var escapeHtml = function (s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        };
+
+        var palette = null, paletteInput = null, paletteList = null;
+        var paletteItems = [], paletteIndex = -1, paletteData = null;
+
+        /* 静态页面不在 index.json 里，手动补上 */
+        var staticPages = [
+            { title: '首页', href: '/' },
+            { title: '归档', href: '/archives/' },
+            { title: '分类', href: '/categories/' },
+            { title: '标签', href: '/tags/' },
+            { title: '关于', href: '/about/' }
+        ];
+
+        var loadPaletteData = function () {
+            if (paletteData) { return Promise.resolve(paletteData); }
+            return fetch('/index.json', { cache: 'force-cache' })
+                .then(function (r) { return r.ok ? r.json() : []; })
+                .then(function (j) {
+                    var items = staticPages.slice();
+                    (Array.isArray(j) ? j : []).forEach(function (p) {
+                        items.push({
+                            title: p.title || '',
+                            href: p.permalink || '',
+                            category: (p.categories && p.categories.length) ? p.categories[0] : '',
+                            summary: p.summary || ''
+                        });
+                    });
+                    paletteData = items;
+                    return items;
+                })
+                .catch(function () { paletteData = staticPages.slice(); return paletteData; });
+        };
+
+        var renderPalette = function (q) {
+            var all = paletteData || [];
+            q = (q || '').trim().toLowerCase();
+            var matched = q
+                ? all.filter(function (it) {
+                    return (it.title + ' ' + (it.category || '') + ' ' + (it.summary || ''))
+                        .toLowerCase().indexOf(q) >= 0;
+                  })
+                : all;
+
+            matched = matched.slice(0, 40);
+            paletteItems = matched;
+            paletteIndex = matched.length ? 0 : -1;
+
+            if (!matched.length) {
+                paletteList.innerHTML = '<li class="palette-empty">没有匹配项</li>';
+                return;
+            }
+
+            paletteList.innerHTML = matched.map(function (it, i) {
+                return '<li role="option" data-href="' + escapeHtml(it.href) + '"' +
+                       (i === 0 ? ' aria-selected="true"' : '') + '>' +
+                       '<span class="palette-title">' + escapeHtml(it.title) + '</span>' +
+                       (it.category ? '<span class="palette-tag">' + escapeHtml(it.category) + '</span>' : '') +
+                       '</li>';
+            }).join('');
+        };
+
+        var movePalette = function (dir) {
+            if (!paletteItems.length) { return; }
+            paletteIndex = (paletteIndex + dir + paletteItems.length) % paletteItems.length;
+            var lis = paletteList.querySelectorAll('li[data-href]');
+            for (var i = 0; i < lis.length; i++) {
+                lis[i].setAttribute('aria-selected', String(i === paletteIndex));
+                if (i === paletteIndex && lis[i].scrollIntoView) {
+                    lis[i].scrollIntoView({ block: 'nearest' });
+                }
+            }
+        };
+
+        var buildPalette = function () {
+            var wrap = doc.createElement('div');
+            wrap.className = 'palette';
+            wrap.dataset.open = 'false';
+            wrap.setAttribute('role', 'dialog');
+            wrap.setAttribute('aria-modal', 'true');
+            wrap.setAttribute('aria-label', '快速跳转');
+            wrap.innerHTML =
+                '<div class="palette-panel">' +
+                  '<input class="palette-input" type="text" placeholder="搜索文章、标签、页面…" ' +
+                         'autocomplete="off" spellcheck="false" aria-label="搜索">' +
+                  '<ul class="palette-list" role="listbox"></ul>' +
+                  '<div class="palette-foot">' +
+                    '<span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>' +
+                    '<span><kbd>Enter</kbd> 打开</span>' +
+                    '<span><kbd>Esc</kbd> 关闭</span>' +
+                  '</div>' +
+                '</div>';
+            doc.body.appendChild(wrap);
+
+            palette = wrap;
+            paletteInput = wrap.querySelector('.palette-input');
+            paletteList = wrap.querySelector('.palette-list');
+
+            paletteInput.addEventListener('input', function () { renderPalette(this.value); });
+            paletteInput.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown') { e.preventDefault(); movePalette(1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); movePalette(-1); }
+                else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var it = paletteItems[paletteIndex];
+                    if (it && it.href) { window.location.href = it.href; }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closePalette();
+                }
+            });
+            wrap.addEventListener('click', function (e) {
+                if (e.target === wrap) { closePalette(); }
+            });
+            paletteList.addEventListener('click', function (e) {
+                var li = e.target.closest && e.target.closest('li[data-href]');
+                if (li) { window.location.href = li.getAttribute('data-href'); }
+            });
+        };
+
+        var openPalette = function () {
+            if (!palette) { buildPalette(); }
+            palette.dataset.open = 'true';
+            doc.body.classList.add('palette-open');
+            paletteInput.value = '';
+            renderPalette('');
+            paletteInput.focus();
+            loadPaletteData().then(function () {
+                if (palette.dataset.open === 'true') { renderPalette(paletteInput.value); }
+            });
+        };
+
+        var closePalette = function () {
+            if (!palette) { return; }
+            palette.dataset.open = 'false';
+            doc.body.classList.remove('palette-open');
+        };
+
+        var isPaletteOpen = function () { return !!palette && palette.dataset.open === 'true'; };
+
+        /* ---- 上一篇 / 下一篇：直接读页脚的 .paginav ---- */
+        var goPost = function (cls) {
+            var link = doc.querySelector('.paginav a.' + cls);
+            if (link) { window.location.href = link.getAttribute('href'); }
+        };
+
+        var goTop = function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        var gPressed = false, gTimer = null;
+
+        doc.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                if (isPaletteOpen()) { closePalette(); } else { openPalette(); }
+                return;
+            }
+
+            if (e.key === 'Escape' && isPaletteOpen()) {
+                e.preventDefault();
+                /* 阻止传播：否则同一次 Esc 会同时命中搜索框的 onkeydown 而把它清空 */
+                e.stopPropagation();
+                closePalette();
+                return;
+            }
+
+            if (isPaletteOpen()) { return; }
+            if (isTyping() || e.ctrlKey || e.metaKey || e.altKey) { return; }
+
+            switch (e.key) {
+                case '/': {
+                    var si = doc.getElementById('searchInput');
+                    if (si) { e.preventDefault(); si.focus(); }
+                    break;
+                }
+                case 't': {
+                    var tt = doc.getElementById('theme-toggle');
+                    if (tt) { e.preventDefault(); tt.click(); }
+                    break;
+                }
+                case '?':
+                    e.preventDefault();
+                    openPalette();
+                    break;
+                case 'j':
+                    e.preventDefault();
+                    goPost('next');
+                    break;
+                case 'k':
+                    e.preventDefault();
+                    goPost('prev');
+                    break;
+                case 'g':
+                    gPressed = true;
+                    window.clearTimeout(gTimer);
+                    gTimer = window.setTimeout(function () { gPressed = false; }, 1200);
+                    break;
+                case 'h':
+                    if (gPressed) { e.preventDefault(); gPressed = false; goTop(); }
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        /* ==================================================================
+           10. 写作热力图（C2）
+           ------------------------------------------------------------------
+           GitHub 贡献图样式，最近 53 周、以周日为列首。
+           数据由模板内联在 #heatmap 的 data-days 上（{ "YYYY-MM-DD": 篇数 }），
+           这里只负责按读者当地日期生成网格——Hugo 构建时无法预知读者打开
+           页面的那一天，所以起点必须由浏览器算。
+           ================================================================== */
+        var heatWrap = doc.getElementById('heatmap');
+        if (heatWrap) {
+            var days = {};
+            try { days = JSON.parse(heatWrap.getAttribute('data-days') || '{}'); } catch (e) { days = {}; }
+
+            var WEEKS = 53;
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            /* 回溯到本周周日，再往前推 WEEKS-1 周作为起点 */
+            var start = new Date(today);
+            start.setDate(start.getDate() - start.getDay() - (WEEKS - 1) * 7);
+
+            var fmt = function (d) {
+                var m = d.getMonth() + 1, dd = d.getDate();
+                return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd;
+            };
+
+            /* 先统计最大值，用于分级阈值 */
+            var counts = [], cursor = new Date(start);
+            for (var i = 0; i < WEEKS * 7; i++) {
+                counts.push(days[fmt(cursor)] || 0);
+                cursor.setDate(cursor.getDate() + 1);
+            }
+            var max = Math.max.apply(null, counts.concat([1]));
+            var levelOf = function (n) {
+                if (!n) return 0;
+                if (max <= 3) return Math.min(4, n);
+                var q = n / max;
+                if (q <= 0.25) return 1;
+                if (q <= 0.5) return 2;
+                if (q <= 0.75) return 3;
+                return 4;
+            };
+
+            /* 月份标签行：只在每月第一周出现月份名 */
+            var MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            var monthsHtml = '';
+            cursor = new Date(start);
+            for (var w = 0; w < WEEKS; w++) {
+                var cell = new Date(cursor);
+                var label = '';
+                /* 该列含当月的头几天时打标签，避免重复 */
+                if (cell.getDate() <= 7) { label = MONTHS[cell.getMonth()]; }
+                monthsHtml += '<span' + (label ? ' data-label="' + label + '"' : '') + '></span>';
+                cursor.setDate(cursor.getDate() + 7);
+            }
+
+            /* 周几标签：只标周一 / 周三 / 周五，避免拥挤 */
+            var dayLabels = ['', '一', '', '三', '', '五', ''];
+            var daysHtml = dayLabels.map(function (t) { return '<span>' + t + '</span>'; }).join('');
+
+            /* 网格主体 */
+            var cellsHtml = '';
+            cursor = new Date(start);
+            for (var k = 0; k < WEEKS * 7; k++) {
+                var key = fmt(cursor);
+                var n = days[key] || 0;
+                var title = key + (n ? '：' + n + ' 篇' : '：无');
+                cellsHtml += '<span class="heat-cell" data-level="' + levelOf(n) + '" title="' + title + '"></span>';
+                cursor.setDate(cursor.getDate() + 1);
+            }
+
+            var legend = '<div class="heat-legend"><span>少</span>' +
+                '<span class="heat-cell" data-level="0"></span>' +
+                '<span class="heat-cell" data-level="1"></span>' +
+                '<span class="heat-cell" data-level="2"></span>' +
+                '<span class="heat-cell" data-level="3"></span>' +
+                '<span class="heat-cell" data-level="4"></span>' +
+                '<span>多</span></div>';
+
+            heatWrap.innerHTML =
+                '<div class="heatmap-months">' + monthsHtml + '</div>' +
+                '<div class="heatmap-body">' +
+                  '<div class="heatmap-days">' + daysHtml + '</div>' +
+                  '<div class="heatmap-grid">' + cellsHtml + '</div>' +
+                '</div>' + legend;
+        }
+
+        /* ==================================================================
+           11. 随机文章（C4）
+           ------------------------------------------------------------------
+           在侧栏或页面上给一个「随便看看」入口。索引复用 /index.json，
+           不额外请求；点击时才拉取，避免所有页面都付这份开销。
+           ================================================================== */
+        var randomBtns = doc.querySelectorAll('[data-random-post]');
+        if (randomBtns.length) {
+            var pickRandom = function () {
+                fetch('/index.json', { cache: 'force-cache' })
+                    .then(function (r) { return r.ok ? r.json() : []; })
+                    .then(function (list) {
+                        if (!Array.isArray(list) || !list.length) { return; }
+                        var it = list[Math.floor(Math.random() * list.length)];
+                        if (it && it.permalink) { window.location.href = it.permalink; }
+                    })
+                    .catch(function () { /* 拉取失败时静默，不打断阅读 */ });
+            };
+            for (var ri = 0; ri < randomBtns.length; ri++) {
+                randomBtns[ri].addEventListener('click', function (e) {
+                    e.preventDefault();
+                    pickRandom();
                 });
             }
         }

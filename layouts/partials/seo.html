@@ -1,0 +1,88 @@
+{{- /* ==========================================================================
+   seo.html — 结构化数据 JSON-LD（E3）
+   --------------------------------------------------------------------------
+   直接内联 <script type="application/ld+json">，而不是给 Hugo 加一个自定义
+   输出格式。原因：自定义输出格式需要同时改 `outputs` 与 `outputFormats`，
+   并会为每个页面额外生成一个文件，SEO 价值与复杂度不成比例；内联进 HTML
+   反而更可靠——搜索引擎必定能读到，且不会多出孤立的 .json 文件。
+
+   输出三种 schema：
+     · 全站 / 首页   WebSite（含 SearchAction，帮助搜索引擎给出站内搜索框）
+     · 文章页        BlogPosting（含作者、发布/修改时间、字数、关键词）
+     · 文章页         BreadcrumbList（与页面可见面包屑一致，增强搜索结果展示）
+   ========================================================================== */ -}}
+
+{{- if .IsHome -}}
+<script type="application/ld+json">
+{{- dict
+    "@context" "https://schema.org"
+    "@type" "WebSite"
+    "name" site.Title
+    "url" site.BaseURL
+    "description" (site.Params.description | default site.Title)
+    "inLanguage" (site.Language.LanguageCode | default site.Language.Lang)
+    "potentialAction" (dict
+        "@type" "SearchAction"
+        "target" (dict "@type" "EntryPoint" "urlTemplate" (printf "%s?q={search_term_string}" (strings.TrimSuffix "/" site.BaseURL)))
+        "query-input" "required name=search_term_string"
+    )
+    | jsonify (dict "indent" "  ") | safeJS -}}
+</script>
+{{- end -}}
+
+{{- if .IsPage -}}
+{{- $author := site.Params.author | default site.Title -}}
+{{- $desc := "" -}}
+{{- with .Description }}{{ $desc = . }}{{ else }}{{ $desc = .Summary | plainify | truncate 200 }}{{ end -}}
+
+<script type="application/ld+json">
+{{- dict
+    "@context" "https://schema.org"
+    "@type" "BlogPosting"
+    "headline" (.Title | plainify)
+    "description" $desc
+    "url" .Permalink
+    "mainEntityOfPage" (dict "@type" "WebPage" "@id" .Permalink)
+    "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")
+    "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
+    "wordCount" .WordCount
+    "inLanguage" (site.Language.LanguageCode | default site.Language.Lang)
+    "author" (dict "@type" "Person" "name" $author)
+    "publisher" (dict "@type" "Organization" "name" site.Title "url" site.BaseURL)
+    "keywords" (delimit (.Params.tags | default slice) ", ")
+    "articleSection" (delimit (.Params.categories | default slice) ", ")
+    | jsonify (dict "indent" "  ") | safeJS -}}
+</script>
+
+{{- /* 面包屑结构化数据：与页面上可见的 .crumbs 保持一致 */ -}}
+{{- $items := slice -}}
+{{- $items = $items | append (dict "@type" "ListItem" "position" 1 "name" "主页" "item" site.BaseURL) -}}
+{{- $pos := 2 -}}
+{{- with .CurrentSection -}}
+{{- if and .Title (ne .Title $.Title) -}}
+{{- $items = $items | append (dict "@type" "ListItem" "position" $pos "name" .Title "item" .Permalink) -}}
+{{- $pos = add $pos 1 -}}
+{{- end -}}
+{{- end -}}
+{{- range first 1 (.Params.categories | default slice) -}}
+{{- with $.Site.GetPage (printf "/categories/%s" (urlize .)) -}}
+{{- $items = $items | append (dict "@type" "ListItem" "position" $pos "name" .LinkTitle "item" .Permalink) -}}
+{{- $pos = add $pos 1 -}}
+{{- end -}}
+{{- end -}}
+{{- range first 1 (.Params.tags | default slice) -}}
+{{- with $.Site.GetPage (printf "/tags/%s" (urlize .)) -}}
+{{- $items = $items | append (dict "@type" "ListItem" "position" $pos "name" .LinkTitle "item" .Permalink) -}}
+{{- $pos = add $pos 1 -}}
+{{- end -}}
+{{- end -}}
+{{- $items = $items | append (dict "@type" "ListItem" "position" $pos "name" (.Title | plainify)) -}}
+
+<script type="application/ld+json">
+{{- dict
+    "@context" "https://schema.org"
+    "@type" "BreadcrumbList"
+    "itemListElement" $items
+    | jsonify (dict "indent" "  ") | safeJS -}}
+</script>
+{{- end -}}

@@ -1,0 +1,37 @@
+{{- /* ==========================================================================
+   callout.html — 提示框短代码
+   --------------------------------------------------------------------------
+   用法：
+     {{< callout type="note" title="可选标题" >}}
+     支持 **Markdown** 内容。
+     {{< /callout >}}
+
+     type: note | tip | warn | danger | info   （默认 note）
+     title: 可选，省略时按 type 取默认中文标题
+
+   实现要点：
+   · 内容用 .Inner | markdownify，因此框内可以正常写 Markdown（列表、行内
+     代码、链接都行），不像原样输出那样只能写纯文本。
+   · .InnerDeindent 去掉缩进，避免短代码内的缩进被 Markdown 当成代码块。
+   · 类型只影响 data-type，具体配色由 CSS 负责（见 60-components.css），
+     这样以后调色不需要改模板。
+   ========================================================================== */ -}}
+
+{{- $type := .Get "type" | default "note" -}}
+{{- $titles := dict
+    "note"    "说明"
+    "tip"     "提示"
+    "warn"    "注意"
+    "danger"  "警告"
+    "info"    "信息" -}}
+{{- $title := .Get "title" | default (index $titles $type) | default "说明" -}}
+
+<div class="callout" data-type="{{ $type }}" role="note">
+    <div class="callout-head">
+        <span class="callout-icon" aria-hidden="true"></span>
+        <span class="callout-title">{{ $title }}</span>
+    </div>
+    <div class="callout-body">
+        {{- .InnerDeindent | markdownify -}}
+    </div>
+</div>

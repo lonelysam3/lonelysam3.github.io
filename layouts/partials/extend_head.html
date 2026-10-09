@@ -66,8 +66,59 @@
        以换行结尾，concat 时会与下一片粘连成非法语句。 */ -}}
 {{- if not site.Params.assets.disableFingerprinting }}
 {{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-global.js" | fingerprint }}
-<script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}" integrity="{{ $search.Data.Integrity }}"></script>
+<script>
+/* 搜索资源延迟到浏览器空闲时再加载（E2 构建瘦身）。
+   fuse.js + fastsearch 合计约 18KB，而绝大多数读者只用来看文章，不搜索。
+   立即加载会占用首屏带宽并推后关键渲染路径；改为 idle 后首屏不受影响。
+   由于 fastsearch 用 DOMContentLoaded 触发索引加载（不是 window.onload），
+   延后注入不会有事件已过期的风险。
+   若浏览器不支持 requestIdleCallback（Safari 早期版本），退化为 1.5s 定时。 */
+(function () {
+  var src = {{ $search.RelPermalink | jsonify }};
+  var integrity = {{ $search.Data.Integrity | jsonify }};
+  var loaded = false;
+  function inject() {
+    if (loaded) { return; }
+    loaded = true;
+    var s = document.createElement('script');
+    s.defer = true;
+    s.crossOrigin = 'anonymous';
+    s.src = src;
+    if (integrity) { s.integrity = integrity; }
+    document.head.appendChild(s);
+  }
+  /* 读者一旦聚焦搜索框，立刻加载，不等 idle */
+  document.addEventListener('focusin', function (e) {
+    var t = e.target;
+    if (t && t.id === 'searchInput') { inject(); }
+  }, { once: true, capture: true });
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(inject, { timeout: 3000 });
+  } else {
+    setTimeout(inject, 1500);
+  }
+})();
+</script>
 {{- else }}
 {{- $search := (slice $fusejs $license_js $fastsearch) | resources.Concat "assets/js/search-global.js" }}
 <script defer crossorigin="anonymous" src="{{ $search.RelPermalink }}"></script>
 {{- end }}
+
+{{- /* ---------------------------------------------------------------------
+   C. 数学公式（KaTeX）
+   ---------------------------------------------------------------------
+   仅当页面内容里确实出现公式语法时才注入资源——KaTeX 的 CSS 加字体约
+   300KB，绝大多数文章用不到，不该让所有页面承担这个开销。
+   判断逻辑见 partials/katex.html。
+   --------------------------------------------------------------------- */ -}}
+{{- partial "katex.html" . }}
+
+{{- /* ---------------------------------------------------------------------
+   D. 结构化数据（JSON-LD）
+   ---------------------------------------------------------------------
+   内联在 head 里，而不是用 Hugo 的自定义输出格式另生成 .json 文件——
+   内联保证搜索引擎一定能读到，且不会为每个页面多出一个孤立文件。
+   类型选择见 partials/seo.html。
+   --------------------------------------------------------------------- */ -}}
+{{- partial "seo.html" . }}

@@ -1,0 +1,61 @@
+{{- /* ==========================================================================
+   breadcrumbs.html — 面包屑导航（A4）
+   --------------------------------------------------------------------------
+   与主题原版 partial 的区别：
+   主题的 breadcrumbs 只输出「主页 » 分类名」，层级浅且不含当前页。
+   本版输出完整路径：主页 » 分类 » 标签 » 当前文章，让读者随时知道自己在哪。
+
+   结构上最后一节是当前页，用 aria-current="page" 标记（不加链接），
+   这既是无障碍要求，也避免读者点到自己所在页面。
+   ========================================================================== */ -}}
+
+{{- $crumbs := slice -}}
+{{- $crumbs = $crumbs | append (dict "name" "主页" "url" ("" | absLangURL)) -}}
+
+{{- if .IsHome -}}
+{{- /* 首页只显示自身，不再叠加 */ -}}
+{{- else -}}
+{{- /* 依次收集：栏目 → 分类 → 标签 → 当前页 —— 只保留实际存在且非空的层级 */ -}}
+{{- with .CurrentSection -}}
+{{- if and .Title (ne .Title $.Title) -}}
+{{- $crumbs = $crumbs | append (dict "name" .Title "url" .RelPermalink) -}}
+{{- end -}}
+{{- end -}}
+
+{{- with .Params.categories -}}
+{{- range first 1 . -}}
+{{- with $.Site.GetPage (printf "/categories/%s" (urlize .)) -}}
+{{- $crumbs = $crumbs | append (dict "name" .LinkTitle "url" .RelPermalink) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- with .Params.tags -}}
+{{- range first 1 . -}}
+{{- with $.Site.GetPage (printf "/tags/%s" (urlize .)) -}}
+{{- $crumbs = $crumbs | append (dict "name" .LinkTitle "url" .RelPermalink) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- if .IsPage -}}
+{{- $crumbs = $crumbs | append (dict "name" .Title "url" "") -}}
+{{- else -}}
+{{- with .Title -}}
+{{- $crumbs = $crumbs | append (dict "name" . "url" "") -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- if gt (len $crumbs) 1 }}
+<nav class="crumbs" aria-label="面包屑导航">
+    {{- range $i, $c := $crumbs }}
+    {{- if $i }}<span class="crumbs-sep" aria-hidden="true">»</span>{{ end }}
+    {{- if $c.url }}
+    <a href="{{ $c.url }}">{{ $c.name }}</a>
+    {{- else }}
+    <span class="crumbs-current" aria-current="page">{{ $c.name }}</span>
+    {{- end }}
+    {{- end }}
+</nav>
+{{- end }}

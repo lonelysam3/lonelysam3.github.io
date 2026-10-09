@@ -330,6 +330,37 @@
     color: var(--c-accent);
 }
 
+/* --- 探索入口按钮 --- */
+.sb-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+}
+
+.sb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: var(--s-2) var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+    background: var(--c-surface-muted);
+    border: 1px solid transparent;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
+}
+
+.sb-btn:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+    border-color: var(--c-accent);
+}
+
 /* --------------------------------------------------------------------------
    3. 文章页
    -------------------------------------------------------------------------- */

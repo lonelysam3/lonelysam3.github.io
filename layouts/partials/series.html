@@ -1,0 +1,75 @@
+{{- /* ==========================================================================
+   series.html — 系列文章导航（A5）
+   --------------------------------------------------------------------------
+   用法：在文章 front matter 里加
+     series: ["SQL 注入笔记"]
+     seriesOrder: 2          （可选，缺省按日期排序）
+
+   输出：系列名 + 「第 2 / 5 篇」进度 + 全部篇目列表（当前篇高亮且不可点）。
+
+   设计取舍：
+   · 只在文章属于某个系列时渲染，普通文章不产生任何多余 DOM。
+   · 用 aria-current="true" 标记当前篇，配合 CSS 高亮，屏幕阅读器也能识别。
+   · 系列内排序：优先 seriesOrder，缺失时按日期。这样即使后来补写中间篇目，
+     只要标注序号就能插进正确位置。
+   ========================================================================== */ -}}
+
+{{- with .Params.series -}}
+{{- $name := index . 0 -}}
+{{- $current := $ -}}
+
+{{- /* 收集同系列文章 */ -}}
+{{- $items := slice -}}
+{{- range where site.RegularPages "Params.series" "intersect" (slice $name) -}}
+{{- $items = $items | append . -}}
+{{- end -}}
+
+{{- if gt (len $items) 1 -}}
+{{- /* 排序：seriesOrder 优先（缺失视为极大，排在最后），其次日期 */ -}}
+{{- $sorted := sort $items "Params.seriesOrder" "asc" -}}
+{{- $byDate := sort $items "Date" "asc" -}}
+
+{{- /* Hugo 的 sort 对缺失字段的处理不稳定，这里手动构建最终顺序：
+       有 seriesOrder 的按其值，无的按日期插入其后。 */ -}}
+{{- $ordered := slice -}}
+{{- $withOrder := where $items "Params.seriesOrder" "!=" nil -}}
+{{- $withoutOrder := where $items "Params.seriesOrder" nil -}}
+{{- if $withOrder -}}
+{{- $ordered = sort $withOrder "Params.seriesOrder" "asc" -}}
+{{- end -}}
+{{- range $withoutOrder -}}
+{{- $ordered = $ordered | append . -}}
+{{- end -}}
+{{- if eq (len $ordered) 0 -}}
+{{- $ordered = $byDate -}}
+{{- end -}}
+
+{{- $total := len $ordered -}}
+{{- $idx := 0 -}}
+{{- range $i, $p := $ordered -}}
+{{- if eq $p.Permalink $current.Permalink -}}{{- $idx = add $i 1 -}}{{- end -}}
+{{- end -}}
+
+<section class="series" aria-label="系列文章">
+    <div class="series-head">
+        <span class="series-label">系列</span>
+        <span class="series-name">{{ $name }}</span>
+        {{- if gt $idx 0 }}
+        <span class="series-progress">第 {{ $idx }} / {{ $total }} 篇</span>
+        {{- end }}
+    </div>
+    <ol class="series-list">
+        {{- range $ordered -}}
+        {{- $isCurrent := eq .Permalink $current.Permalink }}
+        <li {{ if $isCurrent }}aria-current="true"{{ end }}>
+            {{- if $isCurrent -}}
+            <span>{{ .LinkTitle }}</span>
+            {{- else -}}
+            <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+            {{- end -}}
+        </li>
+        {{- end -}}
+    </ol>
+</section>
+{{- end -}}
+{{- end -}}

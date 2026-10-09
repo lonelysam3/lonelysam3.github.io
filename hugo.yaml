@@ -42,6 +42,9 @@ languages:
         - name: 标签
           pageRef: tags/
           weight: 10
+        - name: 统计
+          pageRef: stats/
+          weight: 15
         - name: 关于
           pageRef: about/
           weight: 21
@@ -51,6 +54,14 @@ params:
   description: "lonelysam3's personal blog."
   keywords: [Blog, Portfolio, PaperMod]
   author: Me
+  # 显式声明文章所在的内容目录。
+  # 主题与本站模板都大量使用 site.Params.mainSections 来筛选「文章」，
+  # 例如首页列表、归档时间轴、侧栏最近文章、上下篇导航。
+  # 此前未配置：Hugo 在 mainSections 为空时 where 会退化为「不过滤」，
+  # 于是 about / stats 这类单页也会被当作文章列出来。
+  # 主题的 post_nav_links.html 有 default (slice "posts") 兜底，但本站
+  # 模板没有，因此必须在配置里显式指定。
+  mainSections: ["posts"]
   # author: ["Me", "You"] # multiple authors
   images: ["<link or path of image for opengraph, twitter-cards>"]
   DateFormat: "January 2, 2006"

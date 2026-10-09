@@ -158,6 +158,17 @@
     </div>
     {{- end }}
 
+    {{- /* 探索入口：主内容区没有的随机跳转与统计页。
+           随机按钮由 extend_footer.html 按 [data-random-post] 绑定点击，
+           所有页面都可用，因此这里不做页面类型判断。 */ -}}
+    <div class="sb-block">
+        <h2 class="sb-title">探索</h2>
+        <div class="sb-actions">
+            <button type="button" class="sb-btn" data-random-post>🎲 随便看看</button>
+            <a class="sb-btn" href="{{ "stats/" | relLangURL }}">📊 统计</a>
+        </div>
+    </div>
+
     {{- end }}
 
 </aside>

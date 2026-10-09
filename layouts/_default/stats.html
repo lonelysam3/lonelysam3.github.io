@@ -1,0 +1,132 @@
+{{- /* ==========================================================================
+   stats.html — 统计页（C2）
+   --------------------------------------------------------------------------
+   用法：在 content/ 下放一个 stats.md，front matter 里写 layout: "stats"。
+
+   包含：
+     · 概览卡片：文章数 / 总字数 / 标签数 / 分类数 / 活跃天数 / 首篇日期
+     · 写作热力图（GitHub 贡献图样式），最近 53 周
+     · 标签使用排行（条形图）
+     · 历年产出（条形图）
+
+   【为什么热力图交给 JS 画】
+   Hugo 是构建时渲染，无法预知读者打开页面的当天是哪一天——热力图必须
+   以「今天」为终点回溯 53 周。因此这里把按日期聚合的数据以 JSON 内联，
+   由 extend_footer.html 按读者本地日期生成网格。
+   数据量很小（最多几百个日期键值对），内联不会显著增加页面体积。
+   ========================================================================== */ -}}
+{{- define "main" }}
+
+{{- $posts := where site.RegularPages "Type" "in" site.Params.mainSections }}
+
+{{- /* ---- 汇总指标 ---- */ -}}
+{{- $totalWords := 0 }}
+{{- $totalReading := 0 }}
+{{- range $posts }}
+{{- $totalWords = add $totalWords .WordCount }}
+{{- $totalReading = add $totalReading .ReadingTime }}
+{{- end }}
+
+{{- $tagCount := 0 }}{{ with site.Taxonomies.tags }}{{ $tagCount = len . }}{{ end }}
+{{- $catCount := 0 }}{{ with site.Taxonomies.categories }}{{ $catCount = len . }}{{ end }}
+
+{{- /* 按日期聚合文章数与字数，供热力图与年度图使用 */ -}}
+{{- $byDate := dict }}
+{{- $byYear := dict }}
+{{- range $posts }}
+{{- $d := .Date.Format "2006-01-02" }}
+{{- $y := .Date.Format "2006" }}
+{{- $cur := index $byDate $d | default 0 }}
+{{- $byDate = merge $byDate (dict $d (add $cur 1)) }}
+{{- $curY := index $byYear $y | default 0 }}
+{{- $byYear = merge $byYear (dict $y (add $curY 1)) }}
+{{- end }}
+
+{{- $activeDays := len $byDate }}
+{{- $first := index (sort $posts "Date" "asc") 0 }}
+
+<header class="page-header">
+  <h1>{{ .Title | default "统计" }}</h1>
+  {{- with .Description }}<div class="post-description">{{ .Description }}</div>{{ end }}
+</header>
+
+<div class="post-content">
+
+  {{- /* ---- 概览卡片 ---- */ -}}
+  <div class="stat-grid">
+    <div class="stat-card">
+      <span class="stat-num">{{ len $posts }}</span>
+      <span class="stat-label">篇文章</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">{{ $totalWords }}</span>
+      <span class="stat-label">总字数</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">{{ $tagCount }}</span>
+      <span class="stat-label">个标签</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">{{ $catCount }}</span>
+      <span class="stat-label">个分类</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">{{ $activeDays }}</span>
+      <span class="stat-label">天有写作</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">{{ $totalReading }}</span>
+      <span class="stat-label">分钟总阅读</span>
+    </div>
+  </div>
+
+  {{- with $first }}
+  <p>首篇文章发布于 <strong>{{ .Date.Format "2006 年 1 月 2 日" }}</strong>，至今共 {{ len $posts }} 篇。</p>
+  {{- end }}
+
+  {{- /* ---- 写作热力图 ---- */ -}}
+  <h2>写作热力图</h2>
+  <p class="heat-hint">最近 53 周。颜色越深表示当天发布越多。</p>
+  <div class="heatmap" id="heatmap" data-days='{{ $byDate | jsonify }}'>
+    <noscript><p>热力图需要 JavaScript 才能绘制。</p></noscript>
+  </div>
+
+  {{- /* ---- 标签排行 ---- */ -}}
+  {{- with site.Taxonomies.tags }}
+  <h2>标签使用排行</h2>
+  {{- $max := 0 }}
+  {{- range .ByCount }}{{ if gt .Count $max }}{{ $max = .Count }}{{ end }}{{ end }}
+  <ul class="bar-list">
+    {{- range .ByCount }}
+    <li>
+      <a href="{{ .Page.RelPermalink }}"><span class="bar-name">{{ .Page.LinkTitle }}</span></a>
+      <span class="bar-track" aria-hidden="true">
+        <span class="bar-fill" style="width: {{ div (mul .Count 100) $max }}%"></span>
+      </span>
+      <span class="bar-num">{{ .Count }}</span>
+    </li>
+    {{- end }}
+  </ul>
+  {{- end }}
+
+  {{- /* ---- 历年产出 ---- */ -}}
+  {{- if $byYear }}
+  <h2>历年产出</h2>
+  {{- $maxY := 0 }}
+  {{- range $y, $c := $byYear }}{{ if gt $c $maxY }}{{ $maxY = $c }}{{ end }}{{ end }}
+  <ul class="bar-list">
+    {{- range $y, $c := $byYear }}
+    <li>
+      <span class="bar-name">{{ $y }}</span>
+      <span class="bar-track" aria-hidden="true">
+        <span class="bar-fill" style="width: {{ div (mul $c 100) $maxY }}%"></span>
+      </span>
+      <span class="bar-num">{{ $c }}</span>
+    </li>
+    {{- end }}
+  </ul>
+  {{- end }}
+
+</div>
+
+{{- end }}{{/* end main */}}
