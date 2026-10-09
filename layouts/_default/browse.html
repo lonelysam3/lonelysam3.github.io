@@ -1,0 +1,127 @@
+{{- /* ==========================================================================
+   browse.html — 内容总览页，把分类与标签并排呈现（C 组整合）
+   --------------------------------------------------------------------------
+   为什么要做这一页，而不是把两个分类法合并：
+
+   「分类」与「标签」在 Hugo 里是两套独立的 taxonomy，各自有 URL 前缀
+   （/categories/ 与 /tags/）。真要把它们合并成一套，必须
+     (a) 改 hugo.yaml 的 taxonomies 配置，
+     (b) 迁移所有文章的 front matter，
+     (c) 承担旧 URL 全部失效的代价（/tags/xxx/ 会 404）。
+   收益是「少一个页面」，代价是既有链接全断——不划算。
+
+   真正的痛点是【割裂】：读者想知道「站里都有些什么」时，得在分类页和标签页
+   之间来回跳。所以这里提供一个总览页：两者并排、都带计数与最近文章，并说明
+   各自的语义（分类=栏目，互斥；标签=关键词，自由叠加）。原有 taxonomy 页面
+   保留不动，链接不会失效。
+   ========================================================================== */ -}}
+{{- define "main" }}
+
+{{- $posts := where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) }}
+
+<header class="page-header">
+  <h1>{{ .Title | default "浏览" }}</h1>
+  <div class="post-description">
+    共 {{ len $posts }} 篇文章。分类是栏目（每篇一个），标签是关键词（每篇可多个）。
+  </div>
+</header>
+
+<div class="post-content browse">
+
+  {{- /* ---------------- 分类 ---------------- */ -}}
+  <section class="browse-sec">
+    <h2 class="browse-h">
+      按分类
+      <span class="browse-hint">每篇文章只属于一个分类</span>
+    </h2>
+
+    {{- with site.Taxonomies.categories }}
+    {{- $maxC := 0 }}{{ range .ByCount }}{{ if gt .Count $maxC }}{{ $maxC = .Count }}{{ end }}{{ end }}
+    <ul class="browse-list">
+      {{- range .ByCount }}
+      <li class="browse-item">
+        <a class="browse-link" href="{{ .Page.RelPermalink }}">
+          <span class="browse-name">{{ .Page.LinkTitle }}</span>
+          <span class="browse-num">{{ .Count }} 篇</span>
+        </a>
+        <div class="browse-bar"><span style="width: {{ div (mul .Count 100) $maxC }}%"></span></div>
+        {{- with first 3 .Pages }}
+        <ul class="browse-sub">
+          {{- range . }}<li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>{{ end }}
+        </ul>
+        {{- end }}
+      </li>
+      {{- end }}
+    </ul>
+    {{- else }}
+    <p class="browse-empty">还没有分类。</p>
+    {{- end }}
+  </section>
+
+  {{- /* ---------------- 标签 ---------------- */ -}}
+  <section class="browse-sec">
+    <h2 class="browse-h">
+      按标签
+      <span class="browse-hint">一篇文章可以有多个标签</span>
+    </h2>
+
+    {{- with site.Taxonomies.tags }}
+    <ul class="browse-tags">
+      {{- range .ByCount }}
+      <li>
+        <a href="{{ .Page.RelPermalink }}">
+          {{ .Page.LinkTitle }}<sup>{{ .Count }}</sup>
+        </a>
+      </li>
+      {{- end }}
+    </ul>
+
+    <h3 class="browse-sub-h">标签组合</h3>
+    <p class="browse-note">
+      点标签进入该标签的文章列表。下面是使用最多的几个标签所对应的文章。
+    </p>
+    {{- $maxT := 0 }}{{ range .ByCount }}{{ if gt .Count $maxT }}{{ $maxT = .Count }}{{ end }}{{ end }}
+    <ul class="browse-list">
+      {{- range first 6 .ByCount }}
+      <li class="browse-item">
+        <a class="browse-link" href="{{ .Page.RelPermalink }}">
+          <span class="browse-name">{{ .Page.LinkTitle }}</span>
+          <span class="browse-num">{{ .Count }} 篇</span>
+        </a>
+        <div class="browse-bar"><span style="width: {{ div (mul .Count 100) $maxT }}%"></span></div>
+        {{- with first 3 .Pages }}
+        <ul class="browse-sub">
+          {{- range . }}<li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>{{ end }}
+        </ul>
+        {{- end }}
+      </li>
+      {{- end }}
+    </ul>
+    {{- else }}
+    <p class="browse-empty">还没有标签。</p>
+    {{- end }}
+  </section>
+
+  {{- /* ---------------- 全部文章 ---------------- */ -}}
+  <section class="browse-sec">
+    <h2 class="browse-h">
+      全部文章
+      <span class="browse-hint">按时间倒序</span>
+    </h2>
+    {{- with $posts.ByDate.Reverse }}
+    <ul class="sb-links">
+      {{- range . }}
+      <li>
+        <a href="{{ .RelPermalink }}">
+          {{ .Title }}
+          <span class="browse-date">{{ .Date.Format "2006-01-02" }}</span>
+        </a>
+      </li>
+      {{- end }}
+    </ul>
+    {{- end }}
+  </section>
+
+</div>
+
+{{- end }}{{/* end main */}}

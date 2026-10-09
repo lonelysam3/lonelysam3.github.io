@@ -361,6 +361,55 @@
     border-color: var(--c-accent);
 }
 
+/* --- 浏览块：热门标签条 + 完整入口 --- */
+.sb-tagrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+}
+
+.sb-tagrow a {
+    display: inline-block;
+    padding: 0.15em 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-muted);
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.sb-tagrow a:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+.sb-tagrow sup {
+    margin-inline-start: 0.25em;
+    font-size: 0.85em;
+    color: var(--c-text-faint);
+}
+
+.sb-all {
+    display: inline-block;
+    margin-top: var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-muted);
+    border-bottom: 1px solid var(--c-border-strong);
+    transition:
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
+}
+
+.sb-all:hover {
+    color: var(--c-accent);
+    border-color: var(--c-accent);
+}
+
 /* --------------------------------------------------------------------------
    3. 文章页
    -------------------------------------------------------------------------- */

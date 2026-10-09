@@ -129,10 +129,14 @@
         </div>
     </div>
 
-    {{- /* 分类统计：主内容只在导航提供入口，没有计数与概览 */ -}}
-    {{- with site.Taxonomies.categories }}
+    {{- /* 浏览：把分类与标签收进同一个区块。
+           此前侧栏只有「分类」，而全站只有 1 个分类，这一块几乎不传递信息；
+           现在同时给出分类计数与最常用的几个标签，并指向完整的浏览页。
+           分类计入数量、标签只取前 6 个，避免侧栏被标签撑长。 */ -}}
     <div class="sb-block">
-        <h2 class="sb-title">分类</h2>
+        <h2 class="sb-title">浏览</h2>
+
+        {{- with site.Taxonomies.categories }}
         <ul class="sb-counts">
             {{- range .ByCount }}
             <li>
@@ -143,8 +147,18 @@
             </li>
             {{- end }}
         </ul>
+        {{- end }}
+
+        {{- with site.Taxonomies.tags }}
+        <div class="sb-tagrow">
+            {{- range first 6 .ByCount }}
+            <a href="{{ .Page.RelPermalink }}">{{ .Page.LinkTitle }}<sup>{{ .Count }}</sup></a>
+            {{- end }}
+        </div>
+        {{- end }}
+
+        <a class="sb-all" href="{{ "browse/" | relLangURL }}">全部文章与标签 →</a>
     </div>
-    {{- end }}
 
     {{- /* 最近文章：主内容区是分页列表，侧栏给不翻页的最新几篇 */ -}}
     {{- with first 5 (where site.RegularPages "Type" "in" site.Params.mainSections) }}

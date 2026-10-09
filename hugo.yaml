@@ -36,11 +36,15 @@ languages:
         - name: 归档
           pageRef: archives/
           weight: 5
-        - name: 分类
-          pageRef: categories/
-          weight: 10
-        - name: 标签
-          pageRef: tags/
+        # 「分类」与「标签」合并为「浏览」一项：两者原本各占一个导航位置，
+        # 但都是索引类页面，读者想知道「站里有什么」时要在两者间来回跳。
+        # 浏览页（layouts/_default/browse.html）把分类、标签、全部文章并排
+        # 呈现，并说明两者语义差异。
+        # 原有的 /categories/ 与 /tags/ 页面【保留可用】——它们是 Hugo 的
+        # taxonomy 页面，大量文章与搜索结果的链接指向它们，删掉会让链接失效。
+        # 这里只是不再从主导航露出入口，避免重复。
+        - name: 浏览
+          pageRef: browse/
           weight: 10
         - name: 统计
           pageRef: stats/

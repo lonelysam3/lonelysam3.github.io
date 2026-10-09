@@ -902,7 +902,164 @@ body.palette-open {
 }
 
 /* ==========================================================================
-   13. 关于页照片
+   13. 浏览页（分类 + 标签总览）
+   ========================================================================== */
+.browse-sec {
+    margin-bottom: var(--s-10);
+}
+
+.browse-sec:last-child {
+    margin-bottom: 0;
+}
+
+.browse-h {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-3);
+    margin: var(--s-8) 0 var(--s-4);
+    padding-bottom: var(--s-2);
+    font-size: var(--fs-md);
+    border-bottom: 1px solid var(--c-border);
+}
+
+.browse-hint {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-normal);
+    color: var(--c-text-faint);
+}
+
+.browse-sub-h {
+    margin: var(--s-6) 0 var(--s-2);
+    font-size: var(--fs-sm);
+    color: var(--c-text-muted);
+}
+
+.browse-note,
+.browse-empty {
+    margin: var(--s-2) 0 var(--s-4);
+    font-size: var(--fs-sm);
+    color: var(--c-text-faint);
+}
+
+.browse-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.browse-item {
+    padding: var(--s-3) 0;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.browse-item:last-child {
+    border-bottom: none;
+}
+
+.browse-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-3);
+}
+
+.browse-name {
+    font-weight: var(--fw-medium);
+    color: var(--c-text);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.browse-link:hover .browse-name {
+    color: var(--c-accent);
+}
+
+.browse-num {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-faint);
+}
+
+.browse-bar {
+    height: 4px;
+    margin-top: var(--s-2);
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+    overflow: hidden;
+}
+
+.browse-bar > span {
+    display: block;
+    height: 100%;
+    background: var(--c-accent);
+    border-radius: var(--r-full);
+}
+
+.browse-sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+    margin: var(--s-2) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-xs);
+}
+
+.browse-sub a {
+    color: var(--c-text-muted);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.browse-sub a:hover {
+    color: var(--c-accent);
+}
+
+/* 标签云 */
+.browse-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: var(--s-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.browse-tags a {
+    display: inline-block;
+    padding: 0.25em 0.85em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.browse-tags a:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+.browse-tags sup {
+    margin-inline-start: 0.3em;
+    font-size: 0.85em;
+    color: var(--c-text-faint);
+}
+
+/* 全部文章里的日期 */
+.browse-date {
+    margin-inline-start: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-faint);
+}
+
+/* ==========================================================================
+   14. 关于页照片
    --------------------------------------------------------------------------
    关于页那张图是 base64 内联的（原图 678×800），且无法经图片管线压缩，
    因此靠 CSS 约束显示尺寸来控制观感与带宽浪费。
@@ -921,7 +1078,7 @@ body.palette-open {
 }
 
 /* ==========================================================================
-   14. 窄屏适配
+   15. 窄屏适配
    ========================================================================== */
 @media (max-width: 45rem) {
     .callout {
