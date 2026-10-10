@@ -51,7 +51,7 @@ ShowToc: true
 
 ## 下载SDK
 
-[RunningByeBye/dev/CQUPT-Sports-SDK-使用总结.md at main · skh2945932142/RunningByeBye](https://github.com/skh2945932142/RunningByeBye/blob/main/dev/CQUPT-Sports-SDK-使用总结.md)
+`https://github.com/skh2945932142/RunningByeBye/blob/main/dev/CQUPT-Sports-SDK-%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93.md`
 
 主要基于这个教程
 
@@ -110,10 +110,14 @@ CA 证书文件在 Yakit 的安装目录下，比如`D:\yakit\yakit-projects\yak
 ### 5. 抓取 openid
 
 1. 保持 Yakit 处于运行状态，把微信完全退出再重新打开，然后登录用于跑步的那个微信号
-3. 在微信里启动校园跑小程序
-4. 回到 Yakit，找到形如这样的请求`https://sport.cqupt.edu.cn/new_wxapp/wxUnifyId/checkBinding?wxCode=xxxxxxxx`
 
-6. 点击这个包，在 Response 里就能看到 `openid` 字段，复制出来
+2. 在微信里启动校园跑小程序
+
+3. 回到 Yakit，找到形如这样的请求
+
+   `https://sport.cqupt.edu.cn/new_wxapp/wxUnifyId/checkBinding?wxCode=xxxxxxxx`
+
+4. 点击这个包，在 Response 里就能看到 `openid` 字段，复制出来
 
 ### 6. 抓不到包时的排查顺序
 
@@ -147,9 +151,11 @@ CA 证书文件在 Yakit 的安装目录下，比如`D:\yakit\yakit-projects\yak
    在风华开启配速 6 分钟/千米的跑步
 
    `-f` 可选场地：`风华运动场` / `太极运动场` / `宁静苑`
+   
    `-p` 配速，填 `0` 表示随机
-   `-i` 点位上报间隔秒数，填 `0` 表示自动
 
+   `-i` 点位上报间隔秒数，填 `0` 表示自动
+   
 3. 建议宿舍留人帮忙执行命令行，抱个电脑在操场上扫脸很需要勇气
 
 ## 制作前端页面（可选）
