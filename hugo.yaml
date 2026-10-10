@@ -1,6 +1,9 @@
-baseURL: "https://blog.lonelysam8.me" # 主站的 URL（线上实际域名；改这里才能让 og:url / RSS / sitemap 用对域名）
+# 主站域名。改这里才能让 og:url / RSS / sitemap / 页脚链接用对域名。
+# 注：GitHub Actions 构建时会用 --baseURL "${{ steps.pages.outputs.base_url }}/" 覆盖本项，
+# 所以线上链接跟随 Pages 的 Custom domain 设置；本地构建则以本行为准。
+baseURL: "https://blog.lonelysam3.tech"
 title: lonelysam3's Blog # 站点标题
-copyright: "[©2026 lonelysam3's Blog](https://blog.lonelysam8.me/)" # 网站的版权声明，通常显示在页脚
+copyright: "[©2026 lonelysam3's Blog](https://blog.lonelysam3.tech/)" # 网站的版权声明，通常显示在页脚
 theme: PaperMod # 主题
 languageCode: zh-cn # 语言
 
