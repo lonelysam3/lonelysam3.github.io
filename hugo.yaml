@@ -1,9 +1,16 @@
-# 主站域名。改这里才能让 og:url / RSS / sitemap / 页脚链接用对域名。
-# 注：GitHub Actions 构建时会用 --baseURL "${{ steps.pages.outputs.base_url }}/" 覆盖本项，
-# 所以线上链接跟随 Pages 的 Custom domain 设置；本地构建则以本行为准。
-baseURL: "https://blog.lonelysam3.tech"
+# 本地开发用的地址。线上构建时 GitHub Actions 会用
+#   --baseURL "${{ steps.pages.outputs.base_url }}/"
+# 覆盖本项，实际域名由仓库根目录的 static/CNAME 决定（GitHub Pages 读它来绑定域名）。
+#
+# 【刻意不在这里写真实域名】域名可能更换（免费域名有有效期），而本文件的改动会
+# 进版本控制、长期留存。把它留成本地地址，换域名时只需改 static/CNAME 一行，
+# 其余环节（所有 absURL、RSS、sitemap、og:url、站内绝对链接）都由 Pages 的输出
+# 自动派生，不需要动任何配置。
+baseURL: "http://localhost:1313/"
 title: lonelysam3's Blog # 站点标题
-copyright: "[©2026 lonelysam3's Blog](https://blog.lonelysam3.tech/)" # 网站的版权声明，通常显示在页脚
+# 页脚版权。链接用相对路径 "/" 而不是写死域名——相对路径在任何域名下都正确，
+# 换域名时无需改动。改成绝对地址反而会多出一处需要同步维护的地方。
+copyright: "[©2026 lonelysam3's Blog](/)"
 theme: PaperMod # 主题
 languageCode: zh-cn # 语言
 
