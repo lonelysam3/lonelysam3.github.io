@@ -70,7 +70,7 @@ ShowToc: true
 
 3. 执行`go run main.go`运行主程序
 
-## 获取 openid：Yakit 抓包完整流程
+## 获取 openid
 
 ### 1. 安装 Yakit
 
@@ -111,7 +111,7 @@ CA 证书文件在 Yakit 的安装目录下，比如`D:\yakit\yakit-projects\yak
 
 1. 保持 Yakit 处于运行状态，把微信完全退出再重新打开，然后登录用于跑步的那个微信号
 3. 在微信里启动校园跑小程序
-4. 回到 Yakit，找到形如这样的请求：`https://sport.cqupt.edu.cn/new_wxapp/wxUnifyId/checkBinding?wxCode=xxxxxxxx`
+4. 回到 Yakit，找到形如这样的请求`https://sport.cqupt.edu.cn/new_wxapp/wxUnifyId/checkBinding?wxCode=xxxxxxxx`
 
 6. 点击这个包，在 Response 里就能看到 `openid` 字段，复制出来
 
@@ -141,9 +141,8 @@ CA 证书文件在 Yakit 的安装目录下，比如`D:\yakit\yakit-projects\yak
 | `recover` | 恢复未完成的跑步任务 |
 
 1. 第一次启动执行 `go run ./cmd/commandline login <openid>` 绑定抓到的 openid，
-   后续启动时无需再次绑定。能看到输出姓名学号等则说明绑定成功，否则重复
-   获取openid一节重新抓取
-
+   后续启动时无需再次绑定。能看到输出姓名学号等则说明绑定成功，否则重复 获取openid 一节重新抓取
+   
 2. 执行 `go run ./cmd/commandline run start <openid> -f 风华运动场 -p 6.0`
    在风华开启配速 6 分钟/千米的跑步
 
@@ -155,7 +154,7 @@ CA 证书文件在 Yakit 的安装目录下，比如`D:\yakit\yakit-projects\yak
 
 ## 制作前端页面（可选）
 
-让 ai agent 阅读这个项目文件夹，做一个前端页面
+让 AI Agent 阅读这个项目文件夹，做一个前端页面
 
 利用 Github 学生认证从微软 Azure 获取免费的服务器，上传前端页面方便在操场用手机查看
 
