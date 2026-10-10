@@ -1,3 +1,29 @@
+# =============================================================================
+# 【HTTPS 与域名的运维说明 —— 换域名、或想开 GitHub 那个灰色开关时，请先读这段】
+#
+# 本站域名解析挂在 Cloudflare 上并开启了代理（橙色云）。由此产生两个容易误判的
+# 现象，记录在此以免日后重复排查：
+#
+# 1. GitHub 仓库 Settings → Pages 的「Enforce HTTPS」是灰色、点不了，提示
+#    "your domain is not properly configured to support HTTPS"。
+#    原因：流量都被 Cloudflare 接走，GitHub 收不到 ACME 验证请求，无法为本域名
+#    签发证书（直连 GitHub 的 185.199.108-111.153 只会拿到 *.github.io 证书，
+#    不覆盖自定义域名），因此拒绝开启该选项。
+#
+#    【这不影响使用】实测 http 访问由 Cloudflare 返回 301 跳到 https，且只需
+#    一跳即达 200，不存在重定向循环。也就是 HTTPS 强制跳转已在 Cloudflare 层
+#    完成，GitHub 那个开关是多余的，保持灰色即可，不要去关代理换它。
+#
+# 2. Cloudflare 在「Always Use HTTPS」旁会提示：若源站也强制跳转 HTTPS，可能
+#    导致 ERR_TOO_MANY_REDIRECTS。本站不会：GitHub Pages 的 Enforce HTTPS 开
+#    不了，源站并不做跳转，没有第二跳。该循环只在 Cloudflare 的 SSL/TLS 模式为
+#    Flexible 时才会发生——那种模式用 http 回源，与源站跳转互相推。因此请确保
+#    SSL/TLS 模式为 Full 或 Full (strict)，不要用 Flexible。
+#
+# 换域名的操作：只改 static/CNAME 一行，再到 Cloudflare 为新子域名加一条指向
+# <用户名>.github.io 的 CNAME 记录即可，本文件无需改动。
+# =============================================================================
+#
 # 本地开发用的地址。线上构建时 GitHub Actions 会用
 #   --baseURL "${{ steps.pages.outputs.base_url }}/"
 # 覆盖本项，实际域名由仓库根目录的 static/CNAME 决定（GitHub Pages 读它来绑定域名）。

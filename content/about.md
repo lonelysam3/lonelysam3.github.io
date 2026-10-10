@@ -5,15 +5,9 @@ url: "/about/"
 summary: about
 ---
 
-LonelySam3，CQUPT 网络空间安全专业大二在读。写着玩，也顺便练手。
-
-成都人。
+LonelySam3，CQUPT 网络空间安全专业大二在读写着玩，也顺便练手
 
 方向偏 Web 安全与渗透测试，水平一般，还在补基础。
-
-
-
-
 
 给还在高中的朋友几句话：
 
@@ -23,9 +17,9 @@ LonelySam3，CQUPT 网络空间安全专业大二在读。写着玩，也顺便�
 
 永远不要轻视水课和水课作业，它可能会让你某一天晚上疯狂开夜车补作业来防止挂科
 
-这个博客记录我的学习笔记和一些想法，更新随缘。
+这个博客记录我的学习笔记和一些想法，更新随缘
 
-最后贴一张高一时的照片。
+最后贴一张高一时的照片
 
 <img class="about-photo"
      src="data:img/jpg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcU
