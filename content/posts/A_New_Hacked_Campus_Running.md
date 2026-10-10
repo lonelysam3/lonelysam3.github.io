@@ -78,7 +78,7 @@ ShowToc: true
 4. 启动MITM交互式劫持开始抓包
 5. 保持yakit抓包状态，前往电脑版微信登录用于跑步的微信号
 6. 微信启动跑步小程序，返回yakit界面，寻找形如https://sport.cqupt.edu.cn/new_wxapp/wxUnifyId/checkBinding?wxCode=的包
-7. 单击这个包 Response里机获得openid
+7. 单击这个包 Response里即可获得openid
 
 ## 用命令行启动跑步
 
