@@ -5,7 +5,7 @@ url: "/about/"
 summary: about
 ---
 
-LonelySam3，CQUPT 网络空间安全专业大二在读写着玩，也顺便练手
+我是LonelySam3，CQUPT 网络空间安全专业大二在读，写着玩，也顺便练手
 
 方向偏 Web 安全与渗透测试，水平一般，还在补基础
 
