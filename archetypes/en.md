@@ -63,10 +63,43 @@ tags: ["tag-one", "tag-two"]
                     Change it freely — it does not affect pairing.
        date         Publication date and time. Drives sorting everywhere.
        draft        true = not published. Set to false when ready.
-       categories   Pick exactly ONE. Appears in the sidebar and breadcrumbs.
-       tags         As many as you like. Powers search, tag pages, "Related".
+       categories   Pick exactly ONE. See the note below about language.
+       tags         As many as you like. See the note below about language.
 
-       Optional fields — delete the line if unused:
+     → CATEGORIES AND TAGS ARE SHARED BETWEEN LANGUAGES
+
+       Hugo keeps ONE taxonomy vocabulary for the whole site — this cannot be
+       split per language. So if the English post says `categories: ["notes"]`
+       while the Chinese post says `["日记"]`, the Chinese sidebar ends up
+       showing a stray "notes" entry alongside 日记.
+
+       Therefore: use the SAME Chinese term in both versions.
+
+         content/posts/x.md          categories: ["教程"]
+         content/en/posts/x.md       categories: ["教程"]     ← same term
+
+       Each site then DISPLAYS that term in its own language, because
+       content/categories/教程/_index.md says `title: "教程"` while
+       content/en/categories/教程/_index.md says `title: "Tutorial"`.
+       One vocabulary, two labels.
+
+       Terms this site already uses: 日记 / 教程 / 公告
+       Tags in use: 博客 / 生活记录 / 校园跑 / 科技 / 笔记 / Github / 公告
+
+     → PINNING A POST TO THE TOP
+
+       Add `weight: 1`. Hugo sorts lists by weight ascending, then by date
+       descending for equal weights, and posts WITH a weight come before all
+       posts without one. Verified against this site's build:
+
+         weight: 1  ->  appears first
+         (no weight) -> ordered by date, newest first, after all pinned posts
+
+       Lower numbers come first, so use 1, 2, 3… to order several pinned
+       posts. Remove the line to unpin.
+
+     → OPTIONAL FIELDS — delete the line if unused:
+
          summary        One-line blurb for list pages and search results.
                         OMIT IT rather than leaving it empty: an empty string
                         counts as "set but empty" and renders a blank blurb

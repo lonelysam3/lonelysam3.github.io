@@ -53,10 +53,40 @@ tags: ["标签1", "标签2"]
        title        列表、<title>、浏览器标签页显示的名字。随便改，不影响配对。
        date         发布日期与时间，决定各处排序。
        draft        true = 不发布。写好了改成 false。
-       categories   只填一个。显示在侧栏「分类」并用于面包屑与结构化数据。
-       tags         可填多个。用于搜索、标签页、侧栏「相关文章」。
+       categories   只填一个。见下面关于语言的说明。
+       tags         可填多个。见下面关于语言的说明。
 
-       可选字段——不用就整行删掉：
+     → 分类与标签在两种语言之间是【共享】的
+
+       Hugo 全站只有一套 taxonomy 词表，无法按语言拆开。因此如果英文版写
+       categories: ["notes"] 而中文版写 ["日记"]，中文站侧栏就会同时出现
+       日记 和 notes 两个条目。
+
+       所以：【两版用同一个中文词】。
+
+         content/posts/x.md          categories: ["教程"]
+         content/en/posts/x.md       categories: ["教程"]     ← 同一个词
+
+       而每个站会用自己的语言显示它，因为
+         content/categories/教程/_index.md     写 title: "教程"
+         content/en/categories/教程/_index.md  写 title: "Tutorial"
+       一套词表，两个标签。
+
+       本站已有的分类：日记 / 教程 / 公告
+       已有的标签：博客 / 生活记录 / 校园跑 / 科技 / 笔记 / Github / 公告
+
+     → 把文章置顶
+
+       加一行 `weight: 1`。Hugo 列表按 weight 升序排，同 weight 再按日期倒序，
+       而【有 weight 的都排在没 weight 的前面】。已在本站实测确认：
+
+         weight: 1    →  排在最前
+         无 weight    →  按日期倒序，排在所有置顶文章之后
+
+       数字小的在前，多篇置顶就用 1、2、3… 排序。删掉这行即取消置顶。
+
+     → 可选字段——不用就整行删掉：
+
          summary        列表页与搜索结果里的一段话。不填则自动截取正文开头。
                         【不要留空字符串】，那会被当作「已设置但为空」，
                         会渲染出一段空白而不是自动截取。
