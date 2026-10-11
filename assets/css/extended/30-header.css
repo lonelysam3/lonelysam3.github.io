@@ -343,6 +343,17 @@ html.js .nav.is-scrolled {
     align-items: center;
     gap: 2px;
     padding: 2px;
+    /* 【为什么用 min-width 而不是 width: max-content】
+       最初用 max-content 让盒子按内容撑开，实测仍然偏窄（容器 53px，
+       而两个按钮实际需要 66px），按钮被裁掉一角。原因是 max-content 的
+       尺寸在布局阶段就要确定，而 Inter 用 font-display: swap 异步加载——
+       测量发生在回退字体生效时，等 Inter 换上来字形变宽，容器不会跟着涨。
+
+       改用显式 min-width：值 = 两枚短标签（EN / 中，约 1.9rem 各）
+       + 间隙 + 内边距，留一点余量。数字写死是刻意的——它不受字体加载
+       时机影响，任何一种字体下都够宽。 */
+    width: max-content;
+    min-width: 4.5rem;
     background: var(--c-surface-muted);
     border-radius: var(--r-full);
     transform: translateY(-50%);

@@ -69,29 +69,11 @@
                 </button>
                 {{- end }}
 
-                {{- if (not site.Params.disableLangToggle) }}
-                    {{- $lang := .Lang}}
-                    {{- $separator := or $label_text (not site.Params.disableThemeToggle)}}
-                    {{- with site.Home.Translations }}
-                    <ul class="lang-switch">
-                        {{- if $separator }}<li>|</li>{{ end }}
-                        {{- range . -}}
-                        {{- if ne $lang .Lang }}
-                        <li>
-                            <a href="{{- .Permalink -}}" title="{{ .Language.Params.languageAltTitle | default (.Language.LanguageName | emojify) | default (.Lang | title) }}"
-                                aria-label="{{ .Language.LanguageName | default (.Lang | title) }}">
-                                {{- if (and site.Params.displayFullLangName (.Language.LanguageName)) }}
-                                {{- .Language.LanguageName | emojify -}}
-                                {{- else -}}
-                                {{- .Lang | title -}}
-                                {{- end -}}
-                            </a>
-                        </li>
-                        {{- end -}}
-                        {{- end}}
-                    </ul>
-                    {{- end }}
-                {{- end }}
+                {{- /* 主题原有的语言切换器（<ul class="lang-switch">）已移除。
+                       它与导航末尾的自定义 partial 是两套东西，同页会渲染出
+                       两个语言切换器；而且它的类名与自定义样式撞名，导致
+                       .lang-switch 的定位规则作用在错误的元素上。
+                       切换器统一由 layouts/partials/lang-switch.html 提供。 */ -}}
             </div>
         </div>
 
