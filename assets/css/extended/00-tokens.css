@@ -1,48 +1,68 @@
 /* ==========================================================================
    00-tokens.css — 设计令牌（全站唯一的视觉决策来源）
    --------------------------------------------------------------------------
-   【风格基准：ChatGPT / OpenAI 设计系统】
-   参考 OpenAI 公开的界面规格，取其【方法论】而非品牌元素：
+   【本版基准】两份参考，各取所长：
 
-     · 单强调色，且只用于主操作与焦点——不拿强调色当装饰
-     · 文字分四级灰阶，靠明度差建立层级，而不是靠颜色或字号跳动
-     · 用细边框划分结构，不堆阴影；阴影只留给真正浮起的层（浮层、弹窗）
-     · 标题用负字距收紧，正文保持中性字距
-     · 正文行高 1.6–1.75，为长文阅读服务
-     · 圆角克制：6 / 8 / 12 / 16px 四档
-     · 内容居中且宽度受限（阅读列 47.5rem ≈ 760px）
+     A. 设计语言参考 OpenAI
+        · 间距一律落在 4px 网格上（2/4/6/8/12/16/20/24），不出现随手值
+        · 圆角克制，取值限定在 4/6/8/10/12/16/999px
+        · 字重只用 400 / 500 / 600，不引入第四个
+        · 单强调色，只用于主操作与焦点，不拿它当装饰
+        · 结构靠细边框划分，阴影只留给真正浮起的层
+        · 内容居中且宽度受限
 
-   取用与保留的界线：
-     · 字体不照搬——OpenAI 用商业字体 Söhne，本站在可用免费字体中选择
-       Inter（同为中性几何无衬线，是公认最接近的替代）。
-     · 强调色不照搬——绿色 #10a37f 是 ChatGPT 的品牌色，直接套用会让本站
-       显得像它的仿站。因此保留本站原有的青色系，只借用「单色、克制」的原则。
-     · 浅色与深色【两套完整实现】。ChatGPT 以浅色为主，本站跟随系统，
-       因此深色不是浅色的简单反相，而是按同一套灰阶逻辑重新取值。
+     B. 排版参考 liuu.org（这是「杂志感」的来源，本版重点补齐）
+        · 正文 18px / line-height 1.75，段落与标题的字号梯度
+        · .prose 行长 68ch、字号 1.08rem、行高 1.78
+        · h2 上边框 + text-wrap: balance，负字距 -0.02em
+        · 代码块 1px 边框 + 左侧 3px 色条（inset box-shadow），不用大面积底色
+        · 暖中性色（底色带极淡红、墨色偏暖、分隔线走暖调 oklch）
+        · 【等宽字体的用法】导航、面包屑、元信息、目录、标签、分页、归档
+          日期——所有「乐器谱号」式的辅助信息全部用等宽字体，正文用衬线/
+          无衬线。这是它整体气质的最大来源。
+
+   【为什么本版把等宽字体的使用面扩大】
+     上一版只把等宽字体用在代码和少量元信息上，整体仍是「一个无衬线走天下」，
+     看起来像后台管理界面。liuu 的做法是让等宽字体承担全部次要信息，与正文
+     形成两种「音色」，页面才有编辑设计的层次。本版对齐这一点。
+
+   【中英文对齐：一份规格，两种字形】
+     liuu.org 的做法是零处 :lang() 分支、零处针对中文的字号改写——靠字体栈
+     自然分流（拉丁字符命中 Inter，汉字跳过 Inter 落到系统中文无衬线），
+     两种文字共用同一套 font-size / line-height / 栏宽。
+     本版完全沿用这个机制：所有尺寸只有一个值，不按语言分叉。
+     基准是英文（拉丁）的排版需求，中文受益于同一套行高与栏宽。
 
    【书写基准：桌面优先】
    基础样式按桌面书写，窄屏在文件末尾用 max-width 媒体查询逐级下调。
 
    【命名约定】
-     --c-*   颜色        --fs-*  字号        --s-*   间距
-     --r-*   圆角        --sh-*  阴影        --dur-* 动效时长
+     --c-*   颜色        --fs-*  字号      --s-*   间距
+     --r-*   圆角        --sh-*  阴影      --dur-* 动效时长
 
    【硬性约束】
-   除本文件外，任何层都不得出现字面量颜色（#hex / rgb()）与魔法数字间距。
-   调色或调间距只改这里。
+   除本文件外，任何层都不得出现字面量颜色（#hex / rgb() / oklch()）与
+   魔法数字间距。调色或调间距只改这里。
+
+   【关于「定义了但没被引用」的令牌】
+   下面几项目前没有使用点，但它们属于【设计刻度】而非死代码，因此保留：
+     --measure  68ch          —— 目标行长，与 --w-main 一起记录「阅读列该多宽」
+     --w-main   45rem(720px)  —— liuu 的 --main-width，本设计的骨架宽度
+     --r-xl     12px          —— 圆角刻度中间档，组件随时可能用到
+   其余令牌务必保持「定义了就有使用点」，避免刻度表虚胖。
    ========================================================================== */
 
 :root {
     /* ================================================================ 字体
-       Inter 由 extend_head.html 注入（拉丁字符集），作为正文与界面字体。
+       Inter 由 extend_head.html 注入（@fontsource，按 unicode-range 分片），
+       承载拉丁正文与界面文字。
 
        字体匹配是逐字符进行的：汉字会跳过所有不含该字形的字体，命中第一个
-       包含它的为止。因此 generic 关键字（monospace / sans-serif）必须放在
-       字体栈最末位，否则前面声明的中文字体永远不会被用到——Windows 对
-       generic 的中文兜底正是中易宋体。
+       包含它的为止。因此 generic 关键字（sans-serif / monospace）必须放在
+       字体栈最末位，否则前面声明的中文字体永远不会被用到。
 
-       Inter 只覆盖拉丁字符，所以中文仍走系统字体：优先苹方 / 鸿蒙 / 小米
-       这类现代无衬线，其次雅黑。这样中英混排时字形粗细接近，不会出现
+       Inter 只覆盖拉丁字符，所以中文走系统无衬线：优先苹方 / 鸿蒙 / 小米
+       这类现代字体，其次雅黑。这样中英混排时字形粗细接近，不会出现
        「英文细、中文粗」的断裂感。 */
     --font-sans:
         "Inter",
@@ -65,6 +85,8 @@
         "Segoe UI Emoji",
         sans-serif;
 
+    /* 等宽字体承担全部次要信息：导航、面包屑、元信息、目录、标签、分页、
+       归档日期、统计数字。中文落在 Sarasa Mono / 雅黑上，不会缺字形。 */
     --font-mono:
         "JetBrains Mono",
         "JetBrainsMono Nerd Font",
@@ -83,39 +105,54 @@
         monospace;
 
     /* ================================================================ 字阶
-       对齐 OpenAI 的字号梯度（16 正文 / 20 小节 / 24 卡片标题 / 32 区块 /
-       40 页面标题 / 56 hero），再按中文可读性上调一级。
-       中文方块字在同样 px 下比拉丁文显得更满，所以正文取 1.0625rem(17px)，
-       介于它的 Body 16px 与 Large Body 18px 之间。 */
-    --fs-2xs:  0.6875rem;  /* 11px 极小角标 */
-    --fs-xs:   0.8125rem;  /* 13px 元信息、标签（OpenAI 的 Caption） */
-    --fs-sm:   0.875rem;   /* 14px 摘要、辅助文字（OpenAI 的 Small Body） */
-    --fs-base: 1.0625rem;  /* 17px 正文（桌面基准） */
-    --fs-md:   1.25rem;    /* 20px 列表标题、小节（OpenAI 的 Subsection） */
-    --fs-lg:   1.5rem;     /* 24px 卡片标题（OpenAI 的 Card Title） */
-    --fs-xl:   clamp(1.75rem, 1.3rem + 1.5vw, 2.125rem);   /* 文章标题 */
-    --fs-2xl:  clamp(2rem, 1.4rem + 2.1vw, 2.5rem);        /* 页面标题 */
+       对齐 liuu.org 的实测规格（桌面）：
+         body 18px / .prose 1.08rem / h2 1.62rem / h3 1.24rem / code .84rem
 
-    /* 行高：正文 1.75 与 ChatGPT 的会话正文一致；标题收紧到 1.2–1.3 */
-    --lh-tight: 1.25;
+       【为什么全部写成 calc(... * var(--user-scale))】
+       侧栏与命令面板里的字号切换按钮通过 --user-scale 放大/缩小正文。
+       旧实现把这件事交给一条 .post-content{font-size:var(--fs-body-user)}，
+       它位于 60-components.css —— 字母序在 40-content.css 之后，因此
+       压过了那边的 .post-content 字号声明（两者权重相同）。改成让字阶
+       自带倍数后，那条覆盖规则已删除，切换器直接作用于令牌，层级干净。
+
+       --fs-base 从 17px 提到 18px：liuu 用 18px，OpenAI 的 Large Body
+       也是 18px，两者一致，没有理由取中间值。 */
+    --fs-2xs:  calc(0.6875rem * var(--user-scale));  /* 11px 极小角标 */
+    --fs-xs:   calc(0.8125rem * var(--user-scale));  /* 13px 元信息、标签 */
+    --fs-sm:   calc(0.875rem  * var(--user-scale));  /* 14px 摘要 */
+    --fs-code: calc(0.84rem   * var(--user-scale));  /* 13.44px 代码（liuu 实测） */
+    --fs-base: calc(1.125rem  * var(--user-scale));  /* 18px 正文（liuu body） */
+    --fs-read: calc(1.08rem   * var(--user-scale));  /* 19.44px 文章正文（liuu .prose） */
+    --fs-md:   calc(1.24rem   * var(--user-scale));  /* 19.84px h3（liuu 实测） */
+    --fs-lg:   calc(1.62rem   * var(--user-scale));  /* 25.92px h2（liuu 实测） */
+    --fs-xl:   calc(clamp(1.75rem, 1.3rem + 1.5vw, 2.125rem) * var(--user-scale));  /* 文章标题 */
+    --fs-2xl:  calc(clamp(2rem, 1.4rem + 2.1vw, 2.5rem) * var(--user-scale));       /* 页面标题 */
+
+    /* 行高
+       body 1.75 与 .prose 1.78 都取自 liuu 实测；标题收紧到 1.3–1.35。
+       中英文共用这些值——中文方块字在 1.75 下呼吸充足，拉丁文也不显松散。 */
+    --lh-prose: 1.78;   /* 文章正文（liuu .prose） */
+    --lh-base:  1.75;   /* 页面正文（liuu body） */
     --lh-snug:  1.5;
-    --lh-base:  1.75;
+    --lh-head:  1.3;    /* h2（liuu） */
+    --lh-head2: 1.35;   /* h3（liuu） */
+    --lh-tight: 1.25;
 
-    /* 字距：标题负字距收紧（OpenAI 的 tracking-tight/snug），正文中性。
-       中文字距由 font-feature 与字体自身决定，这里主要作用于拉丁文。 */
+    /* 字距
+       liuu 只对标题收紧：h2 -0.02em / h3 -0.014em。
+       中文字距由字体自身决定，这里主要作用于拉丁文。 */
     --ls-hero:    -0.02em;
-    --ls-tight:   -0.015em;
-    --ls-snug:    -0.01em;
-    --ls-normal:  0;
-    --ls-wide:    0.01em;
+    --ls-tight:   -0.02em;   /* h2（liuu 原值） */
+    --ls-snug:    -0.014em;  /* h3（liuu 原值） */
+    --ls-caps:    0.06em;    /* 全大写小标签的字距 */
 
     --fw-normal: 400;
-    --fw-medium: 500;   /* OpenAI：标签、导航、元信息 */
-    --fw-semi:   600;   /* OpenAI：标题、按钮 */
-    --fw-bold:   700;
+    --fw-medium: 500;   /* 导航、标签、元信息的强调态 */
+    --fw-semi:   600;   /* 界面标题、按钮 */
+    --fw-bold:   700;   /* 文章正文标题（liuu 的 h2/h3 都是 700） */
 
     /* ============================================================== 间距刻度
-       4px 基准等比刻度，杜绝 13px / 17px 这类随手值 */
+       严格 4px 网格（OpenAI 的硬性要求），杜绝 13px / 17px 这类随手值。 */
     --s-1:  0.25rem;   /*  4px */
     --s-2:  0.5rem;    /*  8px */
     --s-3:  0.75rem;   /* 12px */
@@ -129,174 +166,261 @@
     --s-20: 5rem;      /* 80px */
 
     /* ================================================================ 圆角
-       取材 OpenAI 的 6 / 8 / 12 / 16px 四档，比上一版更克制——
-       圆角过大会显得「玩具感」，克制才有工具感。 */
+       限定在 4/6/8/10/12/16/999 这几档（OpenAI 的约束）。 */
     --r-xs: 4px;
     --r-sm: 6px;
     --r-md: 8px;
-    --r-lg: 12px;
-    --r-xl: 16px;
+    --r-lg: 10px;
+    --r-xl: 12px;
+    --r-2xl: 16px;
     --r-full: 999px;
 
-    /* ================================================================ 动效
-       OpenAI 用 150ms ease 作为默认过渡时长，这里对齐。 */
+    /* ================================================================ 动效 */
     --dur-fast: 130ms;
     --dur-base: 180ms;
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 
     /* ============================================================ 布局尺寸
-       【阅读列宽】
-       OpenAI 的会话区与文档区都是 768px 居中，这是它「学术论文感」的
-       来源之一：宽度受限，视线不需要长距离横移。
-       本站阅读列取 47.5rem(760px)，与 768px 基本一致；中文一行约 22–25 字，
-       落在舒适区间内。
+       【阅读列宽 720px】
+       liuu.org 的 --main-width 正是 720px，这是它「杂志感」的骨架——
+       比 OpenAI 文档区的 768px 更窄，视线横移更短。
+       720px 下 18px 中文约排 40 字、拉丁文约 78 字符，都在舒适区间。
 
        【流体宽度】
        宽度随视口连续变化并受上下限约束：上限保证行长不超出可读区间，
        下限保证代码块与表格不被压坏。容器用 min(100%, …) 直接吃满窄屏，
        因此窄屏不需要任何断点。 */
-    --w-read: clamp(34rem, 52vw, 47.5rem);
-    --col-main: clamp(34rem, 54vw, 49.5rem);
-    --w-side: clamp(14rem, 17vw, 18rem);
-    --w-gap-col: clamp(1.5rem, 3vw, 3.5rem);
+    --w-main:  45rem;                        /* 720px（liuu） */
+    --col-main: clamp(32rem, 46vw, 45rem);
+    --w-read:   clamp(32rem, 46vw, 45rem);
+    --w-side:   clamp(13rem, 16vw, 17rem);
+    --w-gap-col: clamp(1.5rem, 3vw, 3rem);
     --w-container: min(100%, calc(var(--col-main) + var(--w-gap-col) + var(--w-side) + var(--s-8)));
-    --h-header: 4rem;       /* 顶部栏高度 */
+    --h-header: 3.75rem;      /* 顶部栏高度 */
     --pad-x: clamp(1rem, 2.5vw, 2.5rem);   /* 容器横向留白，同样流体 */
 
-    /* 阅读列的行长上限（ch 为单位，随字号自适应）。用于正文段落约束。 */
+    /* 行长上限。liuu 的 .prose 就是 68ch，直接沿用。 */
     --measure: 68ch;
 
     color-scheme: light;
 
     /* ============================================================== 亮色主题
-       依 OpenAI 亮色规格取值：页面纯白、次级面 #f7f7f8、分隔线 #ececf1、
-       正文 #202123。四级文字灰阶由深到浅。#ffffff 作为页面底色在显示器上
-       偏刺眼，本站略降一点到 #fdfdfd，同时保留卡片纯白以形成层次。 */
-    --c-bg:              #fdfdfd;
+       【这一版改用暖中性色】
+       上一版是冷灰（#202123 / #6e6e80 带蓝味），偏「后台工具」。
+       liuu 用暖色：底色 #fdfafa（带极淡红）、墨色 #211e1e（暖黑）、
+       分隔线走暖调 oklch(hue 25)。暖色让白色不那么刺眼，长文更耐读，
+       也更接近纸媒。本版采用同样思路，但保留本站的青作为强调色。
+
+       四级文字灰阶由深到浅，靠明度差建立层级。 */
+    --c-bg:              #fdfbfa;
     --c-surface:         #ffffff;
     --c-surface-raised:  #ffffff;
-    --c-surface-sunken:  #f7f7f8;
-    --c-surface-muted:   #ececf1;
+    --c-surface-sunken:  #f7f4f3;
+    --c-surface-muted:   #f0ecea;
 
-    --c-text:            #202123;
-    --c-text-soft:       #353740;
-    --c-text-muted:      #6e6e80;
-    --c-text-faint:      #8e8ea0;
+    --c-text:            #211e1e;   /* 暖黑，对底色 15.8:1 */
+    --c-text-soft:       #3d3838;
+    --c-text-muted:      #6c6666;   /* liuu 的 --ink-mid */
+    --c-text-faint:      #817a7a;   /* liuu 的 --ink-soft */
 
-    --c-border:          #ececf1;
-    --c-border-strong:   #d9d9e3;
+    --c-border:          oklch(0.895 0.005 25);   /* liuu 的 --rule */
+    --c-border-strong:   oklch(0.82 0.006 25);    /* liuu 的 --rule-hi */
 
-    /* 强调色：保留本站青色，只借用「单一、克制」的原则。
-       亮色下压深以保证对比度（对纯白底约 4.9:1，达 WCAG AA）。 */
+    /* 强调色：保留本站青色（绿色 #10a37f 是 ChatGPT 品牌色，直接套用会
+       显得像仿站）。亮色下压深以保证对比度：对 #fdfbfa 底约 4.9:1，达 AA。 */
     --c-accent:          #0a6e85;
     --c-accent-hover:    #075666;
     --c-accent-soft:     rgba(10, 110, 133, 0.07);
     --c-accent-ring:     rgba(10, 110, 133, 0.28);
     --c-on-accent:       #ffffff;
 
-    --c-code-bg:         #f7f7f8;
-    --c-code-inline-bg:  #f7f7f8;
+    --c-code-bg:         #f7f4f3;
+    --c-code-panel:      #faf7f6;   /* 代码块底（liuu 的 --code-panel） */
+    --c-code-rule:       oklch(0.895 0.005 25);
+    --c-code-inline-bg:  #f0ecea;
     --c-code-inline-fg:  #08606f;
-    --c-code-text:       #202123;
+    --c-code-text:       #2a2626;
     --c-code-copy-bg:    #ffffff;
 
     --c-selection-bg:    #0a6e85;
     --c-selection-fg:    #ffffff;
 
-    /* 阴影：OpenAI 只用极轻的阴影，结构靠边框。
-       因此这里把阴影压到最低，且层级差异主要交给 --c-border。 */
-    --sh-xs: 0 1px 2px rgba(13, 18, 25, 0.04);
-    --sh-sm: 0 1px 2px rgba(13, 18, 25, 0.05);
-    --sh-md: 0 2px 8px rgba(13, 18, 25, 0.08);
-    --sh-lg: 0 8px 24px rgba(13, 18, 25, 0.12);
-    --sh-xl: 0 24px 48px rgba(13, 18, 25, 0.16);
+    /* 阴影
+       结构靠边框，阴影只留给真正浮起的层。第一档刻意带上 1px 内描边——
+       OpenAI 的 Level 1 就是 `0 0 0 1px + 0 2px 4px -1px` 这个组合，
+       比单纯投影更「贴」。 */
+    --sh-xs: 0 1px 2px rgba(33, 30, 30, 0.04);
+    --sh-sm: 0 0 0 1px rgba(33, 30, 30, 0.05), 0 2px 4px -1px rgba(33, 30, 30, 0.08);
+    --sh-md: 0 2px 8px rgba(33, 30, 30, 0.08);
+    --sh-lg: 0 8px 24px rgba(33, 30, 30, 0.12);
+    --sh-xl: 0 16px 48px -18px rgba(15, 23, 42, 0.45);
 
     /* 图标遮罩：用 currentColor 上色，随文字色自动变化 */
     --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.5 16.5 21 21'/%3E%3C/svg%3E");
+
+    /* ======================================================== 代码语法配色
+       收进令牌层的原因：这些颜色此前散落在 50-code.css 里共 28 处字面量，
+       深色主题要再写一遍，两处必然失同步。集中到令牌后，深色只需覆盖
+       同一批名字。色相按「青主调」设计，与全站强调色同一家族。 */
+    --hl-keyword:  #6b39bd;   /* 关键字 / 控制流 */
+    --hl-string:   #16744c;   /* 字符串 */
+    --hl-number:   #ae5f00;   /* 数字 / 常量 */
+    --hl-function: #097584;   /* 函数名 / 调用 */
+    --hl-comment:  #8290a2;   /* 注释 */
+    --hl-type:     #135a9e;   /* 类型 / 类 */
+    --hl-variable: #27333f;   /* 变量 */
+    --hl-operator: #576373;   /* 运算符 / 标点 */
+    --hl-error:    #b02626;   /* 错误 / 删除（diff 的 - 行同色） */
+    --hl-added:    #16744c;   /* diff 的新增行 */
+    --hl-meta:     #7d8ea6;   /* 元信息 / 注解 */
+
+    /* ============================================================ 标注块
+       callout 的四种类型色。此前这些值写死在 60-components.css 里，深浅
+       两套分开维护。收进令牌层后，组件层只引用名字，深色只需覆盖同一批键。
+
+       只定义【强调色】一项，底色与边框由组件层用 color-mix 从强调色派生，
+       这样新增类型时不必再挑三个互相关联的颜色。 */
+    --callout-info:   #2f7fd0;
+    --callout-tip:    #2f9e6b;
+    --callout-warn:   #c98a12;
+    --callout-danger: #cf4b4b;
+
+    /* ============================================================ 浮层遮罩
+       灯箱与命令面板的背幕。写死 #000 的问题是深色主题下遮罩与背景几乎同色，
+       浮层边界消失；用令牌可以分别取值。 */
+    --c-overlay:        rgba(20, 16, 16, 0.88);
+    --c-overlay-soft:   rgba(20, 16, 16, 0.60);
+    --c-overlay-ink:    #ffffff;                    /* 遮罩上的文字与图标 */
+    --c-overlay-btn:    rgba(255, 255, 255, 0.12);  /* 遮罩上的按钮底 */
+    --c-overlay-btn-hi: rgba(255, 255, 255, 0.22);  /* 按钮 hover */
+    --c-overlay-line:   rgba(255, 255, 255, 0.22);  /* 遮罩上的描边 */
+
+    /* ============================================================ 标注块变量
+       （组件层会按类型覆盖下面三个，这里给默认值，避免引用未定义属性时
+       整条声明被丢弃） */
+    --callout-bg:      #f7f4f3;
+    --callout-border:  oklch(0.895 0.005 25);
+    --callout-accent:  var(--c-accent);
+    --callout-icon-url: none;
+
+    /* 用户字号偏移倍数（字号切换按钮写入 --user-scale，此处给默认值）。
+       原先只有 JS 侧设置，CSS 若在 JS 之前求值会拿到无效值。 */
+    --user-scale: 1;
 }
 
 /* ================================================================ 暗色主题
-   对齐 OpenAI 的深色规格：背景 #212121、次级面 #2f2f2f、正文 #ececec。
-   四级文字灰阶同样由深到浅，与亮色一一对应，因此组件层不需要为深色
-   写任何特例——只要它用的是令牌。 */
+   沿用暖色思路：底色 #171313 / 墨色 #ece8e8（liuu 的深色取值方向），
+   而不是上一版的冷灰 #212121。四级灰阶与亮色一一对应，因此组件层
+   不需要为深色写任何特例——只要它用的是令牌。 */
 :root[data-theme="dark"] {
     color-scheme: dark;
 
-    --c-bg:              #212121;
-    --c-surface:         #2f2f2f;
-    --c-surface-raised:  #303030;
-    --c-surface-sunken:  #1a1a1a;
-    --c-surface-muted:   #3a3a3a;
+    --c-bg:              #171313;
+    --c-surface:         #201b1b;
+    --c-surface-raised:  #241f1f;
+    --c-surface-sunken:  #120f0f;
+    --c-surface-muted:   #2b2525;
 
-    --c-text:            #ececec;
-    --c-text-soft:       #d4d4d4;
-    --c-text-muted:      #b4b4b4;
-    --c-text-faint:      #8e8e8e;
+    --c-text:            #ece8e8;
+    --c-text-soft:       #d6d0d0;
+    --c-text-muted:      #b0a8a8;
+    --c-text-faint:      #8b8383;
 
-    --c-border:          #3d3d3d;
-    --c-border-strong:   #4d4d4d;
+    --c-border:          oklch(0.30 0.010 25);   /* liuu 深色 --rule */
+    --c-border-strong:   oklch(0.40 0.010 25);   /* liuu 深色 --rule-hi */
 
-    /* 深色下青色需要提亮才够对比（对 #212121 底约 8:1） */
+    /* 深色下青色需要提亮才够对比（对 #171313 底约 8.4:1） */
     --c-accent:          #35d0e6;
     --c-accent-hover:    #6ee2f2;
     --c-accent-soft:     rgba(53, 208, 230, 0.10);
     --c-accent-ring:     rgba(53, 208, 230, 0.30);
     --c-on-accent:       #04212a;
 
-    --c-code-bg:         #1a1a1a;
-    --c-code-inline-bg:  #3a3a3a;
+    --c-code-bg:         #120f0f;
+    --c-code-panel:      #1d1919;
+    --c-code-rule:       oklch(0.30 0.010 25);
+    --c-code-inline-bg:  #2b2525;
     --c-code-inline-fg:  #8ae4f2;
-    --c-code-text:       #e4e4e4;
-    --c-code-copy-bg:    #2f2f2f;
+    --c-code-text:       #e6e1e1;
+    --c-code-copy-bg:    #241f1f;
 
     --c-selection-bg:    #35d0e6;
     --c-selection-fg:    #04212a;
 
     --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
-    --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+    --sh-sm: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.32);
     --sh-md: 0 2px 8px rgba(0, 0, 0, 0.36);
     --sh-lg: 0 8px 24px rgba(0, 0, 0, 0.46);
-    --sh-xl: 0 24px 48px rgba(0, 0, 0, 0.56);
+    --sh-xl: 0 16px 48px -18px rgba(0, 0, 0, 0.6);
+
+    /* 语法配色：深色下整体提亮，保持同一套色相顺序 */
+    --hl-keyword:  #c6aafa;
+    --hl-string:   #8fdb9f;
+    --hl-number:   #f2b678;
+    --hl-function: #5cd8d2;
+    --hl-comment:  #98a6b9;
+    --hl-type:     #7cc0f8;
+    --hl-variable: #cbd6e4;
+    --hl-operator: #98a6b9;
+    --hl-error:    #fa9090;
+    --hl-added:    #8fdb9f;
+    --hl-meta:     #98a6b9;
+
+    --callout-bg:      #1d1919;
+    --callout-border:  oklch(0.30 0.010 25);
+
+    /* 深色下标注色整体提亮（浅色那组对深底对比不足） */
+    --callout-info:   #6cb0ec;
+    --callout-tip:    #63c990;
+    --callout-warn:   #e0ad4a;
+    --callout-danger: #f08080;
+
+    /* 深色下遮罩要比背景更暗，浮层边界才成立 */
+    --c-overlay:        rgba(8, 6, 6, 0.90);
+    --c-overlay-soft:   rgba(8, 6, 6, 0.65);
+    --c-overlay-ink:    #f4f0f0;
+    --c-overlay-btn:    rgba(255, 255, 255, 0.10);
+    --c-overlay-btn-hi: rgba(255, 255, 255, 0.18);
+    --c-overlay-line:   rgba(255, 255, 255, 0.18);
 }
 
 /* ==========================================================================
    桌面优先 · 向下适配
    --------------------------------------------------------------------------
-   宽度已全部流体化，容器用 min(100%, …) 自动吃满窄屏，因此这里只调【字号】
-   ——字号不适合纯 vw 缩放，中文字形在小屏上需要相对更大的字号才可读。
-   字号梯度对齐 OpenAI 的响应式规格（页面标题 40 → 28px）。
+   宽度已全部流体化，容器用 min(100%, …) 自动吃满窄屏，因此这里只调【字号】。
+   断点取 820px —— 与 liuu.org 一致，它的移动端规格正是在这里把
+   body 从 18px 降到 17px、.prose 从 1.08rem 降到 1.02rem。
    ========================================================================== */
 
-/* 小笔记本：字阶略收 */
+/* 平板横屏：字阶略收 */
 @media (max-width: 75rem) {
     :root {
-        --fs-base: 1rem;
-        --fs-md: 1.1875rem;
-        --fs-lg: 1.4375rem;
+        --fs-md: calc(1.2rem * var(--user-scale));
+        --fs-lg: calc(1.5rem * var(--user-scale));
     }
 }
 
-/* 平板横屏 */
-@media (max-width: 60rem) {
+/* 820px 断点（对齐 liuu 的移动端规格）
+   注意：这里必须带上 calc(... * var(--user-scale))，否则会盖掉倍数字号，
+   使窄屏下字号切换失效。 */
+@media (max-width: 51.25rem) {
     :root {
-        --fs-base: 1rem;
-        --fs-md: 1.1875rem;
-        --fs-lg: 1.375rem;
-        --h-header: 3.5rem;
+        --fs-base: calc(1.0625rem * var(--user-scale));  /* 18 → 17px（liuu 同款调整） */
+        --fs-read: calc(1.02rem   * var(--user-scale));  /* .prose 1.08 → 1.02rem */
+        --fs-md:   calc(1.16rem   * var(--user-scale));
+        --fs-lg:   calc(1.4rem    * var(--user-scale));
+        --fs-xl:   calc(1.5rem    * var(--user-scale));
+        --fs-2xl:  calc(1.75rem   * var(--user-scale));
+        --h-header: 3.25rem;
     }
 }
 
-/* 平板竖屏 / 手机 */
+/* 手机：再收一级间距，正文不再缩小（17px 是阅读下限） */
 @media (max-width: 45rem) {
     :root {
-        --fs-base: 1rem;       /* 手机上正文不再缩小，16px 是阅读下限 */
-        --fs-md: 1.125rem;
-        --fs-lg: 1.3125rem;
-        --fs-xl: 1.5rem;
-        --fs-2xl: 1.75rem;
-        --h-header: 3.25rem;
         --s-16: 2.5rem;
         --s-20: 3rem;
+        --w-side: 0;
     }
 }
 

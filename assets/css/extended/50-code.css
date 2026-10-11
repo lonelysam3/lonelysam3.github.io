@@ -41,10 +41,12 @@ code {
 .highlight {
     position: relative;
     margin: 1.9em 0;
-    background: var(--c-code-bg);
-    border: 1px solid var(--c-border);
+    background: var(--c-code-panel);
+    border: 1px solid var(--c-code-rule);
+    /* liuu 的代码块语言：1px 边框 + 左侧 3px 色条。色条用强调色，
+       因为这里它承担「这是代码」的语义标识，属于焦点标记而非装饰。 */
     border-inline-start: 3px solid var(--c-accent);
-    border-radius: var(--r-md);
+    border-radius: var(--r-sm);
     overflow: hidden;
     box-shadow: none;
 }
@@ -57,10 +59,11 @@ code {
 .highlight pre,
 pre.chroma {
     margin: 0;
-    padding: var(--s-6) var(--s-5) var(--s-5);
+    padding: var(--s-5) var(--s-5) var(--s-4);
     overflow-x: auto;
-    font-size: 0.9rem;
-    line-height: 1.75;
+    /* 0.84rem(13.44px) 是 liuu 的实测值，比正文小两级，让代码明确「退后一层」 */
+    font-size: var(--fs-code);
+    line-height: 1.68;
     letter-spacing: 0;
     tab-size: 4;
     background: transparent;
@@ -199,124 +202,66 @@ pre:hover .copy-code {
 /* ==========================================================================
    6. 语法高亮 · 暗色
    ========================================================================== */
-:root[data-theme="dark"] .chroma,
-:root[data-theme="dark"] .bg {
+/* chroma 语法高亮。
+   颜色全部取自令牌层，因此这里【只写一组选择器】，深浅主题由
+   00-tokens.css 里的 --hl-* 自动分流。
+   此前这里是"深色一组 + 浅色一组"共两块，因两组选择器权重相同而
+   浅色写在后面，无论当前主题是什么，生效的都是浅色那组——深色
+   高亮一直是坏的。改成单组引用令牌后，这个顺序陷阱不复存在。 */
+.chroma :is(.c, .ch, .cm, .c1, .cs, .cd, .cp, .cpf) {
+    color: var(--hl-comment);
+}
+
+.chroma :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .ow) {
+    color: var(--hl-keyword);
+}
+
+.chroma :is(.s, .sa, .sb, .sc, .s1, .s2, .sh, .si, .sx, .ss, .dl) {
+    color: var(--hl-string);
+}
+
+.chroma :is(.se, .sr) {
+    color: var(--hl-meta);
+}
+
+.chroma :is(.m, .mb, .mf, .mh, .mi, .mo, .no) {
+    color: var(--hl-number);
+}
+
+.chroma :is(.nf, .fm, .nc, .nn) {
+    color: var(--hl-function);
+}
+
+.chroma :is(.na, .nb, .bp, .nv, .vc, .vg, .vi, .vm, .nl) {
+    color: var(--hl-variable);
+}
+
+.chroma :is(.nt, .nd, .ni, .ne) {
+    color: var(--hl-type);
+}
+
+.chroma :is(.o, .p) {
+    color: var(--hl-operator);
+}
+
+.chroma :is(.err) {
+    color: var(--hl-error);
+}
+
+.chroma :is(.gd) {
+    color: var(--hl-error);
+}
+
+.chroma :is(.gi) {
+    color: var(--hl-added);
+}
+
+.chroma,
+.bg {
     color: var(--c-code-text);
-    background-color: transparent;
-}
-
-:root[data-theme="dark"] .chroma :is(.c, .ch, .cm, .c1, .cs, .cd, .cp, .cpf) {
-    color: #7d8ea6;
-    font-style: italic;
-}
-
-:root[data-theme="dark"] .chroma :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .ow) {
-    color: #7cc0f8;
-}
-
-:root[data-theme="dark"] .chroma :is(.s, .sa, .sb, .sc, .s1, .s2, .sh, .si, .sx, .ss, .dl) {
-    color: #8fdb9f;
-}
-
-:root[data-theme="dark"] .chroma :is(.se, .sr) {
-    color: #5cd8d2;
-}
-
-:root[data-theme="dark"] .chroma :is(.m, .mb, .mf, .mh, .mi, .mo, .no) {
-    color: #f2b678;
-}
-
-:root[data-theme="dark"] .chroma :is(.nf, .fm, .nc, .nn) {
-    color: #c6aafa;
-}
-
-:root[data-theme="dark"] .chroma :is(.na, .nb, .bp, .nv, .vc, .vg, .vi, .vm, .nl) {
-    color: #cbd6e4;
-}
-
-:root[data-theme="dark"] .chroma :is(.nt, .nd, .ni, .ne) {
-    color: #5cd8d2;
-}
-
-:root[data-theme="dark"] .chroma :is(.o, .p) {
-    color: #98a6b9;
-}
-
-:root[data-theme="dark"] .chroma .err {
-    color: #fa9090;
     background: transparent;
 }
 
-:root[data-theme="dark"] .chroma .gd {
-    color: #fa9090;
-}
-
-:root[data-theme="dark"] .chroma .gi {
-    color: #8fdb9f;
-}
-
-/* ==========================================================================
-   7. 语法高亮 · 亮色
-   ========================================================================== */
-:root[data-theme="light"] .chroma,
-:root[data-theme="light"] .bg {
-    color: var(--c-code-text);
-    background-color: transparent;
-}
-
-:root[data-theme="light"] .chroma :is(.c, .ch, .cm, .c1, .cs, .cd, .cp, .cpf) {
-    color: #8290a2;
-    font-style: italic;
-}
-
-:root[data-theme="light"] .chroma :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .ow) {
-    color: #135a9e;
-}
-
-:root[data-theme="light"] .chroma :is(.s, .sa, .sb, .sc, .s1, .s2, .sh, .si, .sx, .ss, .dl) {
-    color: #16744c;
-}
-
-:root[data-theme="light"] .chroma :is(.se, .sr) {
-    color: #097584;
-}
-
-:root[data-theme="light"] .chroma :is(.m, .mb, .mf, .mh, .mi, .mo, .no) {
-    color: #ae5f00;
-}
-
-:root[data-theme="light"] .chroma :is(.nf, .fm, .nc, .nn) {
-    color: #6b39bd;
-}
-
-:root[data-theme="light"] .chroma :is(.na, .nb, .bp, .nv, .vc, .vg, .vi, .vm, .nl) {
-    color: #27333f;
-}
-
-:root[data-theme="light"] .chroma :is(.nt, .nd, .ni, .ne) {
-    color: #097584;
-}
-
-:root[data-theme="light"] .chroma :is(.o, .p) {
-    color: #576373;
-}
-
-:root[data-theme="light"] .chroma .err {
-    color: #b02626;
-    background: transparent;
-}
-
-:root[data-theme="light"] .chroma .gd {
-    color: #b02626;
-}
-
-:root[data-theme="light"] .chroma .gi {
-    color: #16744c;
-}
-
-/* ==========================================================================
-   8. 桌面优先 · 向下适配
-   ========================================================================== */
 @media (max-width: 60rem) {
     .highlight pre,
     pre.chroma,

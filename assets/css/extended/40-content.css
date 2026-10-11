@@ -18,7 +18,11 @@
     padding: var(--s-10);
     background: var(--c-surface-sunken);
     border: 1px solid var(--c-border);
-    border-radius: var(--r-xl);
+    border-radius: var(--r-2xl);
+    /* 这是页面上最大的一块「卡片」，用带 1px 内描边的那档阴影。
+       OpenAI 的 Level 1 就是「0 0 0 1px + 0 2px 4px -1px」的组合，
+       比单纯投影更贴合，因为它把边框也算进阴影里。 */
+    box-shadow: var(--sh-sm);
 }
 
 .home-info .entry-header h1 {
@@ -164,8 +168,8 @@
     padding: var(--s-10);
     background: var(--c-surface-sunken);
     border: 1px solid var(--c-border);
-    border-radius: var(--r-xl);
-    box-shadow: none;
+    border-radius: var(--r-2xl);
+    box-shadow: var(--sh-sm);
 }
 
 .first-entry .entry-header {
@@ -260,15 +264,23 @@
 
 /* --------------------------------------------------------------------------
    5. 正文排版
+   --------------------------------------------------------------------------
+   字号层级直接对齐 liuu.org 的实测值（桌面）：
+     body 18px / .prose 1.08rem / h2 1.62rem / h3 1.24rem / code .84rem
+   全部集中在 00-tokens.css 的 --fs-* 里，这里只引用。
+   中英文共用同一套值，不按语言分叉——这是「两版对齐」的实现方式。
    -------------------------------------------------------------------------- */
 .post-content {
-    font-size: var(--fs-base);
-    line-height: var(--lh-base);
+    font-size: var(--fs-read);
+    line-height: var(--lh-prose);
     color: var(--c-text-soft);
 }
 
 .post-content > p {
     margin: 0 0 1.35em;
+    /* pretty 让浏览器避免最后一行只剩一个孤字。对中文尤其有价值：
+       中文没有连字符，孤字换行比拉丁文更常见。 */
+    text-wrap: pretty;
 }
 
 /* 首段略作强调，形成阅读进入感 */
@@ -277,7 +289,13 @@
     color: var(--c-text);
 }
 
-/* ---- 标题层级：h2 底线分节，h3 左侧强调竖线 ---- */
+/* ---- 标题层级 ----
+   取自 liuu 的两个关键手法：
+     1. h2 用【上边框】分节（不是下边框）——在标题「之上」画一条线，
+        视觉上把内容切成章节，而不是给标题加下划线。
+     2. h2 上间距远大于下间距（2.1em vs .1em）：标题紧贴它带领的内容，
+        与上一节拉开距离。这是印刷排版里常见的「近下远上」原则。
+   两个手法都靠 text-wrap: balance 让短标题不出现孤字换行。 */
 .post-content h1,
 .post-content h2,
 .post-content h3,
@@ -286,39 +304,56 @@
 .post-content h6 {
     margin: 0;
     color: var(--c-text);
-    font-weight: var(--fw-semi);
+    /* 文章正文标题用 700（liuu 的 h2/h3 都是 700），界面标题才用 600 */
+    font-weight: var(--fw-bold);
+    /* balance 让多行标题的行长均匀；中文同样受益（避免最后一行只剩一个字） */
+    text-wrap: balance;
+    /* 锚点跳转时给吸顶导航留出空间，否则标题会被导航盖住 */
+    scroll-margin-top: 5.5rem;
 }
 
 .post-content h1 {
-    margin: 2em 0 0.8em;
-    font-size: var(--fs-lg);
+    margin: 2.1em 0 0.1em;
+    font-size: var(--fs-xl);
+    line-height: var(--lh-head);
+    letter-spacing: var(--ls-hero);
 }
 
 .post-content h2 {
-    margin: 2.4em 0 0.9em;
-    padding-bottom: 0.45em;
+    margin: 2.1em 0 0.1em;
+    padding-top: 0.5em;
     font-size: var(--fs-lg);
-    line-height: var(--lh-snug);
-    letter-spacing: -0.018em;
-    border-bottom: 1px solid var(--c-border);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-head);
+    letter-spacing: var(--ls-tight);
+    border-top: 1px solid var(--c-border);
+}
+
+/* 首个标题不吃上边框与上间距，否则文章开头会多出一条悬空的线 */
+.post-content h2:first-child,
+.post-content > :first-child > h2:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 
 .post-content h3 {
-    margin: 2em 0 0.7em;
-    padding-inline-start: var(--s-4);
+    margin: 1.7em 0 0.1em;
     font-size: var(--fs-md);
-    line-height: var(--lh-snug);
-    border-inline-start: 3px solid var(--c-accent);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-head2);
+    letter-spacing: var(--ls-snug);
 }
 
 .post-content h4 {
-    margin: 1.7em 0 0.6em;
+    margin: 1.5em 0 0.4em;
     font-size: 1.05em;
+    letter-spacing: var(--ls-snug);
 }
 
 .post-content h5,
 .post-content h6 {
-    margin: 1.5em 0 0.5em;
+    margin: 1.4em 0 0.4em;
     font-size: 0.95em;
     color: var(--c-text-muted);
 }
@@ -404,15 +439,17 @@
     margin-bottom: 0;
 }
 
-/* ---- 引用 ---- */
+/* ---- 引用 ----
+   改用暖色分隔线而不是强调色：OpenAI 的原则是「强调色只用于主操作与焦点」，
+   段落引用不是操作，用强调色会与链接抢注意力。liuu 的引用块同样走 --rule。 */
 .post-content blockquote {
     margin: 1.9em 0;
-    padding: var(--s-5) var(--s-6);
+    padding: 0 var(--s-6);
     color: var(--c-text-muted);
-    background: var(--c-surface-sunken);
+    background: none;
     border: none;
-    border-inline-start: 3px solid var(--c-accent);
-    border-radius: 0 var(--r-md) var(--r-md) 0;
+    border-inline-start: 3px solid var(--c-border-strong);
+    border-radius: 0;
 }
 
 .post-content blockquote p:last-child {
@@ -582,7 +619,8 @@
     margin-bottom: var(--s-2);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
-    letter-spacing: 0.06em;
+    /* 全大写字母串需要额外字距才不显拥挤，这是排印惯例 */
+    letter-spacing: var(--ls-caps);
     text-transform: uppercase;
     color: var(--c-text-faint);
 }
