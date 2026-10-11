@@ -1,9 +1,27 @@
 /* ==========================================================================
    00-tokens.css — 设计令牌（全站唯一的视觉决策来源）
    --------------------------------------------------------------------------
+   【风格基准：ChatGPT / OpenAI 设计系统】
+   参考 OpenAI 公开的界面规格，取其【方法论】而非品牌元素：
+
+     · 单强调色，且只用于主操作与焦点——不拿强调色当装饰
+     · 文字分四级灰阶，靠明度差建立层级，而不是靠颜色或字号跳动
+     · 用细边框划分结构，不堆阴影；阴影只留给真正浮起的层（浮层、弹窗）
+     · 标题用负字距收紧，正文保持中性字距
+     · 正文行高 1.6–1.75，为长文阅读服务
+     · 圆角克制：6 / 8 / 12 / 16px 四档
+     · 内容居中且宽度受限（阅读列 47.5rem ≈ 760px）
+
+   取用与保留的界线：
+     · 字体不照搬——OpenAI 用商业字体 Söhne，本站在可用免费字体中选择
+       Inter（同为中性几何无衬线，是公认最接近的替代）。
+     · 强调色不照搬——绿色 #10a37f 是 ChatGPT 的品牌色，直接套用会让本站
+       显得像它的仿站。因此保留本站原有的青色系，只借用「单色、克制」的原则。
+     · 浅色与深色【两套完整实现】。ChatGPT 以浅色为主，本站跟随系统，
+       因此深色不是浅色的简单反相，而是按同一套灰阶逻辑重新取值。
+
    【书写基准：桌面优先】
-   本文件与后续各层的基础样式均按桌面尺寸书写，窄屏在文件末尾用
-   max-width 媒体查询逐级下调（1200 / 960 / 720px）。
+   基础样式按桌面书写，窄屏在文件末尾用 max-width 媒体查询逐级下调。
 
    【命名约定】
      --c-*   颜色        --fs-*  字号        --s-*   间距
@@ -16,11 +34,37 @@
 
 :root {
     /* ================================================================ 字体
-       JetBrains Mono 由 extend_head.html 注入，仅覆盖拉丁字符集。
+       Inter 由 extend_head.html 注入（拉丁字符集），作为正文与界面字体。
+
        字体匹配是逐字符进行的：汉字会跳过所有不含该字形的字体，命中第一个
        包含它的为止。因此 generic 关键字（monospace / sans-serif）必须放在
        字体栈最末位，否则前面声明的中文字体永远不会被用到——Windows 对
-       generic 的中文兜底正是中易宋体。 */
+       generic 的中文兜底正是中易宋体。
+
+       Inter 只覆盖拉丁字符，所以中文仍走系统字体：优先苹方 / 鸿蒙 / 小米
+       这类现代无衬线，其次雅黑。这样中英混排时字形粗细接近，不会出现
+       「英文细、中文粗」的断裂感。 */
+    --font-sans:
+        "Inter",
+        "Inter var",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI Variable Text",
+        "Segoe UI",
+        Roboto,
+        "Helvetica Neue",
+        Arial,
+        "PingFang SC",
+        "HarmonyOS Sans SC",
+        "MiSans",
+        "Source Han Sans SC",
+        "Noto Sans CJK SC",
+        "Microsoft YaHei UI",
+        "Microsoft YaHei",
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        sans-serif;
+
     --font-mono:
         "JetBrains Mono",
         "JetBrainsMono Nerd Font",
@@ -31,7 +75,6 @@
         "Cascadia Code",
         "Sarasa Mono SC",
         "Noto Sans Mono CJK SC",
-        "Microsoft YaHei Mono",
         "Microsoft YaHei UI",
         "Microsoft YaHei",
         "PingFang SC",
@@ -39,43 +82,36 @@
         "Noto Sans CJK SC",
         monospace;
 
-    --font-sans:
-        "PingFang SC",
-        "HarmonyOS Sans SC",
-        "MiSans",
-        "Source Han Sans SC",
-        "Noto Sans CJK SC",
-        "Microsoft YaHei UI",
-        "Microsoft YaHei",
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI Variable Text",
-        "Segoe UI",
-        Roboto,
-        "Helvetica Neue",
-        Arial,
-        "Apple Color Emoji",
-        "Segoe UI Emoji",
-        sans-serif;
-
     /* ================================================================ 字阶
-       桌面基准。标题用 clamp() 做流式缩放，正文在窄屏下调一档。 */
+       对齐 OpenAI 的字号梯度（16 正文 / 20 小节 / 24 卡片标题 / 32 区块 /
+       40 页面标题 / 56 hero），再按中文可读性上调一级。
+       中文方块字在同样 px 下比拉丁文显得更满，所以正文取 1.0625rem(17px)，
+       介于它的 Body 16px 与 Large Body 18px 之间。 */
     --fs-2xs:  0.6875rem;  /* 11px 极小角标 */
-    --fs-xs:   0.75rem;    /* 12px 元信息、标签 */
-    --fs-sm:   0.875rem;   /* 14px 列表摘要、辅助文字 */
-    --fs-base: 1.125rem;   /* 18px 正文（桌面基准） */
-    --fs-md:   1.3125rem;  /* 21px 列表标题 */
-    --fs-lg:   1.5rem;     /* 24px 小节标题 */
-    --fs-xl:   clamp(1.875rem, 1.4rem + 1.6vw, 2.375rem);  /* 文章标题 */
-    --fs-2xl:  clamp(2.125rem, 1.5rem + 2.2vw, 2.875rem);  /* 页面标题 */
+    --fs-xs:   0.8125rem;  /* 13px 元信息、标签（OpenAI 的 Caption） */
+    --fs-sm:   0.875rem;   /* 14px 摘要、辅助文字（OpenAI 的 Small Body） */
+    --fs-base: 1.0625rem;  /* 17px 正文（桌面基准） */
+    --fs-md:   1.25rem;    /* 20px 列表标题、小节（OpenAI 的 Subsection） */
+    --fs-lg:   1.5rem;     /* 24px 卡片标题（OpenAI 的 Card Title） */
+    --fs-xl:   clamp(1.75rem, 1.3rem + 1.5vw, 2.125rem);   /* 文章标题 */
+    --fs-2xl:  clamp(2rem, 1.4rem + 2.1vw, 2.5rem);        /* 页面标题 */
 
-    --lh-tight: 1.2;
-    --lh-snug:  1.45;
+    /* 行高：正文 1.75 与 ChatGPT 的会话正文一致；标题收紧到 1.2–1.3 */
+    --lh-tight: 1.25;
+    --lh-snug:  1.5;
     --lh-base:  1.75;
 
+    /* 字距：标题负字距收紧（OpenAI 的 tracking-tight/snug），正文中性。
+       中文字距由 font-feature 与字体自身决定，这里主要作用于拉丁文。 */
+    --ls-hero:    -0.02em;
+    --ls-tight:   -0.015em;
+    --ls-snug:    -0.01em;
+    --ls-normal:  0;
+    --ls-wide:    0.01em;
+
     --fw-normal: 400;
-    --fw-medium: 500;
-    --fw-semi:   600;
+    --fw-medium: 500;   /* OpenAI：标签、导航、元信息 */
+    --fw-semi:   600;   /* OpenAI：标题、按钮 */
     --fw-bold:   700;
 
     /* ============================================================== 间距刻度
@@ -92,137 +128,150 @@
     --s-16: 4rem;      /* 64px */
     --s-20: 5rem;      /* 80px */
 
-    /* ================================================================ 圆角 */
+    /* ================================================================ 圆角
+       取材 OpenAI 的 6 / 8 / 12 / 16px 四档，比上一版更克制——
+       圆角过大会显得「玩具感」，克制才有工具感。 */
     --r-xs: 4px;
     --r-sm: 6px;
-    --r-md: 10px;
-    --r-lg: 14px;
-    --r-xl: 18px;
+    --r-md: 8px;
+    --r-lg: 12px;
+    --r-xl: 16px;
     --r-full: 999px;
 
-    /* ================================================================ 动效 */
-    --dur-fast: 120ms;
-    --dur-base: 200ms;
+    /* ================================================================ 动效
+       OpenAI 用 150ms ease 作为默认过渡时长，这里对齐。 */
+    --dur-fast: 130ms;
+    --dur-base: 180ms;
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 
     /* ============================================================ 布局尺寸
+       【阅读列宽】
+       OpenAI 的会话区与文档区都是 768px 居中，这是它「学术论文感」的
+       来源之一：宽度受限，视线不需要长距离横移。
+       本站阅读列取 47.5rem(760px)，与 768px 基本一致；中文一行约 22–25 字，
+       落在舒适区间内。
+
        【流体宽度】
-       早前用四个硬断点（75rem / 60rem / 45rem）切换固定列宽，断点之间宽度
-       完全不变——1024px 与 1439px 得到完全相同的版面。这确实是「没自适应」。
-
-       现在改用 clamp() 做连续缩放：宽度随视口【连续】变化，同时受上下限
-       约束。上限是必要的，不是保守：正文行长有可读性上限（约 45–90 字符，
-       中文约 20–40 字），纯按百分比在 4K 屏上会算出 150+ 字符的行，那不是
-       自适应而是难读。下限同样必要：太窄会破坏代码块与表格。
-
-       --w-read     正文阅读列：最小 36rem(576px)，理想 55vw，最大 52rem(832px)
-       --col-main   主内容列：比阅读列略宽
-       --w-side     侧栏：随视口比例缩放，最小 14rem 最大 18rem
-       --w-gap-col  列间距：3vw，最小 1.5rem 最大 3.5rem
-       --w-container 容器：主列 + 间距 + 侧栏 + 两侧留白，随视口连续变化
-
-       另外容器用 min() 直接吃满视口（减去留白），所以窄屏不需要任何断点。 */
-    --w-read: clamp(36rem, 55vw, 52rem);
-    --col-main: clamp(36rem, 56vw, 54rem);
+       宽度随视口连续变化并受上下限约束：上限保证行长不超出可读区间，
+       下限保证代码块与表格不被压坏。容器用 min(100%, …) 直接吃满窄屏，
+       因此窄屏不需要任何断点。 */
+    --w-read: clamp(34rem, 52vw, 47.5rem);
+    --col-main: clamp(34rem, 54vw, 49.5rem);
     --w-side: clamp(14rem, 17vw, 18rem);
     --w-gap-col: clamp(1.5rem, 3vw, 3.5rem);
     --w-container: min(100%, calc(var(--col-main) + var(--w-gap-col) + var(--w-side) + var(--s-8)));
     --h-header: 4rem;       /* 顶部栏高度 */
     --pad-x: clamp(1rem, 2.5vw, 2.5rem);   /* 容器横向留白，同样流体 */
 
+    /* 阅读列的行长上限（ch 为单位，随字号自适应）。用于正文段落约束。 */
+    --measure: 68ch;
+
     color-scheme: light;
 
-    /* ============================================================== 亮色主题 */
-    --c-bg:              #fbfcfd;
+    /* ============================================================== 亮色主题
+       依 OpenAI 亮色规格取值：页面纯白、次级面 #f7f7f8、分隔线 #ececf1、
+       正文 #202123。四级文字灰阶由深到浅。#ffffff 作为页面底色在显示器上
+       偏刺眼，本站略降一点到 #fdfdfd，同时保留卡片纯白以形成层次。 */
+    --c-bg:              #fdfdfd;
     --c-surface:         #ffffff;
     --c-surface-raised:  #ffffff;
-    --c-surface-sunken:  #f4f6f9;
-    --c-surface-muted:   #eef1f5;
+    --c-surface-sunken:  #f7f7f8;
+    --c-surface-muted:   #ececf1;
 
-    --c-text:            #0d1219;
-    --c-text-soft:       #333d4b;
-    --c-text-muted:      #5c6675;
-    --c-text-faint:      #8a94a3;
+    --c-text:            #202123;
+    --c-text-soft:       #353740;
+    --c-text-muted:      #6e6e80;
+    --c-text-faint:      #8e8ea0;
 
-    --c-border:          #e3e8ee;
-    --c-border-strong:   #c9d2dd;
+    --c-border:          #ececf1;
+    --c-border-strong:   #d9d9e3;
 
+    /* 强调色：保留本站青色，只借用「单一、克制」的原则。
+       亮色下压深以保证对比度（对纯白底约 4.9:1，达 WCAG AA）。 */
     --c-accent:          #0a6e85;
     --c-accent-hover:    #075666;
-    --c-accent-soft:     rgba(10, 110, 133, 0.075);
+    --c-accent-soft:     rgba(10, 110, 133, 0.07);
     --c-accent-ring:     rgba(10, 110, 133, 0.28);
     --c-on-accent:       #ffffff;
 
-    --c-code-bg:         #f6f8fa;
-    --c-code-inline-bg:  rgba(10, 110, 133, 0.07);
+    --c-code-bg:         #f7f7f8;
+    --c-code-inline-bg:  #f7f7f8;
     --c-code-inline-fg:  #08606f;
-    --c-code-text:       #2a333f;
+    --c-code-text:       #202123;
     --c-code-copy-bg:    #ffffff;
 
     --c-selection-bg:    #0a6e85;
     --c-selection-fg:    #ffffff;
 
+    /* 阴影：OpenAI 只用极轻的阴影，结构靠边框。
+       因此这里把阴影压到最低，且层级差异主要交给 --c-border。 */
     --sh-xs: 0 1px 2px rgba(13, 18, 25, 0.04);
-    --sh-sm: 0 1px 3px rgba(13, 18, 25, 0.06), 0 1px 2px rgba(13, 18, 25, 0.04);
-    --sh-md: 0 4px 12px rgba(13, 18, 25, 0.07), 0 1px 3px rgba(13, 18, 25, 0.04);
-    --sh-lg: 0 16px 40px rgba(13, 18, 25, 0.12), 0 4px 12px rgba(13, 18, 25, 0.05);
+    --sh-sm: 0 1px 2px rgba(13, 18, 25, 0.05);
+    --sh-md: 0 2px 8px rgba(13, 18, 25, 0.08);
+    --sh-lg: 0 8px 24px rgba(13, 18, 25, 0.12);
+    --sh-xl: 0 24px 48px rgba(13, 18, 25, 0.16);
 
     /* 图标遮罩：用 currentColor 上色，随文字色自动变化 */
     --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.5 16.5 21 21'/%3E%3C/svg%3E");
 }
 
-/* ================================================================ 暗色主题 */
+/* ================================================================ 暗色主题
+   对齐 OpenAI 的深色规格：背景 #212121、次级面 #2f2f2f、正文 #ececec。
+   四级文字灰阶同样由深到浅，与亮色一一对应，因此组件层不需要为深色
+   写任何特例——只要它用的是令牌。 */
 :root[data-theme="dark"] {
     color-scheme: dark;
 
-    --c-bg:              #0b0e14;
-    --c-surface:         #121722;
-    --c-surface-raised:  #171d29;
-    --c-surface-sunken:  #0e121a;
-    --c-surface-muted:   #1b2230;
+    --c-bg:              #212121;
+    --c-surface:         #2f2f2f;
+    --c-surface-raised:  #303030;
+    --c-surface-sunken:  #1a1a1a;
+    --c-surface-muted:   #3a3a3a;
 
-    --c-text:            #e9eef6;
-    --c-text-soft:       #c2cbd9;
-    --c-text-muted:      #8996a8;
-    --c-text-faint:      #5f6b7c;
+    --c-text:            #ececec;
+    --c-text-soft:       #d4d4d4;
+    --c-text-muted:      #b4b4b4;
+    --c-text-faint:      #8e8e8e;
 
-    --c-border:          #1f2735;
-    --c-border-strong:   #2f3b4d;
+    --c-border:          #3d3d3d;
+    --c-border-strong:   #4d4d4d;
 
+    /* 深色下青色需要提亮才够对比（对 #212121 底约 8:1） */
     --c-accent:          #35d0e6;
     --c-accent-hover:    #6ee2f2;
     --c-accent-soft:     rgba(53, 208, 230, 0.10);
-    --c-accent-ring:     rgba(53, 208, 230, 0.28);
+    --c-accent-ring:     rgba(53, 208, 230, 0.30);
     --c-on-accent:       #04212a;
 
-    --c-code-bg:         #0f141d;
-    --c-code-inline-bg:  rgba(53, 208, 230, 0.10);
+    --c-code-bg:         #1a1a1a;
+    --c-code-inline-bg:  #3a3a3a;
     --c-code-inline-fg:  #8ae4f2;
-    --c-code-text:       #c6d2e2;
-    --c-code-copy-bg:    #171d29;
+    --c-code-text:       #e4e4e4;
+    --c-code-copy-bg:    #2f2f2f;
 
     --c-selection-bg:    #35d0e6;
     --c-selection-fg:    #04212a;
 
-    --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.30);
-    --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.36);
-    --sh-md: 0 4px 14px rgba(0, 0, 0, 0.42);
-    --sh-lg: 0 16px 44px rgba(0, 0, 0, 0.52);
+    --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
+    --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+    --sh-md: 0 2px 8px rgba(0, 0, 0, 0.36);
+    --sh-lg: 0 8px 24px rgba(0, 0, 0, 0.46);
+    --sh-xl: 0 24px 48px rgba(0, 0, 0, 0.56);
 }
 
 /* ==========================================================================
    桌面优先 · 向下适配
    --------------------------------------------------------------------------
-   宽度已全部流体化（见上方 clamp 定义），容器用 min(100%, …) 自动吃满窄屏，
-   因此这里不再改任何宽度，只调【字号】——字号不适合纯 vw 缩放，中文字形
-   在小屏上需要相对更大的字号才可读，所以保留断点式下调。
+   宽度已全部流体化，容器用 min(100%, …) 自动吃满窄屏，因此这里只调【字号】
+   ——字号不适合纯 vw 缩放，中文字形在小屏上需要相对更大的字号才可读。
+   字号梯度对齐 OpenAI 的响应式规格（页面标题 40 → 28px）。
    ========================================================================== */
 
 /* 小笔记本：字阶略收 */
 @media (max-width: 75rem) {
     :root {
-        --fs-base: 1.0625rem;
-        --fs-md: 1.25rem;
+        --fs-base: 1rem;
+        --fs-md: 1.1875rem;
         --fs-lg: 1.4375rem;
     }
 }
@@ -230,8 +279,8 @@
 /* 平板横屏 */
 @media (max-width: 60rem) {
     :root {
-        --fs-base: 1.0625rem;
-        --fs-md: 1.25rem;
+        --fs-base: 1rem;
+        --fs-md: 1.1875rem;
         --fs-lg: 1.375rem;
         --h-header: 3.5rem;
     }
@@ -240,11 +289,11 @@
 /* 平板竖屏 / 手机 */
 @media (max-width: 45rem) {
     :root {
-        --fs-base: 1rem;
-        --fs-md: 1.1875rem;
+        --fs-base: 1rem;       /* 手机上正文不再缩小，16px 是阅读下限 */
+        --fs-md: 1.125rem;
         --fs-lg: 1.3125rem;
-        --fs-xl: 1.625rem;
-        --fs-2xl: 1.875rem;
+        --fs-xl: 1.5rem;
+        --fs-2xl: 1.75rem;
         --h-header: 3.25rem;
         --s-16: 2.5rem;
         --s-20: 3rem;

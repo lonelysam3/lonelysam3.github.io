@@ -241,9 +241,11 @@ html.js .nav.is-scrolled {
     align-items: center;
     gap: var(--s-1);
     margin: 0;
-    /* 右侧为主题切换按钮让位：该按钮绝对定位在容器右端，宽约 34px。
-       实测留 32px 会让按钮压住末个菜单项，故给 2.75rem(44px)。 */
-    padding: 0 2.75rem 0 0;
+    /* 右侧为两个绝对定位的按钮让位：语言切换器 + 主题按钮。
+       两者都在容器右端，宽度合计约 80px；实测只留一个按钮的 2.75rem(44px)
+       会让语言切换器压住末个菜单项（1500px 视口下重叠 83px）。
+       这里给 6.25rem(100px)，留出安全余量。 */
+    padding: 0 8.75rem 0 0;
     list-style: none;
     overflow-x: auto;
     scrollbar-width: none;
@@ -320,6 +322,74 @@ html.js .nav.is-scrolled {
 .nav .logo-switches #theme-toggle svg {
     width: 1.15rem;
     height: 1.15rem;
+}
+
+/* --------------------------------------------------------------------------
+   语言切换器
+   --------------------------------------------------------------------------
+   与主题按钮同样绝对定位：.nav 是三列栅格（品牌 │ 搜索 │ 导航），若把语言
+   按钮留在栅格流里会成为第 4 个栅格子项而被挤到第二行。因此钉在右端、
+   主题按钮的左侧。
+
+   右偏移 = 主题按钮占位（2.5rem）+ 切换器自身宽度（约 2.6rem）+ 间隙。
+   这个数字必须与 #menu 的 padding-inline-end 相称：#menu 留出两个按钮的
+   总宽，切换器才能落在菜单项右侧而不压住它。
+   -------------------------------------------------------------------------- */
+.nav .lang-switch {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: calc(var(--pad-x) + 3.625rem);
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+    transform: translateY(-50%);
+    z-index: 3;
+}
+
+.nav .lang-switch .lang-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9rem;
+    padding: 0.25em 0.55em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    line-height: 1.4;
+    color: var(--c-text-muted);
+    border-radius: var(--r-full);
+    white-space: nowrap;
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.nav .lang-switch a.lang-item:hover {
+    color: var(--c-text);
+    background: var(--c-surface);
+}
+
+/* 当前语言：实心强调，读者一眼看出自己在哪个版本 */
+.nav .lang-switch .lang-item.is-current {
+    color: var(--c-on-accent);
+    background: var(--c-accent);
+    cursor: default;
+}
+
+/* 窄屏：与主题按钮一起收窄，避免把品牌压扁。
+   右偏移必须与上面 #menu 的 padding-inline-end 相称。 */
+@media (max-width: 45rem) {
+    .nav .lang-switch {
+        inset-inline-end: calc(var(--pad-x) + 3.5rem);
+    }
+
+    .nav .lang-switch .lang-item {
+        min-width: 1.5rem;
+        padding: 0.2em 0.35em;
+    }
 }
 
 /* ==========================================================================
@@ -419,9 +489,10 @@ html.js .nav.is-scrolled {
     /* 主题切换按钮绝对定位在容器右端（内容盒右边缘）。实测 390px 视口下
        按钮宽 40.4px，而菜单的 padding-inline-end 只有 2.25rem（36px），
        于是按钮左缘 325.6 压住末个菜单项的右缘 328，重叠 2.4px。
-       这里给足 44px（与桌面同值），把重叠彻底排除。 */
+       这里给足 6.25rem（与桌面同值），为语言切换器与主题按钮两个
+       绝对定位元素留位，把重叠彻底排除。 */
     .nav #menu {
-        padding-inline-end: 2.75rem;
+        padding-inline-end: 8.75rem;
         gap: 0;
     }
 

@@ -1,5 +1,5 @@
 {{- /* ==========================================================================
-   browse.html — 内容总览页，把分类与标签并排呈现（C 组整合）
+   browse.html — 内容总览页，把分类与标签并排呈现
    --------------------------------------------------------------------------
    为什么要做这一页，而不是把两个分类法合并：
 
@@ -14,15 +14,20 @@
    之间来回跳。所以这里提供一个总览页：两者并排、都带计数与最近文章，并说明
    各自的语义（分类=栏目，互斥；标签=关键词，自由叠加）。原有 taxonomy 页面
    保留不动，链接不会失效。
+
+   【全部文案走 i18n】
+   本页正文里没有任何写死的中文——早期版本把「按分类」「全部文章」等直接写在
+   模板里，导致英文站的标题是英文、正文却是中文。所有可见文字现在都取自
+   i18n/{zh,en}.yaml，标题则用 front matter 的 title。
    ========================================================================== */ -}}
 {{- define "main" }}
 
 {{- $posts := where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) }}
 
 <header class="page-header">
-  <h1>{{ .Title | default "浏览" }}</h1>
+  <h1>{{ .Title }}</h1>
   <div class="post-description">
-    共 {{ len $posts }} 篇文章。分类是栏目（每篇一个），标签是关键词（每篇可多个）。
+    {{ i18n "browse_summary" (dict "Count" (len $posts)) }}
   </div>
 </header>
 
@@ -31,8 +36,8 @@
   {{- /* ---------------- 分类 ---------------- */ -}}
   <section class="browse-sec">
     <h2 class="browse-h">
-      按分类
-      <span class="browse-hint">每篇文章只属于一个分类</span>
+      {{ i18n "browse_by_category" }}
+      <span class="browse-hint">{{ i18n "browse_by_category_hint" }}</span>
     </h2>
 
     {{- with site.Taxonomies.categories }}
@@ -42,7 +47,7 @@
       <li class="browse-item">
         <a class="browse-link" href="{{ .Page.RelPermalink }}">
           <span class="browse-name">{{ .Page.LinkTitle }}</span>
-          <span class="browse-num">{{ .Count }} 篇</span>
+          <span class="browse-num">{{ i18n "unit_posts" (dict "Count" .Count) }}</span>
         </a>
         <div class="browse-bar"><span style="width: {{ div (mul .Count 100) $maxC }}%"></span></div>
         {{- with first 3 .Pages }}
@@ -54,15 +59,15 @@
       {{- end }}
     </ul>
     {{- else }}
-    <p class="browse-empty">还没有分类。</p>
+    <p class="browse-empty">{{ i18n "browse_empty_category" }}</p>
     {{- end }}
   </section>
 
   {{- /* ---------------- 标签 ---------------- */ -}}
   <section class="browse-sec">
     <h2 class="browse-h">
-      按标签
-      <span class="browse-hint">一篇文章可以有多个标签</span>
+      {{ i18n "browse_by_tag" }}
+      <span class="browse-hint">{{ i18n "browse_by_tag_hint" }}</span>
     </h2>
 
     {{- with site.Taxonomies.tags }}
@@ -76,17 +81,15 @@
       {{- end }}
     </ul>
 
-    <h3 class="browse-sub-h">标签组合</h3>
-    <p class="browse-note">
-      点标签进入该标签的文章列表。下面是使用最多的几个标签所对应的文章。
-    </p>
+    <h3 class="browse-sub-h">{{ i18n "browse_tag_combo" }}</h3>
+    <p class="browse-note">{{ i18n "browse_tag_note" }}</p>
     {{- $maxT := 0 }}{{ range .ByCount }}{{ if gt .Count $maxT }}{{ $maxT = .Count }}{{ end }}{{ end }}
     <ul class="browse-list">
       {{- range first 6 .ByCount }}
       <li class="browse-item">
         <a class="browse-link" href="{{ .Page.RelPermalink }}">
           <span class="browse-name">{{ .Page.LinkTitle }}</span>
-          <span class="browse-num">{{ .Count }} 篇</span>
+          <span class="browse-num">{{ i18n "unit_posts" (dict "Count" .Count) }}</span>
         </a>
         <div class="browse-bar"><span style="width: {{ div (mul .Count 100) $maxT }}%"></span></div>
         {{- with first 3 .Pages }}
@@ -98,15 +101,15 @@
       {{- end }}
     </ul>
     {{- else }}
-    <p class="browse-empty">还没有标签。</p>
+    <p class="browse-empty">{{ i18n "browse_empty_tag" }}</p>
     {{- end }}
   </section>
 
   {{- /* ---------------- 全部文章 ---------------- */ -}}
   <section class="browse-sec">
     <h2 class="browse-h">
-      全部文章
-      <span class="browse-hint">按时间倒序</span>
+      {{ i18n "browse_all_posts" }}
+      <span class="browse-hint">{{ i18n "browse_all_posts_hint" }}</span>
     </h2>
     {{- with $posts.ByDate.Reverse }}
     <ul class="sb-links">
@@ -114,7 +117,7 @@
       <li>
         <a href="{{ .RelPermalink }}">
           {{ .Title }}
-          <span class="browse-date">{{ .Date.Format "2006-01-02" }}</span>
+          <span class="browse-date">{{ .Date | time.Format (site.Params.DateFormat | default "2006-01-02") }}</span>
         </a>
       </li>
       {{- end }}

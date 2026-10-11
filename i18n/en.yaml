@@ -1,0 +1,195 @@
+# ============================================================================
+# i18n/en.yaml — English UI strings
+# ----------------------------------------------------------------------------
+# Mirrors i18n/zh.yaml key for key. Theme-provided keys (read_time / words /
+# prev_page / next_page / toc / translations / home / edit_post / code_copy /
+# code_copied) come from themes/PaperMod/i18n/en.yaml and are intentionally
+# not duplicated here.
+#
+# Wording is deliberately idiomatic rather than literal: the goal is that an
+# English reader sees a site written for them, not a translation of a Chinese
+# one. Hence "Older / Newer" instead of "Previous / Next", "Reading time"
+# instead of "Total reading minutes", and so on.
+# ============================================================================
+
+# ---- Top search box ----
+- id: search_placeholder
+  translation: "Search ↵"
+- id: search_label
+  translation: "Search"
+- id: search_results
+  translation: "Search results"
+
+# ---- Breadcrumbs ----
+- id: breadcrumb_home
+  translation: "Home"
+- id: breadcrumb_label
+  translation: "Breadcrumb"
+
+# ---- Sidebar ----
+- id: sidebar_label
+  translation: "Sidebar"
+- id: sidebar_toc
+  translation: "On this page"
+- id: sidebar_nav
+  translation: "More posts"
+- id: sidebar_related
+  translation: "Related"
+- id: sidebar_latest
+  translation: "Latest"
+- id: sidebar_browse
+  translation: "Browse"
+- id: sidebar_explore
+  translation: "Explore"
+- id: sidebar_all_posts
+  translation: "All posts & tags →"
+- id: sidebar_now
+  translation: "Now"
+
+# ---- Post navigation direction ----
+- id: prev_post_label
+  translation: "← Newer"
+- id: next_post_label
+  translation: "Older →"
+
+# ---- Action buttons ----
+- id: action_random
+  translation: "🎲 Random"
+- id: action_stats
+  translation: "📊 Stats"
+
+# ---- Article page ----
+- id: series_label
+  translation: "Series"
+- id: series_progress
+  translation: "Part {{ .Current }} of {{ .Total }}"
+- id: series_aria
+  translation: "Series navigation"
+- id: font_size_group
+  translation: "Text size"
+- id: font_size_dec
+  translation: "Decrease text size"
+- id: font_size_reset
+  translation: "Reset text size"
+- id: font_size_inc
+  translation: "Increase text size"
+- id: draft_hint
+  translation: "Draft"
+
+# ---- Browse page ----
+- id: browse_title
+  translation: "Browse"
+- id: browse_summary
+  translation: "{{ .Count }} posts so far. Categories are sections — one per post. Tags are keywords — as many as you like."
+- id: browse_by_category
+  translation: "By category"
+- id: browse_by_category_hint
+  translation: "one category per post"
+- id: browse_by_tag
+  translation: "By tag"
+- id: browse_by_tag_hint
+  translation: "a post can carry several tags"
+- id: browse_tag_combo
+  translation: "Tag combinations"
+- id: browse_tag_note
+  translation: "Pick a tag to see everything filed under it. Below are the most-used ones with their recent posts."
+- id: browse_all_posts
+  translation: "All posts"
+- id: browse_all_posts_hint
+  translation: "newest first"
+- id: browse_empty_category
+  translation: "No categories yet."
+- id: browse_empty_tag
+  translation: "No tags yet."
+- id: unit_posts
+  translation:
+    one: "{{ .Count }} post"
+    other: "{{ .Count }} posts"
+
+# ---- Stats page ----
+- id: stats_title
+  translation: "Stats"
+- id: stats_articles
+  translation: "posts"
+- id: stats_words
+  translation: "words written"
+- id: stats_tags
+  translation: "tags"
+- id: stats_categories
+  translation: "categories"
+- id: stats_active_days
+  translation: "active days"
+- id: stats_reading_time
+  translation: "minutes of reading"
+- id: stats_first_post
+  translation: "First post published {{ .Date }} — {{ .Count }} posts since."
+- id: stats_heatmap
+  translation: "Writing activity"
+- id: stats_heatmap_hint
+  translation: "Last 53 weeks. Darker squares mean more posts that day."
+- id: stats_heatmap_noscript
+  translation: "The heatmap needs JavaScript to render."
+- id: stats_by_year
+  translation: "Posts per year"
+- id: stats_less
+  translation: "Less"
+- id: stats_more
+  translation: "More"
+
+# ---- 404 ----
+- id: notfound_title
+  translation: "404"
+- id: notfound_subtitle
+  translation: "This page doesn't exist"
+- id: notfound_why
+  translation: "Likely causes:"
+- id: notfound_reason_1
+  translation: "The link is mistyped, or got truncated when it was copied"
+- id: notfound_reason_2
+  translation: "The post was renamed or removed"
+- id: notfound_reason_3
+  translation: "Paths are case-sensitive, and the capitalisation doesn't match"
+- id: notfound_try
+  translation: "Try instead:"
+- id: notfound_try_search
+  translation: "Search for a keyword using the box at the top"
+- id: notfound_try_archive
+  translation: "Browse the <a href=\"{{ .ArchiveURL }}\">archive</a> by date"
+- id: notfound_try_tags
+  translation: "Find similar posts under <a href=\"{{ .TagsURL }}\">tags</a>"
+- id: notfound_back_home
+  translation: "← Back home"
+
+# ---- Language switch ----
+- id: lang_switch_label
+  translation: "Language"
+- id: lang_switch_title
+  translation: "Switch to"
+
+# ---- Command palette ----
+- id: palette_label
+  translation: "Quick jump"
+- id: palette_placeholder
+  translation: "Search posts, tags, pages…"
+- id: palette_empty
+  translation: "No matches"
+- id: palette_key_select
+  translation: "choose"
+- id: palette_key_open
+  translation: "open"
+- id: palette_key_close
+  translation: "close"
+
+# ---- Shortcode defaults ----
+- id: callout_note
+  translation: "Note"
+- id: callout_tip
+  translation: "Tip"
+- id: callout_warn
+  translation: "Warning"
+- id: callout_danger
+  translation: "Danger"
+- id: callout_info
+  translation: "Info"
+- id: details_default_title
+  translation: "Show more"

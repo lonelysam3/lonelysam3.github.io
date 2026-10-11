@@ -10,7 +10,7 @@
    ========================================================================== */ -}}
 
 {{- $crumbs := slice -}}
-{{- $crumbs = $crumbs | append (dict "name" "主页" "url" ("" | absLangURL)) -}}
+{{- $crumbs = $crumbs | append (dict "name" (i18n "breadcrumb_home") "url" ("" | absLangURL)) -}}
 
 {{- if .IsHome -}}
 {{- /* 首页只显示自身，不再叠加 */ -}}
@@ -48,7 +48,7 @@
 {{- end -}}
 
 {{- if gt (len $crumbs) 1 }}
-<nav class="crumbs" aria-label="面包屑导航">
+<nav class="crumbs" aria-label="{{ i18n "breadcrumb_label" }}">
     {{- range $i, $c := $crumbs }}
     {{- if $i }}<span class="crumbs-sep" aria-hidden="true">»</span>{{ end }}
     {{- if $c.url }}

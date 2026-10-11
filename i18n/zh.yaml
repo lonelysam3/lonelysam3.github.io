@@ -1,0 +1,190 @@
+# ============================================================================
+# i18n/zh.yaml — 中文界面文案
+# ----------------------------------------------------------------------------
+# 只放【本站模板里写死的文案】。主题自带的那几个键（read_time / words /
+# prev_page / next_page / toc / translations / home / edit_post / code_copy /
+# code_copied）由 themes/PaperMod/i18n/zh.yaml 提供，这里不要重复定义，
+# 否则以后升级主题时两处会不一致。
+#
+# 命名与主题保持一致：小写 + 下划线。
+# ============================================================================
+
+# ---- 顶部搜索框 ----
+- id: search_placeholder
+  translation: "搜索 ↵"
+- id: search_label
+  translation: "搜索"
+- id: search_results
+  translation: "搜索结果"
+
+# ---- 面包屑 ----
+- id: breadcrumb_home
+  translation: "主页"
+- id: breadcrumb_label
+  translation: "面包屑导航"
+
+# ---- 侧栏 ----
+- id: sidebar_label
+  translation: "侧栏"
+- id: sidebar_toc
+  translation: "本页目录"
+- id: sidebar_nav
+  translation: "上下篇"
+- id: sidebar_related
+  translation: "相关文章"
+- id: sidebar_latest
+  translation: "最新文章"
+- id: sidebar_browse
+  translation: "浏览"
+- id: sidebar_explore
+  translation: "探索"
+- id: sidebar_all_posts
+  translation: "全部文章与标签 →"
+- id: sidebar_now
+  translation: "此刻"
+
+# ---- 上下篇方向 ----
+- id: prev_post_label
+  translation: "← 上一篇"
+- id: next_post_label
+  translation: "下一篇 →"
+
+# ---- 探索按钮 ----
+- id: action_random
+  translation: "🎲 随便看看"
+- id: action_stats
+  translation: "📊 统计"
+
+# ---- 文章页 ----
+- id: series_label
+  translation: "系列"
+- id: series_progress
+  translation: "第 {{ .Current }} / {{ .Total }} 篇"
+- id: series_aria
+  translation: "系列文章"
+- id: font_size_group
+  translation: "正文字号"
+- id: font_size_dec
+  translation: "减小字号"
+- id: font_size_reset
+  translation: "恢复默认字号"
+- id: font_size_inc
+  translation: "增大字号"
+- id: draft_hint
+  translation: "草稿"
+
+# ---- 浏览页 ----
+- id: browse_title
+  translation: "浏览"
+- id: browse_summary
+  translation: "共 {{ .Count }} 篇文章。分类是栏目（每篇一个），标签是关键词（每篇可多个）。"
+- id: browse_by_category
+  translation: "按分类"
+- id: browse_by_category_hint
+  translation: "每篇文章只属于一个分类"
+- id: browse_by_tag
+  translation: "按标签"
+- id: browse_by_tag_hint
+  translation: "一篇文章可以有多个标签"
+- id: browse_tag_combo
+  translation: "标签组合"
+- id: browse_tag_note
+  translation: "点标签进入该标签的文章列表。下面是使用最多的几个标签所对应的文章。"
+- id: browse_all_posts
+  translation: "全部文章"
+- id: browse_all_posts_hint
+  translation: "按时间倒序"
+- id: browse_empty_category
+  translation: "还没有分类。"
+- id: browse_empty_tag
+  translation: "还没有标签。"
+- id: unit_posts
+  translation: "{{ .Count }} 篇"
+
+# ---- 统计页 ----
+- id: stats_title
+  translation: "统计"
+- id: stats_articles
+  translation: "篇文章"
+- id: stats_words
+  translation: "总字数"
+- id: stats_tags
+  translation: "个标签"
+- id: stats_categories
+  translation: "个分类"
+- id: stats_active_days
+  translation: "天有写作"
+- id: stats_reading_time
+  translation: "分钟总阅读"
+- id: stats_first_post
+  translation: "首篇文章发布于 {{ .Date }}，至今共 {{ .Count }} 篇。"
+- id: stats_heatmap
+  translation: "写作热力图"
+- id: stats_heatmap_hint
+  translation: "最近 53 周。颜色越深表示当天发布越多。"
+- id: stats_heatmap_noscript
+  translation: "热力图需要 JavaScript 才能绘制。"
+- id: stats_by_year
+  translation: "历年产出"
+- id: stats_less
+  translation: "少"
+- id: stats_more
+  translation: "多"
+
+# ---- 404 ----
+- id: notfound_title
+  translation: "404"
+- id: notfound_subtitle
+  translation: "这个页面不存在"
+- id: notfound_why
+  translation: "可能的原因："
+- id: notfound_reason_1
+  translation: "链接拼错了，或者从别处复制时被截断"
+- id: notfound_reason_2
+  translation: "这篇文章被重命名或删除了"
+- id: notfound_reason_3
+  translation: "地址里的路径区分大小写，字母大小写不一致"
+- id: notfound_try
+  translation: "可以试试："
+- id: notfound_try_search
+  translation: "用顶部搜索框搜关键词"
+- id: notfound_try_archive
+  translation: "去<a href=\"{{ .ArchiveURL }}\">归档</a>按时间翻一翻"
+- id: notfound_try_tags
+  translation: "在<a href=\"{{ .TagsURL }}\">标签</a>页找同类内容"
+- id: notfound_back_home
+  translation: "← 返回首页"
+
+# ---- 语言切换 ----
+- id: lang_switch_label
+  translation: "语言"
+- id: lang_switch_title
+  translation: "切换到"
+
+# ---- 命令面板 ----
+- id: palette_label
+  translation: "快速跳转"
+- id: palette_placeholder
+  translation: "搜索文章、标签、页面…"
+- id: palette_empty
+  translation: "没有匹配项"
+- id: palette_key_select
+  translation: "选择"
+- id: palette_key_open
+  translation: "打开"
+- id: palette_key_close
+  translation: "关闭"
+
+# ---- 短代码默认标题 ----
+- id: callout_note
+  translation: "说明"
+- id: callout_tip
+  translation: "提示"
+- id: callout_warn
+  translation: "注意"
+- id: callout_danger
+  translation: "警告"
+- id: callout_info
+  translation: "信息"
+- id: details_default_title
+  translation: "展开查看"

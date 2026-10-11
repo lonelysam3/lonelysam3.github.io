@@ -6,12 +6,11 @@
    A. 字体与运行时标记（全局，每页生效）
       1) 尽早标记 JS 可用，供 30-ui.css 中的吸顶导航交互样式使用
       2) 预热字体 CDN 连接
-      3) 加载 JetBrains Mono（编码字体）的 400/500/600/700 四个字重
-   B. 首页顶部搜索框（仅首页生效）
-      样式与 fastsearch 资源加载
+      3) 加载 Inter（界面与正文，拉丁字符集）四个字重
+      4) 加载 JetBrains Mono（编码字体）四个字重
 
    字体设计说明：
-   · JetBrains Mono 不含 CJK 字形，中文回退由 10-fonts.css 的字体栈统一兜底。
+   · 两套字体都不含 CJK 字形，中文回退由 00-tokens.css 的字体栈统一兜底。
    · fontsource 按 unicode-range 分片（cyrillic / greek / vietnamese /
      latin-ext / latin），浏览器只会下载当前页面真正用到的子集。
    · 四个字重对应实际用到的排版层级：400 正文代码、500 导航激活态与强调、
@@ -32,7 +31,21 @@
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
 {{- /* ---------------------------------------------------------------------
-   A-3. 编码字体：JetBrains Mono v5.3.0，四个字重
+   A-3. 界面字体：Inter v5.2.5，四个字重
+   ---------------------------------------------------------------------
+   Inter 是中性几何无衬线，在免费字体里最接近 OpenAI 使用的商业字体 Söhne，
+   因此用它承载正文与界面。只覆盖拉丁字符，中文由系统字体兜底。
+   --------------------------------------------------------------------- */ -}}
+{{- $sansBase := "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.2.5" -}}
+{{- range $w := slice "400" "500" "600" "700" }}
+<link rel="stylesheet"
+      href="{{ $sansBase }}/{{ $w }}.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer">
+{{- end }}
+
+{{- /* ---------------------------------------------------------------------
+   A-4. 编码字体：JetBrains Mono v5.3.0，四个字重
    --------------------------------------------------------------------- */ -}}
 {{- $monoBase := "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.3.0" -}}
 {{- range $w := slice "400" "500" "600" "700" }}

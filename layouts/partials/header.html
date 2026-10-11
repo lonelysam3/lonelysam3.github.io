@@ -98,9 +98,9 @@
         {{- /* 常驻顶部搜索框：置于商标之后、导航之前 */ -}}
         <div id="searchbox" class="top-search">
             <input id="searchInput"
-                placeholder="{{ site.Params.searchPlaceholder | default "搜索 ↵" }}"
-                aria-label="搜索" type="search" autocomplete="off" maxlength="64">
-            <ul id="searchResults" aria-label="搜索结果"></ul>
+                placeholder="{{ site.Params.searchPlaceholder | default (i18n "search_placeholder") }}"
+                aria-label="{{ i18n "search_label" }}" type="search" autocomplete="off" maxlength="64">
+            <ul id="searchResults" aria-label="{{ i18n "search_results" }}"></ul>
         </div>
 
         {{- $currentPage := . }}
@@ -129,5 +129,9 @@
             </li>
             {{- end }}
         </ul>
+
+        {{- /* 语言切换：置于导航之后、主题按钮之前。
+               必须用 partial 而非 partialCached——内容随当前语言变化。 */ -}}
+        {{- partial "lang-switch.html" . }}
     </nav>
 </header>

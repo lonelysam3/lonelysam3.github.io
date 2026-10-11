@@ -50,12 +50,12 @@
 {{- if eq $p.Permalink $current.Permalink -}}{{- $idx = add $i 1 -}}{{- end -}}
 {{- end -}}
 
-<section class="series" aria-label="系列文章">
+<section class="series" aria-label="{{ i18n "series_aria" }}">
     <div class="series-head">
-        <span class="series-label">系列</span>
+        <span class="series-label">{{ i18n "series_label" }}</span>
         <span class="series-name">{{ $name }}</span>
         {{- if gt $idx 0 }}
-        <span class="series-progress">第 {{ $idx }} / {{ $total }} 篇</span>
+        <span class="series-progress">{{ i18n "series_progress" (dict "Current" $idx "Total" $total) }}</span>
         {{- end }}
     </div>
     <ol class="series-list">

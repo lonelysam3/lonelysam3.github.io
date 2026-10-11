@@ -65,7 +65,7 @@
       <span class="tl-title archive-entry-title">
         {{- .Title | markdownify }}
         {{- if .Draft }}
-        <span class="entry-hint" title="Draft">· 草稿</span>
+        <span class="entry-hint" title="{{ i18n "draft_hint" }}">· {{ i18n "draft_hint" }}</span>
         {{- end }}
       </span>
       <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>

@@ -51,12 +51,21 @@ pagination.pagerSize: 5 #5篇文章翻页
 pygmentsUseClasses: true
 defaultContentLanguage: zh # 顶部首先展示的语言界面
 defaultContentLanguageInSubdir: false # 是否要在地址栏加上默认的语言代码
+# 关闭自动生成的别名重定向页。启用多语言后，Hugo 会额外为默认语言生成
+# public/zh/index.html 这样一个 219 字节的跳转页（把 /zh/ 重定向到 /）。
+# 本站默认语言就在根路径、从没有过 /zh/ 这个地址，因此这个文件纯属多余。
+disableAliases: true
 
 #配置导航栏
 languages:
   zh:
     languageName: "中文" # 展示的语言名
     weight: 1 # 权重
+    # 中文沿用「2025 年 11 月 1 日」这种写法。不显式声明的话，
+    # 模板里的 `site.Params.DateFormat | default` 会落到英文默认值，
+    # 中文站会显示成「十一月 1, 2025」这种中英混排的日期。
+    params:
+      DateFormat: "2006 年 1 月 2 日"
     taxonomies: # 分类系统
       category: categories
       tag: tags
@@ -86,6 +95,55 @@ languages:
           pageRef: stats/
           weight: 15
         - name: 关于
+          pageRef: about/
+          weight: 21
+  en:
+    languageName: "English"
+    weight: 2
+    # 显式声明内容目录。Hugo 默认对语言 en 取 content/en，
+    # 但本站默认语言是 zh 且 defaultContentLanguageInSubdir: false——
+    # 实测在这种组合下，content/en/ 里的【普通页面】会被当作中文站的内容渲染
+    # （.Language.Lang 返回 zh、i18n 取中文），只有 _index.md 能被正确识别；
+    # 显式写 contentDir 后语言归属就明确了。
+    contentDir: content/en
+    # 语言代码影响 <html lang>、日期本地化与 screen reader 发音
+    languageCode: en-us
+    # 英文界面不做 CJK 断行处理
+    hasCJKLanguage: false
+    title: "lonelysam3's Blog"
+    taxonomies:
+      category: categories
+      tag: tags
+    params:
+      title: "lonelysam3's Blog"
+      description: "Notes on web security, Linux, and whatever else I break."
+      # 必须在此重复声明：根级 params.mainSections 不会自动继承到语言级，
+      # 缺了它英文站的 where 查询会得到空列表——表现为浏览页「共 0 篇文章」、
+      # 统计页所有数字为 0、侧栏「最新文章」为空。
+      mainSections: ["posts"]
+      # 首页简介区的文案。home_info.html 读的是 site.Params.homeInfoParams，
+      # 在英文站会解析到这一份。
+      homeInfoParams:
+        Title: "lonelysam3's Blog"
+        Content: "Notes on web security, Linux, and whatever else I break."
+      # 日期用美式写法（Mar 17, 2026），与中文的「三月 17, 2026」区分开
+      # ——这是「看起来像美国人博客」的一部分，不只是翻译文字。
+      DateFormat: "Jan 2, 2006"
+    menus:
+      main:
+        - name: Home
+          pageRef: /
+          weight: 1
+        - name: Archive
+          pageRef: archives/
+          weight: 5
+        - name: Browse
+          pageRef: browse/
+          weight: 10
+        - name: Stats
+          pageRef: stats/
+          weight: 15
+        - name: About
           pageRef: about/
           weight: 21
 params:

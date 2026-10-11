@@ -1,0 +1,49 @@
+{{- /* ==========================================================================
+   lang-switch.html — 语言切换器
+   --------------------------------------------------------------------------
+   行为：
+     点击语言按钮 → 跳转到【同一篇文章】在目标语言下的版本。
+     如果该页没有对应译文，则退回到目标语言的首页——而不是拼一个不存在的
+     URL 让读者撞 404。文章还没写英文版时这一点尤其重要。
+
+   当前语言用 aria-current="true" 标记且不可点，读者一眼能看出自己在哪个版本。
+
+   样式见 30-header.css 的 .lang-switch。
+   ========================================================================== */ -}}
+{{- if gt (len site.Languages) 1 }}
+{{- $cur := site.Language.Lang }}
+<div class="lang-switch" role="group" aria-label="{{ i18n "lang_switch_label" }}">
+    {{- range site.Languages }}
+    {{- $code := .Lang }}
+    {{- /* 按钮上只用【短标签】：中文站显示 "EN"、英文站显示 "中"。
+         不用 "English" / "中文" 这类全称——两个全称并排会让切换器宽出近一倍，
+         实测会盖住导航最后一项（英文站 "Stats" 被遮掉一半）。
+         短标签也符合这类控件的惯例（GitHub、MDN 都用 EN / 中 这种写法）。 */ -}}
+    {{- $label := upper $code }}
+    {{- if eq $code "zh" }}{{ $label = "中" }}{{ end }}
+    {{- if eq $code $cur }}
+    {{- /* 当前语言：标记为选中，不渲染成链接 */ -}}
+    <span class="lang-item is-current" aria-current="true"
+          title="{{ .LanguageName }}">{{ $label }}</span>
+    {{- else }}
+    {{- /* 优先找当前页在目标语言下的译文；找不到就指向该语言的首页。 */ -}}
+    {{- $url := "" }}
+    {{- range $.AllTranslations }}
+    {{- if eq .Language.Lang $code }}{{ $url = .RelPermalink }}{{ end }}
+    {{- end }}
+    {{- if not $url }}
+    {{- /* 该页没有译文时退回到目标语言的【首页】。
+           取首页 URL 走 site.Home.AllTranslations，由 Hugo 给出——它已经处理了
+           defaultContentLanguageInSubdir（本站默认语言不带前缀、英文带 /en/）。
+           手拼 "/%s/" 或调用 relLangURL 加参数都不行：前者在改配置后失效，
+           后者只接受一个参数。 */ -}}
+    {{- range site.Home.AllTranslations }}
+    {{- if eq .Language.Lang $code }}{{ $url = .RelPermalink }}{{ end }}
+    {{- end }}
+    {{- end }}
+    <a class="lang-item" href="{{ $url }}" hreflang="{{ $code }}"
+       title="{{ i18n "lang_switch_title" }} {{ .LanguageName }}">{{ $label }}</a>
+    {{- end }}
+    {{- end }}
+</div>
+{{- end }}

@@ -46,7 +46,7 @@
 {{- $first := index (sort $posts "Date" "asc") 0 }}
 
 <header class="page-header">
-  <h1>{{ .Title | default "统计" }}</h1>
+  <h1>{{ .Title }}</h1>
   {{- with .Description }}<div class="post-description">{{ .Description }}</div>{{ end }}
 </header>
 
@@ -56,39 +56,43 @@
   <div class="stat-grid">
     <div class="stat-card">
       <span class="stat-num">{{ len $posts }}</span>
-      <span class="stat-label">篇文章</span>
+      <span class="stat-label">{{ i18n "stats_articles" }}</span>
     </div>
     <div class="stat-card">
       <span class="stat-num">{{ $totalWords }}</span>
-      <span class="stat-label">总字数</span>
+      <span class="stat-label">{{ i18n "stats_words" }}</span>
     </div>
     <div class="stat-card">
       <span class="stat-num">{{ $tagCount }}</span>
-      <span class="stat-label">个标签</span>
+      <span class="stat-label">{{ i18n "stats_tags" }}</span>
     </div>
     <div class="stat-card">
       <span class="stat-num">{{ $catCount }}</span>
-      <span class="stat-label">个分类</span>
+      <span class="stat-label">{{ i18n "stats_categories" }}</span>
     </div>
     <div class="stat-card">
       <span class="stat-num">{{ $activeDays }}</span>
-      <span class="stat-label">天有写作</span>
+      <span class="stat-label">{{ i18n "stats_active_days" }}</span>
     </div>
     <div class="stat-card">
       <span class="stat-num">{{ $totalReading }}</span>
-      <span class="stat-label">分钟总阅读</span>
+      <span class="stat-label">{{ i18n "stats_reading_time" }}</span>
     </div>
   </div>
 
   {{- with $first }}
-  <p>首篇文章发布于 <strong>{{ .Date.Format "2006 年 1 月 2 日" }}</strong>，至今共 {{ len $posts }} 篇。</p>
+  {{- /* 日期格式跟随语言：中文「2025 年 11 月 1 日」，英文「Nov 1, 2025」 */ -}}
+  <p>{{ i18n "stats_first_post" (dict
+        "Date" (.Date | time.Format (site.Params.DateFormat | default "2006 年 1 月 2 日"))
+        "Count" (len $posts)) | safeHTML }}</p>
   {{- end }}
 
   {{- /* ---- 写作热力图 ---- */ -}}
-  <h2>写作热力图</h2>
-  <p class="heat-hint">最近 53 周。颜色越深表示当天发布越多。</p>
-  <div class="heatmap" id="heatmap" data-days='{{ $byDate | jsonify }}'>
-    <noscript><p>热力图需要 JavaScript 才能绘制。</p></noscript>
+  <h2>{{ i18n "stats_heatmap" }}</h2>
+  <p class="heat-hint">{{ i18n "stats_heatmap_hint" }}</p>
+  <div class="heatmap" id="heatmap" data-days='{{ $byDate | jsonify }}'
+       data-label-less="{{ i18n "stats_less" }}" data-label-more="{{ i18n "stats_more" }}">
+    <noscript><p>{{ i18n "stats_heatmap_noscript" }}</p></noscript>
   </div>
 
   {{- /* 标签排行已移除：与「浏览」页的标签区块功能重叠，且它的每条都是
@@ -97,7 +101,7 @@
 
   {{- /* ---- 历年产出 ---- */ -}}
   {{- if $byYear }}
-  <h2>历年产出</h2>
+  <h2>{{ i18n "stats_by_year" }}</h2>
   {{- $maxY := 0 }}
   {{- range $y, $c := $byYear }}{{ if gt $c $maxY }}{{ $maxY = $c }}{{ end }}{{ end }}
   <ul class="bar-list">

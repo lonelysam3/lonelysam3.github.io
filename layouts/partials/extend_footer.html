@@ -60,13 +60,17 @@
             var clockZone = doc.getElementById('sb-clock-zone');
             var timerId = null;
 
+            /* 日期与时区名按当前界面语言本地化。写死 zh-CN 会让英文站显示
+               「10月11日星期日」这类中文日期。locale 由模板注入到 data-locale。 */
+            var clockLocale = clockTime.getAttribute('data-locale') || 'zh-CN';
+
             var renderClock = function () {
                 var now = new Date();
-                clockTime.textContent = now.toLocaleTimeString('zh-CN', {
+                clockTime.textContent = now.toLocaleTimeString(clockLocale, {
                     hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
                 });
                 if (clockDate) {
-                    clockDate.textContent = now.toLocaleDateString('zh-CN', {
+                    clockDate.textContent = now.toLocaleDateString(clockLocale, {
                         month: 'long', day: 'numeric', weekday: 'long'
                     });
                 }
@@ -347,7 +351,7 @@
             paletteIndex = matched.length ? 0 : -1;
 
             if (!matched.length) {
-                paletteList.innerHTML = '<li class="palette-empty">没有匹配项</li>';
+                paletteList.innerHTML = '<li class="palette-empty">{{ i18n "palette_empty" }}</li>';
                 return;
             }
 
@@ -378,16 +382,16 @@
             wrap.dataset.open = 'false';
             wrap.setAttribute('role', 'dialog');
             wrap.setAttribute('aria-modal', 'true');
-            wrap.setAttribute('aria-label', '快速跳转');
+            wrap.setAttribute('aria-label', '{{ i18n "palette_label" }}');
             wrap.innerHTML =
                 '<div class="palette-panel">' +
-                  '<input class="palette-input" type="text" placeholder="搜索文章、标签、页面…" ' +
-                         'autocomplete="off" spellcheck="false" aria-label="搜索">' +
+                  '<input class="palette-input" type="text" placeholder="{{ i18n "palette_placeholder" }}" ' +
+                         'autocomplete="off" spellcheck="false" aria-label="{{ i18n "search_label" }}">' +
                   '<ul class="palette-list" role="listbox"></ul>' +
                   '<div class="palette-foot">' +
-                    '<span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>' +
-                    '<span><kbd>Enter</kbd> 打开</span>' +
-                    '<span><kbd>Esc</kbd> 关闭</span>' +
+                    '<span><kbd>↑</kbd><kbd>↓</kbd> {{ i18n "palette_key_select" }}</span>' +
+                    '<span><kbd>Enter</kbd> {{ i18n "palette_key_open" }}</span>' +
+                    '<span><kbd>Esc</kbd> {{ i18n "palette_key_close" }}</span>' +
                   '</div>' +
                 '</div>';
             doc.body.appendChild(wrap);
@@ -575,13 +579,18 @@
                 cursor.setDate(cursor.getDate() + 1);
             }
 
-            var legend = '<div class="heat-legend"><span>少</span>' +
+            /* 图例文案与月份名都从 data 属性取，避免在 JS 里写死中文——
+               否则英文站的统计页会出现「少 / 多」这样的中文残留。 */
+            var labelLess = heatWrap.getAttribute('data-label-less') || '';
+            var labelMore = heatWrap.getAttribute('data-label-more') || '';
+
+            var legend = '<div class="heat-legend"><span>' + labelLess + '</span>' +
                 '<span class="heat-cell" data-level="0"></span>' +
                 '<span class="heat-cell" data-level="1"></span>' +
                 '<span class="heat-cell" data-level="2"></span>' +
                 '<span class="heat-cell" data-level="3"></span>' +
                 '<span class="heat-cell" data-level="4"></span>' +
-                '<span>多</span></div>';
+                '<span>' + labelMore + '</span></div>';
 
             heatWrap.innerHTML =
                 '<div class="heatmap-months">' + monthsHtml + '</div>' +

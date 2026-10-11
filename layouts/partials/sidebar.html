@@ -29,7 +29,7 @@
 {{- $isPost := and .IsPage (eq .Section "posts") }}
 {{- if and (or $isHome $isPost) (ne .Params.sidebar false) }}
 
-<aside class="sidebar" aria-label="侧栏">
+<aside class="sidebar" aria-label="{{ i18n "sidebar_label" }}">
 
     {{- if $isPost }}
     {{- /* ==================================================== 文章页侧栏 */ -}}
@@ -39,7 +39,7 @@
     {{- with .TableOfContents }}
     <div class="sb-block sb-toc">
         <details>
-            <summary class="sb-title">本页目录</summary>
+            <summary class="sb-title">{{ i18n "sidebar_toc" }}</summary>
             {{ . }}
         </details>
     </div>
@@ -50,12 +50,12 @@
     {{- $pages := where site.RegularPages "Type" "in" site.Params.mainSections }}
     {{- if and (gt (len $pages) 1) (in $pages .) }}
     <div class="sb-block">
-        <h2 class="sb-title">上下篇</h2>
+        <h2 class="sb-title">{{ i18n "sidebar_nav" }}</h2>
         <ul class="sb-nav">
             {{- with $pages.Next . }}
             <li>
                 <a href="{{ .Permalink }}">
-                    <span class="sb-nav-label">← 上一篇</span>
+                    <span class="sb-nav-label">{{ i18n "prev_post_label" }}</span>
                     <span class="sb-nav-title">{{ .LinkTitle }}</span>
                 </a>
             </li>
@@ -63,7 +63,7 @@
             {{- with $pages.Prev . }}
             <li>
                 <a href="{{ .Permalink }}">
-                    <span class="sb-nav-label">下一篇 →</span>
+                    <span class="sb-nav-label">{{ i18n "next_post_label" }}</span>
                     <span class="sb-nav-title">{{ .LinkTitle }}</span>
                 </a>
             </li>
@@ -92,7 +92,7 @@
 
     {{- if $related }}
     <div class="sb-block">
-        <h2 class="sb-title">相关文章</h2>
+        <h2 class="sb-title">{{ i18n "sidebar_related" }}</h2>
         <ul class="sb-links">
             {{- range first 5 $related }}
             <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
@@ -104,7 +104,7 @@
     {{- $latest = where $latest "Permalink" "!=" .Permalink }}
     {{- with first 5 $latest }}
     <div class="sb-block">
-        <h2 class="sb-title">最新文章</h2>
+        <h2 class="sb-title">{{ i18n "sidebar_latest" }}</h2>
         <ul class="sb-links">
             {{- range . }}
             <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
@@ -118,11 +118,14 @@
     {{- /* ==================================================== 首页侧栏 */ -}}
 
     {{- /* 实时时钟。时间由 extend_footer.html 用本地时区每秒刷新；
-           此处给出静态兜底内容，JS 不可用时也不会出现空白块。 */ -}}
+           此处给出静态兜底内容，JS 不可用时也不会出现空白块。
+           data-locale 交给 JS 用于本地化日期——写死 zh-CN 会让英文站
+           显示「10月11日星期日」这种中文日期。 */ -}}
     <div class="sb-block sb-clock" aria-live="off">
-        <h2 class="sb-title">此刻</h2>
+        <h2 class="sb-title">{{ i18n "sidebar_now" }}</h2>
         <time class="clock-time" id="sb-clock-time"
-              data-tz="{{ site.Params.timeZone | default "Asia/Shanghai" }}">--:--:--</time>
+              data-tz="{{ site.Params.timeZone | default "Asia/Shanghai" }}"
+              data-locale="{{ site.Language.LanguageCode | default site.Language.Lang }}">--:--:--</time>
         <div class="clock-meta">
             <span id="sb-clock-date">—</span>
             <span id="sb-clock-zone">{{ site.Params.timeZone | default "Asia/Shanghai" }}</span>
@@ -134,7 +137,7 @@
            现在同时给出分类计数与最常用的几个标签，并指向完整的浏览页。
            分类计入数量、标签只取前 6 个，避免侧栏被标签撑长。 */ -}}
     <div class="sb-block">
-        <h2 class="sb-title">浏览</h2>
+        <h2 class="sb-title">{{ i18n "sidebar_browse" }}</h2>
 
         {{- with site.Taxonomies.categories }}
         <ul class="sb-counts">
@@ -157,7 +160,7 @@
         </div>
         {{- end }}
 
-        <a class="sb-all" href="{{ "browse/" | relLangURL }}">全部文章与标签 →</a>
+        <a class="sb-all" href="{{ "browse/" | relLangURL }}">{{ i18n "sidebar_all_posts" }}</a>
     </div>
 
     {{- /* 最近文章：主内容区是分页列表，侧栏给不翻页的最新几篇 */ -}}
@@ -176,10 +179,10 @@
            随机按钮由 extend_footer.html 按 [data-random-post] 绑定点击，
            所有页面都可用，因此这里不做页面类型判断。 */ -}}
     <div class="sb-block">
-        <h2 class="sb-title">探索</h2>
+        <h2 class="sb-title">{{ i18n "sidebar_explore" }}</h2>
         <div class="sb-actions">
-            <button type="button" class="sb-btn" data-random-post>🎲 随便看看</button>
-            <a class="sb-btn" href="{{ "stats/" | relLangURL }}">📊 统计</a>
+            <button type="button" class="sb-btn" data-random-post>{{ i18n "action_random" }}</button>
+            <a class="sb-btn" href="{{ "stats/" | relLangURL }}">{{ i18n "action_stats" }}</a>
         </div>
     </div>
 

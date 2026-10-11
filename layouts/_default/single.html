@@ -35,10 +35,10 @@
       {{- partial "edit_post.html" . -}}
       {{- partial "post_canonical.html" . -}}
       {{- /* 字号切换：放在元信息行尾，读者不必找侧栏 */ -}}
-      <span class="fs-switch" role="group" aria-label="正文字号">
-        <button type="button" data-fs="dec" title="减小字号" aria-label="减小字号">A-</button>
-        <button type="button" data-fs="reset" title="恢复默认字号" aria-label="恢复默认字号">A</button>
-        <button type="button" data-fs="inc" title="增大字号" aria-label="增大字号">A+</button>
+      <span class="fs-switch" role="group" aria-label="{{ i18n "font_size_group" }}">
+        <button type="button" data-fs="dec" title="{{ i18n "font_size_dec" }}" aria-label="{{ i18n "font_size_dec" }}">A-</button>
+        <button type="button" data-fs="reset" title="{{ i18n "font_size_reset" }}" aria-label="{{ i18n "font_size_reset" }}">A</button>
+        <button type="button" data-fs="inc" title="{{ i18n "font_size_inc" }}" aria-label="{{ i18n "font_size_inc" }}">A+</button>
       </span>
     </div>
     {{- end }}
