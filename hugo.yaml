@@ -61,6 +61,11 @@ languages:
   zh:
     languageName: "中文" # 展示的语言名
     weight: 1 # 权重
+    # 语言代码影响 <html lang>、日期本地化、评论系统界面语言（giscus 的
+    # data-lang）。必须在这里显式声明：根级的 languageCode 是站点默认值，
+    # Hugo 不会把它继承到语言块，缺失时会退化成语言键 "zh"，
+    # 而 giscus 需要 "zh-CN" 这样的 BCP-47 标签才能正确本地化界面。
+    languageCode: zh-cn
     # 中文沿用「2025 年 11 月 1 日」这种写法。不显式声明的话，
     # 模板里的 `site.Params.DateFormat | default` 会落到英文默认值，
     # 中文站会显示成「十一月 1, 2025」这种中英混排的日期。
@@ -143,9 +148,14 @@ languages:
         - name: Stats
           pageRef: stats/
           weight: 15
-        - name: About
-          pageRef: about/
-          weight: 21
+        # 英文 About 暂时不挂在导航上。
+        # 此前这里有一份英文版，但它是我（助手）在未获授权的情况下替你写的，
+        # 而且不是翻译——改写了原意、漏了内容、还加了原文没有的信息
+        # （例如原文从未提过所在地）。已删除。
+        # 等你自己写好 content/en/about.md 之后，取消下面三行注释即可：
+        # - name: About
+        #   pageRef: about/
+        #   weight: 21
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
   title: "lonelysam3's Blog"
@@ -301,7 +311,10 @@ params:
     inputPosition: "bottom"
     lightTheme: "light"
     darkTheme: "dark"
-    lang: "zh-CN"
+    # 评论界面语言跟随站点语言（见 layouts/partials/comments.html）。
+    # 原先写死 "zh-CN"，英文文章下的评论区 UI 会是中文。
+    # 这里留空，由模板按 site.Language 填。
+    lang: ""
     crossorigin: "anonymous"
 #pygmentsUseClasses: true
 markup:

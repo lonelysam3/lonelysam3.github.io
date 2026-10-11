@@ -25,7 +25,11 @@
             "data-emit-metadata": "{{ .Site.Params.giscus.emitMetadata }}",
             "data-input-position": "{{ .Site.Params.giscus.inputPosition }}",
             "data-theme": getStoredTheme(),
-            "data-lang": "{{ .Site.Params.giscus.lang }}",
+            {{- /* 评论界面语言跟随站点语言：中文站 zh-CN、英文站 en。
+                   配置里留空时就用 site.Language.LanguageCode 兜底，
+                   否则英文文章下的评论区 UI 会是中文。
+                   (giscus 接受 BCP-47 标签，en-us / zh-cn 都能识别。) */}}
+            "data-lang": "{{ .Site.Params.giscus.lang | default .Site.Language.LanguageCode | default .Site.Language.Lang }}",
             "data-loading": "lazy",
             "crossorigin": "anonymous",
         };
