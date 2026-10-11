@@ -13,16 +13,16 @@ summary: ""
 description: ""
 ---
 
-This is a Notice for English readers.
+This is a notice for English readers.
 
-My articles are all originally written in Chinese. English version may be machine translated, outdated or have grammar mistakes. 
+My articles are all originally written in Chinese. English versions may be machine-translated, outdated or have grammar mistakes. 
 
-Also some articles have no English version, This may because of
+Also, some articles have no English version. This may be because:
 
-- The content is only suitable for Chinese mainland or some specific territories (e.g. GFW bypass)
-- I have trouble on English translating, English is not my native language
-- It's dangerous to publish out of Chinese mainland due to politics factors
+- The content is only suitable for the Chinese mainland or some specific territories (e.g., GFW bypass).
+- I have trouble translating into English. English is not my native language.
+- It's dangerous to publish outside the Chinese mainland due to political factors.
 
-If you find something hard to understand, please comment or email me, thank you!
+If you find anything hard to understand, please leave a comment or email me. Thank you!
 
 My email address: lonelysam8@outlook.com
