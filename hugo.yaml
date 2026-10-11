@@ -148,14 +148,9 @@ languages:
         - name: Stats
           pageRef: stats/
           weight: 15
-        # 英文 About 暂时不挂在导航上。
-        # 此前这里有一份英文版，但它是我（助手）在未获授权的情况下替你写的，
-        # 而且不是翻译——改写了原意、漏了内容、还加了原文没有的信息
-        # （例如原文从未提过所在地）。已删除。
-        # 等你自己写好 content/en/about.md 之后，取消下面三行注释即可：
-        # - name: About
-        #   pageRef: about/
-        #   weight: 21
+        - name: About
+          pageRef: about/
+          weight: 21
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
   title: "lonelysam3's Blog"
@@ -253,7 +248,7 @@ params:
   # 主页 - 信息模式（默认）
   homeInfoParams:
     Title: "lonelysam3 的博客"
-    Content: "这是 lonelysam3 的个人博客，记录学习和生活中的点滴。希望你能喜欢这里的内容！"
+    Content: "一些记录，关于网络安全、Linux以及学校里的各种事"
   #  主页 - 信息模式 图标展示
   socialIcons:
     - name: x
