@@ -1,12 +1,19 @@
 {{- /* ==========================================================================
    lang-switch.html — 语言切换器
    --------------------------------------------------------------------------
-   行为：
-     点击语言按钮 → 跳转到【同一篇文章】在目标语言下的版本。
-     如果该页没有对应译文，则退回到目标语言的首页——而不是拼一个不存在的
-     URL 让读者撞 404。文章还没写英文版时这一点尤其重要。
+   行为：点击语言按钮 → 跳转到【同一篇文章】在目标语言下的版本。
 
-   当前语言用 aria-current="true" 标记且不可点，读者一眼能看出自己在哪个版本。
+   【三种情况的处理】
+     1. 该文章有译文            → 链接到译文
+     2. 该文章是文章页但无译文  → 不做成链接（不把读者送去 404），
+                                  改为灰色不可点的标记，作者一看就知道该补一篇
+     3. 非文章页（首页/列表/静态页）→ 退回到目标语言的首页
+
+   【为什么不能用 .AllTranslations 判断「有没有译文」】
+   .AllTranslations 只列出【已经存在】的译文，所以「列表为空」既可能是
+   「这篇没翻译」，也可能是「别的语言根本没有这篇」。要区分这两者，必须
+   遍历每种语言的站点、在其中按 TranslationKey 查找——下面用的就是这种方式
+   （site.Sites 给出全部语言站点，比拿 site.Home.AllTranslations 反查更直接）。
 
    样式见 30-header.css 的 .lang-switch。
    ========================================================================== */ -}}
@@ -21,28 +28,41 @@
          短标签也符合这类控件的惯例（GitHub、MDN 都用 EN / 中 这种写法）。 */ -}}
     {{- $label := upper $code }}
     {{- if eq $code "zh" }}{{ $label = "中" }}{{ end }}
+
     {{- if eq $code $cur }}
     {{- /* 当前语言：标记为选中，不渲染成链接 */ -}}
     <span class="lang-item is-current" aria-current="true"
           title="{{ .LanguageName }}">{{ $label }}</span>
     {{- else }}
-    {{- /* 优先找当前页在目标语言下的译文；找不到就指向该语言的首页。 */ -}}
+
+    {{- /* ---- 在目标语言站点里按 TranslationKey 找这篇的译文 ---- */ -}}
     {{- $url := "" }}
-    {{- range $.AllTranslations }}
-    {{- if eq .Language.Lang $code }}{{ $url = .RelPermalink }}{{ end }}
-    {{- end }}
-    {{- if not $url }}
-    {{- /* 该页没有译文时退回到目标语言的【首页】。
-           取首页 URL 走 site.Home.AllTranslations，由 Hugo 给出——它已经处理了
-           defaultContentLanguageInSubdir（本站默认语言不带前缀、英文带 /en/）。
-           手拼 "/%s/" 或调用 relLangURL 加参数都不行：前者在改配置后失效，
-           后者只接受一个参数。 */ -}}
-    {{- range site.Home.AllTranslations }}
-    {{- if eq .Language.Lang $code }}{{ $url = .RelPermalink }}{{ end }}
+    {{- range site.Sites }}
+    {{- if eq .Language.Lang $code }}
+    {{- range .RegularPages }}
+    {{- if eq .TranslationKey $.TranslationKey }}{{ $url = .RelPermalink }}{{ end }}
     {{- end }}
     {{- end }}
+    {{- end }}
+
+    {{- if $url }}
     <a class="lang-item" href="{{ $url }}" hreflang="{{ $code }}"
        title="{{ i18n "lang_switch_title" }} {{ .LanguageName }}">{{ $label }}</a>
+    {{- else if and $.IsPage (ne $.Section "") }}
+    {{- /* 文章页且尚无译文：不做成链接，避免把读者送到 404 */ -}}
+    <span class="lang-item is-missing" title="{{ i18n "lang_missing" }}">{{ $label }}</span>
+    {{- else }}
+    {{- /* 非文章页：退回到该语言首页。URL 取自 site.Home.AllTranslations，
+          由 Hugo 给出——它已处理好 defaultContentLanguageInSubdir
+          （本站默认语言不带前缀、英文带 /en/）。 */ -}}
+    {{- $home := "" }}
+    {{- range site.Home.AllTranslations }}
+    {{- if eq .Language.Lang $code }}{{ $home = .RelPermalink }}{{ end }}
+    {{- end }}
+    <a class="lang-item" href="{{ $home }}" hreflang="{{ $code }}"
+       title="{{ i18n "lang_switch_title" }} {{ .LanguageName }}">{{ $label }}</a>
+    {{- end }}
+
     {{- end }}
     {{- end }}
 </div>

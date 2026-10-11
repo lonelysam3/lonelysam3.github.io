@@ -165,6 +165,8 @@
   translation: "Language"
 - id: lang_switch_title
   translation: "Switch to"
+- id: lang_missing
+  translation: "This post has no Chinese version yet"
 
 # ---- Command palette ----
 - id: palette_label

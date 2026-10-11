@@ -10,6 +10,17 @@ draft: true
 #   1. 命令行自动套用：hugo new posts/我的文章.md
 #   2. 手动：复制本文件到 content/posts/ 下改名
 #
+# 【英文版怎么写】
+#   英文版放在 content/en/posts/ 下，且【文件名与中文版完全相同】：
+#
+#     content/posts/xdp-firewall.md      →  /posts/xdp-firewall/
+#     content/en/posts/xdp-firewall.md   →  /en/posts/xdp-firewall/
+#
+#   Hugo 以「语言根目录之下的相对路径」判断两篇是否互为译文，文件名相同
+#   即自动配对。配对成功后，页头的 中/EN 切换器会在两版之间直接互跳；
+#   若尚未写英文版，切换器显示为灰色不可点（不会把读者送到 404）。
+#   建英文版用英文模板：hugo new --kind en en/posts/xdp-firewall.md
+#
 # 下面每一项都注明用途；不用的整行删掉，不要留空值——空字符串会被当作
 # 「已设置但为空」，与「未设置」的默认行为不同。
 #

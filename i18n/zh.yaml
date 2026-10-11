@@ -160,6 +160,8 @@
   translation: "语言"
 - id: lang_switch_title
   translation: "切换到"
+- id: lang_missing
+  translation: "这篇文章还没有英文版"
 
 # ---- 命令面板 ----
 - id: palette_label
