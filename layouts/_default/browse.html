@@ -40,10 +40,14 @@
       <span class="browse-hint">{{ i18n "browse_by_category_hint" }}</span>
     </h2>
 
-    {{- with site.Taxonomies.categories }}
-    {{- $maxC := 0 }}{{ range .ByCount }}{{ if gt .Count $maxC }}{{ $maxC = .Count }}{{ end }}{{ end }}
+    {{- /* 用 lang-terms.html 过滤到当前语言：site.Taxonomies 是跨语言的全局
+           词表，直接用会让另一种语言的分类混进本页。 */ -}}
+    {{- $cats := partial "lang-terms.html" (dict "taxonomy" "categories" "param" "categories" "pages" $posts) }}
+    {{- if $cats }}
+    {{- $cats = sort $cats "Count" "desc" }}
+    {{- $maxC := 0 }}{{ range $cats }}{{ if gt .Count $maxC }}{{ $maxC = .Count }}{{ end }}{{ end }}
     <ul class="browse-list">
-      {{- range .ByCount }}
+      {{- range $cats }}
       <li class="browse-item">
         <a class="browse-link" href="{{ .Page.RelPermalink }}">
           <span class="browse-name">{{ .Page.LinkTitle }}</span>
@@ -70,9 +74,12 @@
       <span class="browse-hint">{{ i18n "browse_by_tag_hint" }}</span>
     </h2>
 
-    {{- with site.Taxonomies.tags }}
+    {{- /* 同样过滤到当前语言 */ -}}
+    {{- $tags := partial "lang-terms.html" (dict "taxonomy" "tags" "param" "tags" "pages" $posts) }}
+    {{- if $tags }}
+    {{- $tags = sort $tags "Count" "desc" }}
     <ul class="browse-tags">
-      {{- range .ByCount }}
+      {{- range $tags }}
       <li>
         <a href="{{ .Page.RelPermalink }}">
           {{ .Page.LinkTitle }}<sup>{{ .Count }}</sup>
@@ -83,9 +90,9 @@
 
     <h3 class="browse-sub-h">{{ i18n "browse_tag_combo" }}</h3>
     <p class="browse-note">{{ i18n "browse_tag_note" }}</p>
-    {{- $maxT := 0 }}{{ range .ByCount }}{{ if gt .Count $maxT }}{{ $maxT = .Count }}{{ end }}{{ end }}
+    {{- $maxT := 0 }}{{ range $tags }}{{ if gt .Count $maxT }}{{ $maxT = .Count }}{{ end }}{{ end }}
     <ul class="browse-list">
-      {{- range first 6 .ByCount }}
+      {{- range first 6 $tags }}
       <li class="browse-item">
         <a class="browse-link" href="{{ .Page.RelPermalink }}">
           <span class="browse-name">{{ .Page.LinkTitle }}</span>

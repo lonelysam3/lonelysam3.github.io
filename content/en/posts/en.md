@@ -4,9 +4,9 @@ weight: 1
 date: 2026-10-11T21:22:00+08:00
 draft: false
 
-categories: ["公告"]
+categories: ["Notes"]
 
-tags: ["公告"]
+tags: ["Announcement"]
 
 summary: ""
 

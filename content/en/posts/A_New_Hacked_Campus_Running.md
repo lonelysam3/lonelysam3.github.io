@@ -3,14 +3,14 @@ title: "Campus Run Tech"
 date: 2026-10-09T11:22:00+08:00
 draft: false
 
-categories: ["教程"]
-tags: ["校园跑"]
+categories: ["Tutorial"]
+tags: ["Campus Run"]
 
 summary: "A very new campus run tech"
 
 description: ""
 
-series: ["校园科技"]
+series: ["Campus Tech"]
 seriesOrder: 1        # 可选。系列内序号；不填则按发布日期排序。
 
 ShowToc: true

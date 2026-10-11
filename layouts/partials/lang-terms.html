@@ -1,0 +1,67 @@
+{{- /* ==========================================================================
+   lang-terms.html — 把 taxonomy 词表过滤到【当前语言】
+   --------------------------------------------------------------------------
+   为什么需要这个：
+
+   Hugo 的 taxonomy 词表是全球唯一的。`site.Taxonomies.categories` 返回所有
+   语言的词，而且词条上的 `.Count` 与 `.Pages` 也是【跨语言聚合】的。于是
+   英文文章用了「公告」分类，中文站的侧栏也会跟着冒出「公告」。
+
+   （注意区别：`site.RegularPages` 是【按语言作用域】的，Hugo 已自动只返回
+   当前语言的页面——首页列表、归档、搜索索引一直都对。出问题的只有
+   site.Taxonomies 这类聚合视图。）
+
+   【为什么不直接用词条的 .Pages】
+   实测 .Pages 同样跨语言，用它过滤等于没过滤。改为在调用方给的页面集合里
+   反查每篇文章的分类/标签参数，用词名字符串比较来计数。
+
+   用法：
+     {{ $cats := partial "lang-terms.html" (dict
+          "taxonomy" "categories" "param" "categories" "pages" $posts) }}
+     {{ range $cats }}
+       <a href="{{ .Page.RelPermalink }}">{{ .Page.LinkTitle }}</a> ({{ .Count }})
+     {{ end }}
+
+   参数：
+     taxonomy  词表名，如 "categories" / "tags"
+     param     front matter 里的字段名，通常与 taxonomy 同名
+     pages     候选页面集合（应为当前语言的文章）
+   返回：slice of dict，每项含 Page / Count / Pages
+   ========================================================================== */ -}}
+{{- $taxonomy := .taxonomy }}
+{{- $paramKey := .param | default $taxonomy }}
+{{- $posts := .pages }}
+
+{{- /* 【用词条键匹配，且大小写不敏感】
+       两个都踩过坑：
+       1. 不能用 .Page.Title —— 词条页可被 _index.md 覆盖标题，
+          content/en/categories/教程 的 title 是 "Tutorial"，与文章里写的值不同。
+       2. 不能区分大小写 —— 文章可能写 Tutorial / Notes（首字母大写），
+          而词条键是小写的 tutorial / notes。精确比较会一个都匹配不上，
+          表现为侧栏分类整体消失（实测过）。
+       因此统一 lower 之后比较，Title 只负责显示。 */ -}}
+{{- $terms := dict }}
+{{- range $name, $weighted := index site.Taxonomies $taxonomy }}
+{{- $terms = merge $terms (dict $name $weighted) }}
+{{- end }}
+
+{{- $out := slice }}
+{{- range $key, $weighted := $terms }}
+{{- $keyLower := lower $key }}
+{{- $matched := slice }}
+{{- range $posts }}
+{{- $post := . }}
+{{- $vals := index $post.Params $paramKey }}
+{{- if $vals }}
+{{- range $vals }}
+{{- if eq (lower .) $keyLower }}
+{{- $matched = $matched | append $post }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if gt (len $matched) 0 }}
+{{- $out = $out | append (dict "Page" $weighted.Page "Key" $key "Count" (len $matched) "Pages" $matched) }}
+{{- end }}
+{{- end }}
+{{- return $out }}

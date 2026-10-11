@@ -25,11 +25,19 @@
             "data-emit-metadata": "{{ .Site.Params.giscus.emitMetadata }}",
             "data-input-position": "{{ .Site.Params.giscus.inputPosition }}",
             "data-theme": getStoredTheme(),
-            {{- /* 评论界面语言跟随站点语言：中文站 zh-CN、英文站 en。
-                   配置里留空时就用 site.Language.LanguageCode 兜底，
-                   否则英文文章下的评论区 UI 会是中文。
-                   (giscus 接受 BCP-47 标签，en-us / zh-cn 都能识别。) */}}
-            "data-lang": "{{ .Site.Params.giscus.lang | default .Site.Language.LanguageCode | default .Site.Language.Lang }}",
+            {{- /* 【giscus 的语言标签不能从站点语言代码推导】
+                   giscus 的 widget 路径对语言段大小写敏感，且只认它自己定义的
+                   那几个标签：
+                     /zh-CN/widget → 200      /zh-cn/widget → 404
+                     /en/widget    → 200      /en-US/widget → 404
+                   而本站语言代码是标准 BCP-47（zh-cn、en-us），两者写法不同。
+                   曾经用 site.Language.LanguageCode 推导，得到小写 "zh-cn"，
+                   widget 返回 404，而 404 响应带 `frame-ancestors 'self'`，
+                   于是整个评论区被浏览器以 CSP 拦掉（iframe 里只剩一个破图）。
+
+                   因此改为从配置读取，按语言取值：site.Params.giscus.langByLanguage，
+                   键为站点语言代码，值为 giscus 认可的标签。取不到再退回 lang。 */}}
+            "data-lang": "{{ index .Site.Params.giscus.langByLanguage .Site.Language.Lang | default .Site.Params.giscus.lang }}",
             "data-loading": "lazy",
             "crossorigin": "anonymous",
         };

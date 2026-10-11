@@ -10,12 +10,19 @@ summary: about
 ---
 
 I’m LonelySam3, a sophomore majoring in Cybersecurity at CQUPT. I write for fun and to practice my skills.
+
 I focus on web security and penetration testing. My skills are average, and I’m still working on building a solid foundation.
+
 A few words for my friends still in high school:
+
 Anyone who tells you college will be a breeze definitely doesn’t have your best interests at heart.
+
 College classes usually last over 90 minutes. If you get tired of sitting for long periods, make sure to spend plenty of time outdoors after the college entrance exams.
+
 Never underestimate easy courses or their assignments—they might force you to pull all-nighters one day just to catch up and avoid failing.
+
 This blog serves as a record of my study notes and some of my thoughts; updates are sporadic.
+
 Finally, here’s a photo from my freshman year of high school.
 
 <img class="about-photo"

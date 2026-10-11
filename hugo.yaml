@@ -306,10 +306,20 @@ params:
     inputPosition: "bottom"
     lightTheme: "light"
     darkTheme: "dark"
-    # 评论界面语言跟随站点语言（见 layouts/partials/comments.html）。
-    # 原先写死 "zh-CN"，英文文章下的评论区 UI 会是中文。
-    # 这里留空，由模板按 site.Language 填。
-    lang: ""
+    # 【必须逐字写成 giscus 自己的语言标签，不能用 BCP-47】
+    # giscus 的 widget 路径对语言段大小写敏感，只认它自己定义的那几个值：
+    #   /zh-CN/widget → 200    /zh-cn/widget → 404
+    #   /en/widget    → 200    /en-US/widget → 404
+    # 而本站语言代码是标准 BCP-47（zh-cn / en-us），写法与它不同，所以在这里
+    # 显式写明，不由模板从 site.Language.LanguageCode 推导。
+    # （曾经推导过一次：得到小写 zh-cn，widget 直接 404，整块评论区被浏览器
+    #   以 CSP 拦掉。原因已记在 comments.html 里，避免重犯。）
+    lang: "zh-CN"
+    # 按语言覆盖：键是站点语言代码，值是 giscus 认可的语言标签。
+    # 英文站要用 "en"，不能用 BCP-47 的 en-us。
+    langByLanguage:
+      zh: "zh-CN"
+      en: "en"
     crossorigin: "anonymous"
 #pygmentsUseClasses: true
 markup:

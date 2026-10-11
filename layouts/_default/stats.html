@@ -27,8 +27,11 @@
 {{- $totalReading = add $totalReading .ReadingTime }}
 {{- end }}
 
-{{- $tagCount := 0 }}{{ with site.Taxonomies.tags }}{{ $tagCount = len . }}{{ end }}
-{{- $catCount := 0 }}{{ with site.Taxonomies.categories }}{{ $catCount = len . }}{{ end }}
+{{- /* 标签/分类计数同样要过滤到当前语言。
+       site.Taxonomies 是跨语言的全局词表，直接取 len 会把另一种语言的
+       词也算进来——英文站会出现中文站才有的分类数。 */ -}}
+{{- $tagCount := len (partial "lang-terms.html" (dict "taxonomy" "tags" "param" "tags" "pages" $posts)) }}
+{{- $catCount := len (partial "lang-terms.html" (dict "taxonomy" "categories" "param" "categories" "pages" $posts)) }}
 
 {{- /* 按日期聚合文章数与字数，供热力图与年度图使用 */ -}}
 {{- $byDate := dict }}

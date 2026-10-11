@@ -133,15 +133,21 @@
     </div>
 
     {{- /* 浏览：把分类与标签收进同一个区块。
-           此前侧栏只有「分类」，而全站只有 1 个分类，这一块几乎不传递信息；
-           现在同时给出分类计数与最常用的几个标签，并指向完整的浏览页。
-           分类计入数量、标签只取前 6 个，避免侧栏被标签撑长。 */ -}}
+           分类计入数量、标签只取前 6 个，避免侧栏被标签撑长。
+
+           【必须用 lang-terms.html 过滤】
+           site.Taxonomies 是【跨语言的全局词表】，词条上的 .Count/.Pages 也是
+           跨语言聚合的。不过滤的话，英文文章用的分类（如「公告」）会出现在
+           中文侧栏里——实测就是这个现象。过滤后中英各看各的。 */ -}}
+    {{- $sbPosts := where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) }}
     <div class="sb-block">
         <h2 class="sb-title">{{ i18n "sidebar_browse" }}</h2>
 
-        {{- with site.Taxonomies.categories }}
+        {{- $sbCats := partial "lang-terms.html" (dict "taxonomy" "categories" "param" "categories" "pages" $sbPosts) }}
+        {{- $sbTags := partial "lang-terms.html" (dict "taxonomy" "tags" "param" "tags" "pages" $sbPosts) }}
+        {{- with $sbCats }}
         <ul class="sb-counts">
-            {{- range .ByCount }}
+            {{- range sort . "Count" "desc" }}
             <li>
                 <a href="{{ .Page.RelPermalink }}">
                     <span class="sb-count-name">{{ .Page.LinkTitle }}</span>
@@ -152,9 +158,10 @@
         </ul>
         {{- end }}
 
-        {{- with site.Taxonomies.tags }}
+        {{- $sbTags := partial "lang-terms.html" (dict "taxonomy" "tags" "param" "tags" "pages" $sbPosts) }}
+        {{- with $sbTags }}
         <div class="sb-tagrow">
-            {{- range first 6 .ByCount }}
+            {{- range first 6 (sort . "Count" "desc") }}
             <a href="{{ .Page.RelPermalink }}">{{ .Page.LinkTitle }}<sup>{{ .Count }}</sup></a>
             {{- end }}
         </div>
