@@ -1,5 +1,5 @@
 ---
-title: "关于"
+title: "About"
 layout: "about"
 # 【不要写 url】
 # 该值是绝对路径、不带语言前缀。在英文版里写 url: "/about/" 会让中英两版
