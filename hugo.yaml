@@ -74,6 +74,14 @@ languages:
       # 列表左侧「日期戳」的短格式：只到月。日号另用 02 取两位数字，
       # 与语言无关，因此这里只需管年与月。
       DateFormatMonth: "2006 年 1 月"
+      # 「在 GitHub 上编辑」的文案必须写在【语言级】。
+      # 写在根级 params 里两种语言会共用同一份，英文站因此一直显示中文。
+      # 三字段要写全：Hugo 对语言级与根级 params 是浅合并，
+      # 语言里出现 editPost 就整表替换，只写 Text 会让 URL 丢失、链接失效。
+      editPost:
+        URL: "https://github.com/lonelysam3/lonelysam3.github.io/blob/main/content"
+        Text: "在 GitHub 上编辑"
+        appendFilePath: true
     taxonomies: # 分类系统
       category: categories
       tag: tags
@@ -139,6 +147,10 @@ languages:
       DateFormat: "Jan 2, 2006"
       # 列表左侧日期戳的短格式（月 + 年）
       DateFormatMonth: "Jan 2006"
+      editPost:
+        URL: "https://github.com/lonelysam3/lonelysam3.github.io/blob/main/content"
+        Text: "Edit on GitHub"
+        appendFilePath: true
     menus:
       main:
         - name: Home
@@ -296,10 +308,6 @@ params:
   # 关联编辑：此处 URL 原先残留占位符 <path_to_repo>，
   # 导致每篇文章的 “Suggest Changes” 都指向一个 404 链接（实测生成
   # https://github.com/%3cpath_to_repo%3e/... ）。已改为真实仓库地址。
-  editPost:
-    URL: "https://github.com/lonelysam3/lonelysam3.github.io/blob/main/content"
-    Text: "在 GitHub 上编辑" # edit text
-    appendFilePath: true # to append file path to Edit link
 
   # for search
   # https://fusejs.io/api/options.html

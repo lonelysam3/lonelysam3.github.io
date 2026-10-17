@@ -1,0 +1,47 @@
+{{- /* ==========================================================================
+   edit_post.html — 「在 GitHub 上编辑」链接（覆盖主题同名 partial）
+   --------------------------------------------------------------------------
+   相对主题原版只改一处：拼接【语言内容目录前缀】。
+
+   问题：
+   主题用 path.Join .File.Path 拼仓库路径。而 .File.Path 是相对于【该语言的
+   contentDir】的——英文站（contentDir: content/en）拿到的是
+   posts/A_New_Hacked_Campus_Running.md，拼出来是
+     .../blob/main/content/posts/A_New_Hacked_Campus_Running.md
+   而文件真正的所在是
+     .../blob/main/content/en/posts/A_New_Hacked_Campus_Running.md
+   于是英文站每篇文章的「Edit on GitHub」都指向 404。
+
+   前缀取 Site.LanguagePrefix：默认语言为空串，其他语言是 /en 这样的前缀。
+   这里去掉了前导斜杠，并用 trim 处理前后空白。
+
+   局限（已知并接受）：本做法假定「语言级 contentDir」等于 content/<lang>。
+   本站 en 的 contentDir 正是 content/en，成立。若以后改成 content/english
+   这类与语言键不同的目录，需要改为显式配置前缀。
+   ========================================================================== */ -}}
+
+{{- if and (or .Params.editPost.URL site.Params.editPost.URL) (not (.Param "editPost.disabled")) -}}
+
+{{- /* 语言前缀：默认语言为空串，其他语言形如 "/en"，这里去掉前导斜杠。
+       with 对空串为假，所以默认语言天然走不到里面。 */ -}}
+{{- $langPrefix := "" -}}
+{{- with site.LanguagePrefix -}}
+  {{- $langPrefix = strings.TrimPrefix "/" . -}}
+{{- end -}}
+{{- $dirPrefix := "" -}}
+{{- if $langPrefix -}}
+  {{- $dirPrefix = printf "%s/" $langPrefix -}}
+{{- end -}}
+
+{{- $filePath := "" -}}
+{{- with .File -}}
+  {{- $filePath = path.Join $dirPrefix .Path -}}
+{{- end -}}
+
+{{- if or .Params.author site.Params.author (.Param "ShowReadingTime") (not .Date.IsZero) .IsTranslated }}&nbsp;|&nbsp;{{- end -}}
+<span>
+    <a href="{{ .Params.editPost.URL | default site.Params.editPost.URL }}{{ if .Params.editPost.appendFilePath | default ( site.Params.editPost.appendFilePath | default false ) }}/{{ $filePath }}{{ end }}" rel="noopener noreferrer edit" target="_blank">
+        {{- .Params.editPost.Text | default (site.Params.editPost.Text | default (i18n "edit_post" | default "Edit")) -}}
+    </a>
+</span>
+{{- end }}
