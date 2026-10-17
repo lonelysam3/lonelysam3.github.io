@@ -18,13 +18,20 @@
    ========================================================================== */ -}}
 
 {{- $type := .Get "type" | default "note" -}}
-{{- $titles := dict
-    "note"    "说明"
-    "tip"     "提示"
-    "warn"    "注意"
-    "danger"  "警告"
-    "info"    "信息" -}}
-{{- $title := .Get "title" | default (index $titles $type) | default "说明" -}}
+{{- /* 【默认标题走 i18n，不再写死中文表】
+       原先这里是一份硬编码的中文 dict（说明/提示/注意/警告/信息），
+       英文站的提示框标题因此永远显示中文。i18n 里早已备好
+       callout_note / callout_tip / callout_warn / callout_danger / callout_info
+       五个键，只是这里从没查过。
+
+       键名按 type 拼出来，所以未知 type 会取到空串 —— 回退到 note。 */ -}}
+{{- $title := .Get "title" -}}
+{{- if not $title -}}
+  {{- $title = i18n (printf "callout_%s" $type) -}}
+  {{- if not $title -}}
+    {{- $title = i18n "callout_note" -}}
+  {{- end -}}
+{{- end -}}
 
 <div class="callout" data-type="{{ $type }}" role="note">
     <div class="callout-head">

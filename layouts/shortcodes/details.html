@@ -15,7 +15,8 @@
      定位——因此折叠块适合放补充材料，不适合放主要章节。
    ========================================================================== */ -}}
 
-{{- $title := .Get "title" | default "展开查看" -}}
+{{- /* 默认标题走 i18n：原先写死「展开查看」，英文站的折叠块也是中文。 */ -}}
+{{- $title := .Get "title" | default (i18n "details_default_title") -}}
 {{- $open := eq (.Get "open") "true" -}}
 
 <details class="fold" {{ if $open }}open{{ end }}>

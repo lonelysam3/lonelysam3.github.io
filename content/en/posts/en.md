@@ -7,10 +7,6 @@ draft: false
 categories: ["Notes"]
 
 tags: ["Announcement"]
-
-summary: ""
-
-description: ""
 ---
 
 This is a notice for English readers.

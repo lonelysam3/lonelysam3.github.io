@@ -6,42 +6,57 @@
 
    比默认的「404 Not Found」多做三件事：
      · 说明可能的原因，而不是丢一句错误码；
-     · 给出返回首页 / 归档 / 统计的出口；
+     · 给出返回首页 / 统计 / 随便看看的出口；
      · 提供站内搜索入口和最近文章，让读者有事可做而不是直接关掉。
 
    页面用 .list 作为 body 类（见 baseof.html 的判断），因此沿用列表页的
    排版；同时不渲染侧栏（.Kind 为 404 时 sidebar partial 会返回空）。
+
+   【文案全部走 i18n】
+   这一页原先整页硬编码中文，而 i18n/zh.yaml 与 i18n/en.yaml 里早就备好了
+   一整套 notfound_* 键——只是模板从没接上。结果是 /en/404.html 里正文仍是
+   中文（Hugo 确实会生成这个文件，见 public/en/404.html）。
+   本轮把键接上，并删除模板里那份重复的中文文案。
+
+   notfound_try_archive / notfound_try_tags 的值里带 HTML 链接，URL 由这里
+   通过 dict 传入，不在文案里写死——否则英文版会指到 /archives/ 而不是
+   /en/archives/。因此输出时必须过 safeHTML。
    ========================================================================== */ -}}
 {{- define "main" }}
 
+{{- $ctx := dict
+    "ArchiveURL" ("archives/" | relLangURL)
+    "TagsURL"    ("tags/" | relLangURL)
+-}}
+
 <header class="page-header">
-  <h1>404</h1>
-  <div class="post-description">这个页面不存在</div>
+  <h1>{{ i18n "notfound_title" }}</h1>
+  <div class="post-description">{{ i18n "notfound_subtitle" }}</div>
 </header>
 
 <div class="post-content">
-  <p>可能的原因：</p>
+  <p>{{ i18n "notfound_why" }}</p>
   <ul>
-    <li>链接拼错了，或者从别处复制时被截断</li>
-    <li>这篇文章被重命名或删除了</li>
-    <li>地址里的路径区分大小写，字母大小写不一致</li>
+    <li>{{ i18n "notfound_reason_1" }}</li>
+    <li>{{ i18n "notfound_reason_2" }}</li>
+    <li>{{ i18n "notfound_reason_3" }}</li>
   </ul>
 
-  <p>可以试试：</p>
+  <p>{{ i18n "notfound_try" }}</p>
   <ul>
-    <li>用顶部搜索框搜关键词</li>
-    <li>去<a href="{{ "archives/" | relLangURL }}">归档</a>按时间翻一翻</li>
-    <li>在<a href="{{ "tags/" | relLangURL }}">标签</a>页找同类内容</li>
+    <li>{{ i18n "notfound_try_search" }}</li>
+    <li>{{ i18n "notfound_try_archive" $ctx | safeHTML }}</li>
+    <li>{{ i18n "notfound_try_tags" $ctx | safeHTML }}</li>
   </ul>
 
   <p>
-    <a class="sb-btn" href="{{ "" | relLangURL }}">← 返回首页</a>
-    <a class="sb-btn" href="{{ "stats/" | relLangURL }}">📊 统计</a>
-    <button type="button" class="sb-btn" data-random-post>🎲 随便看看</button>
+    <a class="sb-btn" href="{{ "" | relLangURL }}">{{ i18n "notfound_back_home" }}</a>
+    <a class="sb-btn" href="{{ "stats/" | relLangURL }}">{{ i18n "action_stats" }}</a>
+    <button type="button" class="sb-btn" data-random-post>{{ i18n "action_random" }}</button>
   </p>
 
   {{- with first 5 (where site.RegularPages "Type" "in" site.Params.mainSections) }}
-  <h2>最近文章</h2>
+  <h2>{{ i18n "sidebar_recent" }}</h2>
   <ul class="sb-links">
     {{- range . }}
     <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>

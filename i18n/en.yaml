@@ -43,8 +43,6 @@
   translation: "Latest"
 - id: sidebar_browse
   translation: "Browse"
-- id: sidebar_explore
-  translation: "Explore"
 - id: sidebar_all_posts
   translation: "All posts & tags →"
 - id: sidebar_now
@@ -81,8 +79,6 @@
   translation: "Draft"
 
 # ---- Browse page ----
-- id: browse_title
-  translation: "Browse"
 - id: browse_summary
   translation: "{{ .Count }} posts so far. Categories are sections — one per post. Tags are keywords — as many as you like."
 - id: browse_by_category
@@ -111,8 +107,6 @@
     other: "{{ .Count }} posts"
 
 # ---- Stats page ----
-- id: stats_title
-  translation: "Stats"
 - id: stats_articles
   translation: "posts"
 - id: stats_words
@@ -203,20 +197,14 @@
   translation: "All series"
 - id: series_index_count
   translation: "{{ .Count }} posts"
-- id: series_index_progress
-  translation: "{{ .Count }} posts, last updated {{ .Date }}"
 - id: series_index_empty
   translation: "No series yet. Add series: [\"Name\"] to a post's front matter."
-- id: series_index_latest
-  translation: "Latest"
 - id: search_page_hint
   translation: "Type a keyword, then narrow it with the filters below."
 - id: search_page_empty
   translation: "No matching posts."
 - id: search_page_idle
   translation: "Start typing to search all posts."
-- id: search_filter_all
-  translation: "All"
 - id: search_filter_category
   translation: "Category"
 - id: search_filter_tag
@@ -245,17 +233,15 @@
   translation: "Zoom"
 - id: lightbox_counter
   translation: "{Current} of {Total}"
-- id: toc_active_label
-  translation: "Now reading"
 - id: mobile_nav_label
   translation: "Quick navigation"
 - id: mobile_nav_top
   translation: "Top"
 - id: nav_archive
   translation: "Archive"
-- id: footnote_ref_label
-  translation: "Footnote {Num}"
-- id: footnote_back_label
-  translation: "Back to text"
 - id: search_all_results
   translation: "See all results"
+- id: heatmap_months
+  translation: "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
+- id: heatmap_weekdays
+  translation: ",Mon,,Wed,,Fri,"

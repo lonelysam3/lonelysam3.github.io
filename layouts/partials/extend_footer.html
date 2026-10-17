@@ -681,8 +681,10 @@
                 return 4;
             };
 
-            /* 月份标签行：只在每月第一周出现月份名 */
-            var MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            /* 月份标签行：只在每月第一周出现月份名。
+               标签由模板经 data-months 传入（逗号分隔），不在 JS 里写死中文——
+               写死过一次，英文统计页的热力图月份就一直是「1月 2月 …」。 */
+            var MONTHS = (heatWrap.getAttribute('data-months') || '').split(',');
             var monthsHtml = '';
             cursor = new Date(start);
             for (var w = 0; w < WEEKS; w++) {
@@ -694,8 +696,9 @@
                 cursor.setDate(cursor.getDate() + 7);
             }
 
-            /* 周几标签：只标周一 / 周三 / 周五，避免拥挤 */
-            var dayLabels = ['', '一', '', '三', '', '五', ''];
+            /* 周几标签：只标周一 / 周三 / 周五，避免拥挤。
+               同样从 data-weekdays 取（逗号分隔、首尾可为空串）。 */
+            var dayLabels = (heatWrap.getAttribute('data-weekdays') || '').split(',');
             var daysHtml = dayLabels.map(function (t) { return '<span>' + t + '</span>'; }).join('');
 
             /* 网格主体 */

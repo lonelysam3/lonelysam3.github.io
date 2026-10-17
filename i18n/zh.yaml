@@ -40,8 +40,6 @@
   translation: "最新"
 - id: sidebar_browse
   translation: "浏览"
-- id: sidebar_explore
-  translation: "探索"
 - id: sidebar_all_posts
   translation: "全部文章与标签 →"
 - id: sidebar_now
@@ -78,8 +76,6 @@
   translation: "草稿"
 
 # ---- 浏览页 ----
-- id: browse_title
-  translation: "浏览"
 - id: browse_summary
   translation: "共 {{ .Count }} 篇文章。分类是栏目（每篇一个），标签是关键词（每篇可多个）。"
 - id: browse_by_category
@@ -106,8 +102,6 @@
   translation: "{{ .Count }} 篇"
 
 # ---- 统计页 ----
-- id: stats_title
-  translation: "统计"
 - id: stats_articles
   translation: "篇文章"
 - id: stats_words
@@ -198,20 +192,14 @@
   translation: "全部系列"
 - id: series_index_count
   translation: "{{ .Count }} 篇"
-- id: series_index_progress
-  translation: "已写 {{ .Count }} 篇，最近更新 {{ .Date }}"
 - id: series_index_empty
   translation: "还没有系列。在文章 front matter 里加 series: [\"系列名\"] 即可。"
-- id: series_index_latest
-  translation: "最新"
 - id: search_page_hint
   translation: "输入关键词，可用下面的筛选缩小范围。"
 - id: search_page_empty
   translation: "没有匹配的文章。"
 - id: search_page_idle
   translation: "开始输入以搜索全部文章。"
-- id: search_filter_all
-  translation: "全部"
 - id: search_filter_category
   translation: "分类"
 - id: search_filter_tag
@@ -240,17 +228,15 @@
   translation: "缩放"
 - id: lightbox_counter
   translation: "第 {Current} / {Total} 张"
-- id: toc_active_label
-  translation: "正在阅读"
 - id: mobile_nav_label
   translation: "快捷导航"
 - id: mobile_nav_top
   translation: "顶部"
 - id: nav_archive
   translation: "归档"
-- id: footnote_ref_label
-  translation: "脚注 {Num}"
-- id: footnote_back_label
-  translation: "返回正文"
 - id: search_all_results
   translation: "查看全部结果"
+- id: heatmap_months
+  translation: "1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月"
+- id: heatmap_weekdays
+  translation: ",一,,三,,五,"

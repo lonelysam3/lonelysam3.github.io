@@ -353,13 +353,8 @@
     color: var(--c-accent);
 }
 
-/* --- 探索入口按钮 --- */
-.sb-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-}
-
+/* --- 按钮（404 页的「返回首页 / 统计 / 随便看看」在用）---
+   注：.sb-actions 容器已随侧栏「探索」区一起删除，这里只保留按钮本身。 */
 .sb-btn {
     display: inline-flex;
     align-items: center;

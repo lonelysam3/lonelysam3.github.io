@@ -94,7 +94,8 @@
   <h2>{{ i18n "stats_heatmap" }}</h2>
   <p class="heat-hint">{{ i18n "stats_heatmap_hint" }}</p>
   <div class="heatmap" id="heatmap" data-days='{{ $byDate | jsonify }}'
-       data-label-less="{{ i18n "stats_less" }}" data-label-more="{{ i18n "stats_more" }}">
+       data-label-less="{{ i18n "stats_less" }}" data-label-more="{{ i18n "stats_more" }}"
+     data-months="{{ i18n "heatmap_months" }}" data-weekdays="{{ i18n "heatmap_weekdays" }}">
     <noscript><p>{{ i18n "stats_heatmap_noscript" }}</p></noscript>
   </div>
 
