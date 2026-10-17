@@ -128,6 +128,13 @@
     --fs-xl:   calc(clamp(1.75rem, 1.3rem + 1.5vw, 2.125rem) * var(--user-scale));  /* 文章标题 */
     --fs-2xl:  calc(clamp(2rem, 1.4rem + 2.1vw, 2.5rem) * var(--user-scale));       /* 页面标题 */
 
+    /* 列表页专用两档。
+       日号要够大才读得像「栏目标记」而不是一串附属信息；列表标题比文章页的
+       h2 小一档，避免在列表里与正文争夺视觉重量。
+       取值对照 liuu 的 .stamp .d(1.9rem) 与 .entry .body h2(1.5rem)。 */
+    --fs-list-date:  calc(1.9rem * var(--user-scale));   /* 30.4px 日号 */
+    --fs-list-title: calc(1.5rem * var(--user-scale));   /* 24px 列表标题 */
+
     /* 行高
        body 1.75 与 .prose 1.78 都取自 liuu 实测；标题收紧到 1.3–1.35。
        中英文共用这些值——中文方块字在 1.75 下呼吸充足，拉丁文也不显松散。 */
@@ -145,6 +152,8 @@
     --ls-tight:   -0.02em;   /* h2（liuu 原值） */
     --ls-snug:    -0.014em;  /* h3（liuu 原值） */
     --ls-caps:    0.06em;    /* 全大写小标签的字距 */
+    --ls-meta:    0.04em;    /* 等宽小字（日期、计数、标签）的轻微字距，
+                                纯大写的等宽串不加字距会挤在一起 */
 
     --fw-normal: 400;
     --fw-medium: 500;   /* 导航、标签、元信息的强调态 */

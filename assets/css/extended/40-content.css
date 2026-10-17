@@ -12,27 +12,36 @@
    --------------------------------------------------------------------------
    只定义外观，列宽与居中一律交给 20-layout.css，避免多处重复声明后
    互相覆盖导致左边缘错位。 */
+/* 【改成报头而不是卡片】
+   原先是一张带边框、底色、圆角、阴影的卡片。问题在于它和下方「编辑式列表」
+   是两种设计语言：卡片属于后台面板，列表属于刊物。两者挨在一起会互相削弱。
+
+   现在改成报头：无边框无底色，只用一条 2px 规则线收束。
+   这条线与文章页标题下的规则线（.post-header）是同一种语言，
+   全站因此只有「一种分隔」的表达方式。 */
 .home-info {
     width: 100%;
-    margin-bottom: var(--s-12);
-    padding: var(--s-10);
-    background: var(--c-surface-sunken);
-    border: 1px solid var(--c-border);
-    border-radius: var(--r-2xl);
-    /* 这是页面上最大的一块「卡片」，用带 1px 内描边的那档阴影。
-       OpenAI 的 Level 1 就是「0 0 0 1px + 0 2px 4px -1px」的组合，
-       比单纯投影更贴合，因为它把边框也算进阴影里。 */
-    box-shadow: var(--sh-sm);
+    margin-bottom: var(--s-8);
+    padding: 0 0 var(--s-6);
+    background: none;
+    border: none;
+    border-bottom: 2px solid var(--c-text);
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .home-info .entry-header h1 {
-    margin-bottom: var(--s-4);
-    font-size: var(--fs-xl);
+    margin: 0 0 var(--s-3);
+    font-size: var(--fs-2xl);
     font-weight: var(--fw-bold);
-    letter-spacing: -0.026em;
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-hero);
+    text-wrap: balance;
 }
 
 .home-info .entry-content {
+    /* 简介不铺满整行：限宽 34em 左右，读起来像刊首语而不是一整条横幅 */
+    max-width: 34em;
     font-size: var(--fs-base);
     line-height: var(--lh-base);
     color: var(--c-text-muted);
@@ -44,7 +53,7 @@
 }
 
 .home-info .entry-footer {
-    margin-top: var(--s-6);
+    margin-top: var(--s-5);
 }
 
 /* --------------------------------------------------------------------------
@@ -85,56 +94,121 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. 文章列表
+   3. 文章列表（编辑式三栏）
    --------------------------------------------------------------------------
-   采用「发丝分隔的连续列表」而非「每篇一张卡片」：同屏多篇时重复的卡片边框
-   会形成大量视觉噪音，连续列表更适合阅读型博客。
+   结构见 layouts/_default/list.html：
+
+     .post-entry   grid ── 日期戳 │ 正文 │ 阅读时长
+     ├ .entry-stamp        左列：大号日号 + 小号年月（等宽、等宽数字）
+     ├ .entry-body         中列：标题 / 摘要 / 字数 + 标签胶囊
+     ├ .entry-dur          右列：阅读时长，右对齐成一列
+     └ .entry-link         整块点击热区（绝对定位，不占栅格）
+
+   三个决策：
+
+   1) 不用「每篇一张卡片」。同屏多篇时重复的卡片边框会形成大量视觉噪音，
+      连续列表更适合阅读型博客，分隔只用 1px 发丝线。
+
+   2) 日期独立成列，且字号反差大（日号 1.9rem / 年月 0.6875rem）。
+      这样它读起来像「栏目标记」而不是一串附属信息——扫列表时按日期定位，
+      比逐字读「2026 年 10 月 9 日」快得多。
+
+   3) hover 时背景淡染 + 底部强调线从左扫入（::after 的 scaleX）。
+      负向 margin 让淡染一直铺到容器边缘，悬停范围与视觉范围才一致。
    -------------------------------------------------------------------------- */
 .post-entry {
     position: relative;
-    display: block;
-    width: 100%;
-    padding: var(--s-8) 0;
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+    gap: 0 var(--s-6);
+    /* 基线对齐：日号、标题、阅读时长共用同一条基线，
+       视觉上它们排成一行，而不是三个各自从顶部起始的块 */
+    align-items: baseline;
+    padding: var(--s-5) var(--s-3);
+    /* 负 margin 让 hover 背景溢出到容器边缘（行内留白仍由 padding 保证） */
+    margin-inline: calc(var(--s-3) * -1);
     background: none;
     border: none;
-    border-top: 1px solid var(--c-border);
-    border-radius: 0;
-    box-shadow: none;
-    transition: none;
-}
-
-.post-entry:last-of-type {
     border-bottom: 1px solid var(--c-border);
+    border-radius: var(--r-sm);
+    box-shadow: none;
+    transition: background-color var(--dur-base) var(--ease);
 }
 
-/* 旧层的左侧强调条与悬浮位移在此全部取消 */
+/* 旧层的左侧强调条与前缀装饰全部取消 */
 .post-entry::before {
     content: none;
 }
 
+/* 底部强调线：默认收敛为 0，hover 时从左向右展开 */
+.post-entry::after {
+    content: "";
+    position: absolute;
+    inset-inline: var(--s-3);
+    bottom: -1px;
+    height: 1px;
+    background: var(--c-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-base) var(--ease);
+}
+
 .post-entry:hover {
+    background: var(--c-accent-soft);
     transform: none;
     box-shadow: none;
 }
 
-/* 整卡点击热区（PaperMod 注入的覆盖链接） */
-.post-entry .entry-link:focus-visible {
-    outline: 2px solid var(--c-accent-ring);
-    outline-offset: var(--s-2);
-    border-radius: var(--r-sm);
+.post-entry:hover::after {
+    transform: scaleX(1);
+}
+
+/* ---- 左列：日期戳 ---- */
+.entry-stamp {
+    font-family: var(--font-mono);
+    /* 等宽数字：月份个位数与两位数时，日号不会左右抖动 */
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.stamp-d {
+    display: block;
+    font-size: var(--fs-list-date);
+    font-weight: var(--fw-semi);
+    line-height: 1;
+    letter-spacing: var(--ls-hero);
+    color: var(--c-text);
+    transition: color var(--dur-base) var(--ease);
+}
+
+.stamp-m {
+    display: block;
+    margin-top: var(--s-1);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-faint);
+}
+
+/* hover 时把日号提到强调色——与底部线条一起构成「选中」的反馈 */
+.post-entry:hover .stamp-d {
+    color: var(--c-accent);
+}
+
+/* ---- 中列：标题 / 摘要 / 元信息 ---- */
+.entry-body {
+    min-width: 0;
 }
 
 .post-entry .entry-header h2 {
-    margin: 0 0 var(--s-3);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-semi);
+    margin: 0 0 var(--s-2);
+    font-size: var(--fs-list-title);
+    font-weight: var(--fw-bold);
     line-height: var(--lh-snug);
-    letter-spacing: -0.016em;
+    letter-spacing: var(--ls-snug);
+    /* 标题较长时让各行长度均匀，避免末行只剩一两个字 */
+    text-wrap: balance;
     transition: color var(--dur-fast) var(--ease);
-}
-
-.post-entry:hover .entry-header h2 {
-    color: var(--c-accent);
 }
 
 .post-entry .entry-content {
@@ -147,63 +221,86 @@
     line-height: var(--lh-base);
     color: var(--c-text-muted);
     text-align: start;
+    text-wrap: pretty;
 }
 
 .post-entry .entry-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2) var(--s-4);
     margin-top: var(--s-3);
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
     color: var(--c-text-faint);
 }
 
-/* 首页首篇：轻底色区块突出，不使用大卡片
-   注意：列宽与居中由 20-layout.css 统一定义，这里不再重复声明。
-   本文件早期版本在多处写了 max-width: var(--w-read) + margin-inline: auto，
-   会覆盖布局层的 --col-main 约束，导致各区块宽度不一致、左边缘错位。 */
-.first-entry {
-    display: block;
-    width: 100%;
-    min-height: 0;
-    margin-bottom: var(--s-6);
-    padding: var(--s-10);
-    background: var(--c-surface-sunken);
+.ef-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+}
+
+/* 标签用描边胶囊而不是实心色块：列表里几乎每篇都带标签，实心块会抢标题的
+   注意力；描边更安静，hover 才上强调色。 */
+.ef-tag {
+    padding: 0.1em 0.6em;
+    color: var(--c-text-muted);
     border: 1px solid var(--c-border);
-    border-radius: var(--r-2xl);
-    box-shadow: var(--sh-sm);
+    border-radius: var(--r-full);
+    transition:
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
 }
 
-.first-entry .entry-header {
-    display: block;
-    overflow: visible;
+.ef-tag:hover {
+    color: var(--c-accent);
+    border-color: var(--c-accent);
 }
 
-.first-entry .entry-header h1 {
-    margin: 0 0 var(--s-3);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-snug);
-    letter-spacing: -0.02em;
+/* ---- 右列：阅读时长 ---- */
+.entry-dur {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease);
 }
 
-.first-entry .entry-content {
-    -webkit-line-clamp: 3;
-    margin: 0;
-    font-size: var(--fs-sm);
+.post-entry:hover .entry-dur {
     color: var(--c-text-muted);
 }
 
-.first-entry .entry-footer {
-    margin-top: var(--s-4);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--c-text-faint);
+/* 整块点击热区（PaperMod 注入的覆盖链接） */
+.post-entry .entry-link:focus-visible {
+    outline: 2px solid var(--c-accent-ring);
+    outline-offset: var(--s-2);
+    border-radius: var(--r-sm);
+}
+
+/* 首篇：仅在未启用 homeInfoParams 时出现（此时首页没有简介区，
+   第一篇文章承担「开篇」角色，标题放大一档）。 */
+.first-entry .entry-header h2 {
+    font-size: var(--fs-2xl);
 }
 
 /* --------------------------------------------------------------------------
    4. 文章头部
    -------------------------------------------------------------------------- */
+/* 【标题下加 2px 规则线】
+   这是 liuu 的 .ptitle 手法：用一条比发丝线明显得多的横线把「标题区」与
+   「正文区」切开。好处是文章一开始就有一个明确的起跑线，读者知道正文从
+   哪一行开始；只用留白的话，长标题与首段之间容易糊成一片。
+
+   用 --c-text（正文墨色）而不是 --c-border：这条线是结构标记，不是装饰，
+   它需要和正文同等强度。 */
 .post-header {
-    margin-bottom: var(--s-10);
+    margin-bottom: var(--s-8);
+    padding-bottom: var(--s-6);
+    border-bottom: 2px solid var(--c-text);
 }
 
 .breadcrumbs {
@@ -240,6 +337,36 @@
     font-size: var(--fs-base);
     line-height: var(--lh-base);
     color: var(--c-text-muted);
+}
+
+/* 页头标题后的 RSS 图标。
+   原先它是 23px 的裸 svg，基线跟着大标题走，看起来像误粘上去的一个图标。
+   现在改成明确的小按钮：与标题基线居中对齐、静音色、hover 才上强调色。 */
+.page-header h1 a[href$="index.xml"],
+.page-header h1 a[title="RSS"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: var(--s-3);
+    padding: var(--s-1);
+    vertical-align: 0.12em;
+    color: var(--c-text-faint);
+    border-radius: var(--r-sm);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.page-header h1 a[href$="index.xml"]:hover,
+.page-header h1 a[title="RSS"]:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+.page-header h1 a[href$="index.xml"] svg,
+.page-header h1 a[title="RSS"] svg {
+    width: 1.1rem;
+    height: 1.1rem;
 }
 
 .post-meta {
@@ -777,14 +904,15 @@
    11. 桌面优先 · 向下适配
    ========================================================================== */
 @media (max-width: 60rem) {
-    .home-info,
-    .first-entry {
-        margin-bottom: var(--s-8);
-        padding: var(--s-6);
+    .home-info {
+        margin-bottom: var(--s-6);
+        padding-bottom: var(--s-5);
     }
 
+    /* 三栏仍保留，只收窄行内留白与栏距 */
     .post-entry {
-        padding: var(--s-6) 0;
+        gap: 0 var(--s-4);
+        padding: var(--s-4) var(--s-3);
     }
 
     .post-header {
@@ -807,14 +935,36 @@
 }
 
 @media (max-width: 45rem) {
-    .home-info,
-    .first-entry {
-        padding: var(--s-5);
-        border-radius: var(--r-lg);
+    .home-info {
+        padding-bottom: var(--s-4);
     }
 
+    /* 窄屏下三栏改一栏，日期戳由竖排（日号在上、年月在下）改为横排。
+       右列的阅读时长直接隐藏：窄屏一行放不下，且它不如标题与摘要重要；
+       文章页头部仍能看到阅读时长。 */
     .post-entry {
-        padding: var(--s-5) 0;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--s-2);
+        padding: var(--s-4) var(--s-2);
+        margin-inline: calc(var(--s-2) * -1);
+    }
+
+    .entry-stamp {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-2);
+    }
+
+    .stamp-m {
+        margin-top: 0;
+    }
+
+    .entry-dur {
+        display: none;
+    }
+
+    .post-entry::after {
+        inset-inline: var(--s-2);
     }
 
     .post-content blockquote {

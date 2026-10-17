@@ -1,14 +1,26 @@
 {{- /* ==========================================================================
    list.html — 首页 / 列表页 / 分类页 / 标签页（覆盖主题同名模板）
    --------------------------------------------------------------------------
-   与主题原版的唯一结构性区别：把所有主内容包进 <div class="main-column">。
+   与主题原版的结构性区别有二：
 
-   原因：分栏版面把 <main class="main"> 变成两列栅格。若主内容由多个平级
-   元素（home_info、first_entry、一堆 post_entry）直接作为栅格子项，它们会
-   一个接一个铺满左右两列，侧栏只能被挤到下一行——实测首页文章列表变成了
-   左右交替的两列，侧栏掉到最底部。
+   1) 把所有主内容包进 <div class="main-column">。
+      原因：分栏版面把 <main class="main"> 变成两列栅格。若主内容由多个平级
+      元素（home_info、一堆 post_entry）直接作为栅格子项，它们会一个接一个
+      铺满左右两列，侧栏只能被挤到下一行——实测首页文章列表变成了左右交替的
+      两列，侧栏掉到最底部。
+      包成单根后：.main-column 占第 1 列，侧栏占第 2 列，版面稳定。
 
-   包成单根后：.main-column 占第 1 列，侧栏占第 2 列，版面稳定。
+   2) 文章条目改成【编辑式三栏】：
+        ┌── 日期戳 ──┬──── 正文 ──────┬── 阅读时长 ──┐
+        │     09     │  你邮的校园跑科技 │    3 分钟    │
+        │  2026年10月 │  一种很新的…      │              │
+        └───────────┴────────────────┴──────────────┘
+
+      为什么这样分：
+      · 日期戳把「日号」放大、「年月」压成小号等宽字，日期成了栏目标记而不是
+        一串附属信息。扫列表时按日期定位比读「2026 年 10 月 9 日」快得多。
+      · 阅读时长单独成列右对齐，沿垂直方向对齐成一条，形成视觉基线。
+      · 正文区只放标题、摘要与标签，元信息不再挤在标题下面。
 
    profileMode 未启用（hugo.yaml 中 enabled: false），故不需要 index_profile
    分支；若将来启用，需要为本模板补回该分支。
@@ -64,11 +76,12 @@
     {{- end }}
 
     {{- $term := .Data.Term }}
+    {{- $dfm := site.Params.DateFormatMonth | default "2006 年 1 月" }}
     {{- range $index, $page := $paginator.Pages }}
     {{- $class := "post-entry" }}
     {{- $user_preferred := or site.Params.disableSpecial1stPost site.Params.homeInfoParams }}
     {{- if (and $.IsHome (eq $paginator.PageNumber 1) (eq $index 0) (not $user_preferred)) }}
-    {{- $class = "first-entry" }}
+    {{- $class = "post-entry first-entry" }}
     {{- else if $term }}
     {{- $class = "post-entry tag-entry" }}
     {{- end }}
@@ -76,29 +89,54 @@
     <article class="{{ $class }}">
         {{- $isHidden := (.Param "cover.hiddenInList") | default (.Param "cover.hidden") | default false }}
         {{- partial "cover.html" (dict "cxt" . "IsSingle" false "isHidden" $isHidden) }}
-        <header class="entry-header">
-            <h2 class="entry-hint-parent">
-                {{- .Title }}
-                {{- if .Draft }}
-                <span class="entry-hint" title="Draft">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" fill="currentColor">
-                        <path
-                            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
-                    </svg>
+
+        {{- /* 左：日期戳 */}}
+        <div class="entry-stamp">
+            <time datetime="{{ .Date.Format "2006-01-02" }}">
+                <span class="stamp-d">{{ .Date.Format "02" }}</span>
+                <span class="stamp-m">{{ .Date.Format $dfm }}</span>
+            </time>
+        </div>
+
+        {{- /* 中：标题 + 摘要 + 标签 */}}
+        <div class="entry-body">
+            <header class="entry-header">
+                <h2 class="entry-hint-parent">
+                    {{- .Title }}
+                    {{- if .Draft }}
+                    <span class="entry-hint" title="Draft">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" fill="currentColor">
+                            <path
+                                d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+                        </svg>
+                    </span>
+                    {{- end }}
+                </h2>
+            </header>
+            {{- if (ne (.Param "hideSummary") true) }}
+            <div class="entry-content">
+                <p>{{ .Summary | plainify | htmlUnescape }}{{ if .Truncated }}…{{ end }}</p>
+            </div>
+            {{- end }}
+            {{- if not (.Param "hideMeta") }}
+            <footer class="entry-footer">
+                <span class="ef-words">{{ i18n "words" .WordCount | default (printf "%d words" .WordCount) }}</span>
+                {{- with .GetTerms "tags" }}
+                <span class="ef-tags">
+                    {{- range . }}
+                    <a href="{{ .RelPermalink }}" class="ef-tag">{{ .LinkTitle }}</a>
+                    {{- end }}
                 </span>
                 {{- end }}
-            </h2>
-        </header>
-        {{- if (ne (.Param "hideSummary") true) }}
-        <div class="entry-content">
-            <p>{{ .Summary | plainify | htmlUnescape }}{{ if .Truncated }}...{{ end }}</p>
+            </footer>
+            {{- end }}
         </div>
-        {{- end }}
+
+        {{- /* 右：阅读时长 */}}
         {{- if not (.Param "hideMeta") }}
-        <footer class="entry-footer">
-            {{- partial "post_meta.html" . -}}
-        </footer>
+        <div class="entry-dur">{{ i18n "read_time" .ReadingTime | default (printf "%d min" .ReadingTime) }}</div>
         {{- end }}
+
         <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
     </article>
     {{- end }}

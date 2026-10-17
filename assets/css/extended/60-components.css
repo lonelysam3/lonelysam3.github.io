@@ -514,23 +514,30 @@ body.lightbox-open {
 }
 
 .tl-year-count {
-    margin-inline-start: var(--s-2);
-    font-size: var(--fs-xs);
+    margin-inline-start: var(--s-3);
+    font-size: var(--fs-2xs);
+    /* 等宽数字 + 更小的字号：计数紧贴年份时容易被读成年份的一部分
+       （「2026 4」看成「20264」），拉开间隔并压小。 */
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--ls-meta);
     color: var(--c-text-faint);
 }
 
 .tl-month {
     position: relative;
-    margin-top: var(--s-6);
+    /* 原为 --s-6(24px)。加上条目自身的内边距后，月份之间实际拉开 60px 以上，
+       整页读起来断断续续。收到 16px 后月份仍能分组，但不再散。 */
+    margin-top: var(--s-4);
     padding-inline-start: 0;
 }
 
 .tl-month-label {
     position: relative;
     display: block;
-    margin-bottom: var(--s-2);
+    margin-bottom: var(--s-1);
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
     color: var(--c-text-muted);
 }
 
@@ -550,9 +557,10 @@ body.lightbox-open {
     display: flex;
     align-items: baseline;
     gap: var(--s-3);
-    padding: var(--s-2) var(--s-3);
+    /* 行内上下留白压到 4px：归档是速查视图，行距过大反而不好扫 */
+    padding: var(--s-1) var(--s-3);
     margin-inline-start: calc(var(--s-3) * -1);
-    border-radius: var(--r-md);
+    border-radius: var(--r-sm);
     transition: background-color var(--dur-fast) var(--ease);
 }
 
@@ -957,13 +965,29 @@ body.palette-open {
     list-style: none;
 }
 
+/* 不要在这里加 overflow: hidden。
+   它会把键盘聚焦环（outline-offset 为正）一起裁掉。圆角裁剪交给
+   .browse-bar 自己处理——那里只放背景，裁掉也无所谓。 */
 .browse-item {
-    padding: var(--s-3) 0;
-    border-bottom: 1px solid var(--c-border);
+    position: relative;
+    padding: var(--s-3) var(--s-3);
+    border-radius: var(--r-sm);
 }
 
-.browse-item:last-child {
-    border-bottom: none;
+.browse-item + .browse-item {
+    margin-top: var(--s-1);
+}
+
+/* 【链接不要下划线，而且必须提高权重才能生效】
+   浏览页的根是 .post-content，正文里有这条规则：
+     .post-content a:not(.anchor) { text-decoration: underline }
+   它的权重是 (0,0,2,1)——两个类（.post-content 与 :not 里的 .anchor）
+   加一个元素。只写 .browse-link (0,0,1,0) 完全压不住，实测下划线仍在。
+   所以这里用 .post-content.browse a：同样是 (0,0,2,1)，但本文件在
+   40-content.css 之后加载，平手时后加载者胜。 */
+.post-content.browse a,
+.post-content.browse a:hover {
+    text-decoration: none;
 }
 
 .browse-link {
@@ -974,7 +998,9 @@ body.palette-open {
 }
 
 .browse-name {
-    font-weight: var(--fw-medium);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-semi);
+    letter-spacing: var(--ls-snug);
     color: var(--c-text);
     transition: color var(--dur-fast) var(--ease);
 }
@@ -987,13 +1013,22 @@ body.palette-open {
     flex: 0 0 auto;
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    font-variant-numeric: tabular-nums;
     color: var(--c-text-faint);
 }
 
+/* 占比用一条 2px 的轨道条表达。
+   曾经试过把它铺成整行背景色块（absolute inset:0），占比确实更好比较，但
+   整行色块又让条目变回「卡片」，与全站的编辑式语言冲突，因此退回细条。
+   之前它被误看成下划线，真正的原因是同一行里还叠着链接下划线——下划线去掉
+   之后，这条轨道本身就能正确读成比例。 */
 .browse-bar {
-    height: 4px;
+    position: relative;
+    z-index: 1;
+    height: 2px;
     margin-top: var(--s-2);
-    background: var(--c-surface-muted);
+    background: var(--c-border);
     border-radius: var(--r-full);
     overflow: hidden;
 }
@@ -1036,20 +1071,21 @@ body.palette-open {
 
 .browse-tags a {
     display: inline-block;
-    padding: 0.25em 0.85em;
+    padding: 0.25em 0.8em;
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
+    letter-spacing: var(--ls-meta);
     color: var(--c-text-muted);
-    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
     border-radius: var(--r-full);
     transition:
         color var(--dur-fast) var(--ease),
-        background-color var(--dur-fast) var(--ease);
+        border-color var(--dur-fast) var(--ease);
 }
 
 .browse-tags a:hover {
     color: var(--c-accent);
-    background: var(--c-accent-soft);
+    border-color: var(--c-accent);
 }
 
 .browse-tags sup {

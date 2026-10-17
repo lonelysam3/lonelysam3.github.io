@@ -37,6 +37,8 @@
   translation: "Related"
 - id: sidebar_latest
   translation: "Latest"
+- id: sidebar_recent
+  translation: "Recent posts"
 - id: sidebar_browse
   translation: "Browse"
 - id: sidebar_explore

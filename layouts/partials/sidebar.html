@@ -170,10 +170,12 @@
         <a class="sb-all" href="{{ "browse/" | relLangURL }}">{{ i18n "sidebar_all_posts" }}</a>
     </div>
 
-    {{- /* 最近文章：主内容区是分页列表，侧栏给不翻页的最新几篇 */ -}}
+    {{- /* 最近文章：主内容区是分页列表，侧栏给不翻页的最新几篇。
+           标题走 i18n —— 它曾经硬编码为「最近文章」，英文站侧栏因此
+           出现唯一一块中文，而其余区块都是英文。 */ -}}
     {{- with first 5 (where site.RegularPages "Type" "in" site.Params.mainSections) }}
     <div class="sb-block">
-        <h2 class="sb-title">最近文章</h2>
+        <h2 class="sb-title">{{ i18n "sidebar_recent" }}</h2>
         <ul class="sb-links">
             {{- range . }}
             <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>

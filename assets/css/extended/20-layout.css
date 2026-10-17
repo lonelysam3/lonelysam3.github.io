@@ -133,12 +133,15 @@
     display: block;
 }
 
+/* 分节标题是「索引标签」而不是小标题：字号压到最小、字距拉开、颜色最淡。
+   拉开字距对中文同样有效——「浏 览」比「浏览」更像目录项。
+   用中等字重而不是半粗：淡色 + 半粗会显得又小又重。 */
 .sb-title {
-    margin: 0 0 var(--s-3);
+    margin: 0 0 var(--s-2);
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semi);
-    letter-spacing: 0.08em;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--c-text-faint);
 }
@@ -223,12 +226,13 @@
     margin-top: var(--s-2);
 }
 
+/* 压掉卡片感：侧栏只有 224px 宽，再套一层边框与底色会让它看起来像
+   嵌在侧栏里的另一套组件。改为「左侧一条细线 + hover 淡染」的列表项，
+   与侧栏其它区块同一语言。 */
 .sb-nav a {
     display: block;
-    padding: var(--s-3);
-    background: var(--c-surface-sunken);
-    border: 1px solid var(--c-border);
-    border-radius: var(--r-md);
+    padding: var(--s-2) 0 var(--s-2) var(--s-3);
+    border-inline-start: 2px solid var(--c-border);
     transition:
         background-color var(--dur-fast) var(--ease),
         border-color var(--dur-fast) var(--ease);
@@ -236,7 +240,7 @@
 
 .sb-nav a:hover {
     background: var(--c-accent-soft);
-    border-color: var(--c-accent);
+    border-inline-start-color: var(--c-accent);
 }
 
 .sb-nav-label {
@@ -262,14 +266,30 @@
     list-style: none;
 }
 
+/* 【分类行不画横线】
+   原来每行都有 1px 底边线，且计数被推到最右——两行叠起来就是一张小表格，
+   与侧栏其它区块（纯列表、无框线）不是一种语言。现在只靠行距与 hover
+   淡染区分。
+
+   另外记录一个踩过的坑：曾用 padding + 负 margin 让 hover 淡染铺到侧栏
+   边缘，结果侧栏出现横向滚动条——.sidebar 是 overflow-y: auto，而「一轴
+   非 visible 时另一轴的计算值也不能是 visible」，横向因此变成 auto，
+   8px 出血正好触发它（实测 scrollWidth 232 > clientWidth 224）。
+   侧栏很窄，宁可放弃铺满也不引入横向滚动。 */
 .sb-counts a {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--s-2);
-    padding: var(--s-2) 0;
-    border-bottom: 1px solid var(--c-border);
-    transition: color var(--dur-fast) var(--ease);
+    padding: var(--s-1) 0;
+    border: none;
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.sb-counts li + li {
+    margin-top: var(--s-1);
 }
 
 .sb-counts li:last-child a {
@@ -278,6 +298,7 @@
 
 .sb-counts a:hover {
     color: var(--c-accent);
+    background: var(--c-accent-soft);
 }
 
 .sb-count-name {
@@ -293,6 +314,8 @@
     flex: 0 0 auto;
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
+    /* 等宽数字：个位数与两位数的计数右边缘对齐 */
+    font-variant-numeric: tabular-nums;
     color: var(--c-text-faint);
 }
 
@@ -369,22 +392,25 @@
     margin-top: var(--s-3);
 }
 
+/* 描边胶囊，与列表条目里的 .ef-tag 保持同一形态。
+   原先这里是实心，而列表里是描边，两处同一种东西出现两种画法。 */
 .sb-tagrow a {
     display: inline-block;
-    padding: 0.15em 0.7em;
+    padding: 0.15em 0.65em;
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
     color: var(--c-text-muted);
-    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
     border-radius: var(--r-full);
     transition:
         color var(--dur-fast) var(--ease),
-        background-color var(--dur-fast) var(--ease);
+        border-color var(--dur-fast) var(--ease);
 }
 
 .sb-tagrow a:hover {
     color: var(--c-accent);
-    background: var(--c-accent-soft);
+    border-color: var(--c-accent);
 }
 
 .sb-tagrow sup {

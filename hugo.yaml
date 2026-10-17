@@ -71,6 +71,9 @@ languages:
     # 中文站会显示成「十一月 1, 2025」这种中英混排的日期。
     params:
       DateFormat: "2006 年 1 月 2 日"
+      # 列表左侧「日期戳」的短格式：只到月。日号另用 02 取两位数字，
+      # 与语言无关，因此这里只需管年与月。
+      DateFormatMonth: "2006 年 1 月"
     taxonomies: # 分类系统
       category: categories
       tag: tags
@@ -134,6 +137,8 @@ languages:
       # 日期用美式写法（Mar 17, 2026），与中文的「三月 17, 2026」区分开
       # ——这是「看起来像美国人博客」的一部分，不只是翻译文字。
       DateFormat: "Jan 2, 2006"
+      # 列表左侧日期戳的短格式（月 + 年）
+      DateFormatMonth: "Jan 2006"
     menus:
       main:
         - name: Home

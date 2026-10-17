@@ -118,7 +118,13 @@ html.js .nav.is-scrolled {
 }
 
 .nav #searchbox.top-search #searchInput {
-    width: 15rem;
+    /* 12.5rem 而不是更宽：导航列宽被 --w-container 上限锁死，视口再宽也不会
+       变宽。英文导航有 5 项且每项都比中文宽（Home/Archive/Browse/Stats/About
+       共 363px，中文只 276px），1400px 视口下菜单可用宽度只有 302px，
+       第一项会被 overflow 裁到左边（实测「Home」只剩「me」）。
+       把搜索框收窄 40px 是把空间让给导航最划算的一处：它在未聚焦时只是入口，
+       聚焦后会自动展开到 15rem，并不影响实际使用。 */
+    width: 12.5rem;
     height: 2.375rem;
     padding: 0 var(--s-10) 0 var(--s-4);
     font-family: var(--font-mono);
@@ -139,7 +145,7 @@ html.js .nav.is-scrolled {
 }
 
 .nav #searchbox.top-search #searchInput:focus {
-    width: 17.5rem;
+    width: 15rem;
     background: var(--c-surface);
     border-color: var(--c-accent);
     box-shadow: 0 0 0 3px var(--c-accent-ring);
@@ -245,7 +251,7 @@ html.js .nav.is-scrolled {
        两者都在容器右端，宽度合计约 80px；实测只留一个按钮的 2.75rem(44px)
        会让语言切换器压住末个菜单项（1500px 视口下重叠 83px）。
        这里给 6.25rem(100px)，留出安全余量。 */
-    padding: 0 8.75rem 0 0;
+    padding: 0 8rem 0 0;
     list-style: none;
     overflow-x: auto;
     scrollbar-width: none;
@@ -262,7 +268,9 @@ html.js .nav.is-scrolled {
 
 .nav #menu a {
     display: block;
-    padding: var(--s-2) var(--s-3);
+    /* 9px 而不是 12px。项与项之间已有 4px gap，所以视觉间距仍有 22px，
+       但每项省 6px，5 项共省 30px —— 这正是英文导航放不下的那部分。 */
+    padding: var(--s-2) 0.5625rem;
     font-family: var(--font-mono);
     font-size: var(--fs-sm);
     color: var(--c-text-muted);
@@ -435,22 +443,21 @@ html.js .nav.is-scrolled {
     }
 }
 
-/* 平板或更窄：搜索框收成图标按钮，聚焦后再展开 */
-@media (max-width: 60rem) {
-    .nav {
-        column-gap: var(--s-3);
-    }
+/* --------------------------------------------------------------------------
+   搜索框收成图标按钮（≤80rem / 1280px）
+   --------------------------------------------------------------------------
+   为什么断点定在 1280px 而不是更窄：
 
-    .nav .logo a {
-        font-size: 0.9375rem;
-    }
+   导航的内容宽度由 --w-container 决定，而它是流体列宽算出来的——1280px 视口下
+   只有约 850px。品牌(≈200) + 搜索框(192) + 5 个英文导航项(≈333) + 为两个绝对
+   定位按钮预留的 128px 塞不进去，overflow:auto 会把首项裁到左边界外。
+   实测 1280/1100/1000 三档都会裁，连中文在 1100/1000 也裁。
 
-    .nav .logo a img,
-    .nav .logo a svg {
-        height: 26px;
-        margin-inline-end: var(--s-2);
-    }
-
+   搜索框收成 2.375rem 图标能省出 154px，一次覆盖全部三档。
+   聚焦时它仍展开到 min(48vw, 14rem)；非聚焦时只是入口，功能不丢
+   （站点另有 / 快捷键与 Ctrl+K 命令面板）。
+   -------------------------------------------------------------------------- */
+@media (max-width: 80rem) {
     .nav #searchbox.top-search #searchInput {
         width: 2.375rem;
         padding: 0;
@@ -477,6 +484,23 @@ html.js .nav.is-scrolled {
 
     .nav #searchbox.top-search #searchInput:focus::placeholder {
         color: var(--c-text-faint);
+    }
+}
+
+/* 平板或更窄：整体收紧 */
+@media (max-width: 60rem) {
+    .nav {
+        column-gap: var(--s-3);
+    }
+
+    .nav .logo a {
+        font-size: 0.9375rem;
+    }
+
+    .nav .logo a img,
+    .nav .logo a svg {
+        height: 26px;
+        margin-inline-end: var(--s-2);
     }
 
     .nav #searchbox.top-search:focus-within::after {
