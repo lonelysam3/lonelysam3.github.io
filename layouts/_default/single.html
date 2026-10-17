@@ -34,15 +34,20 @@
       {{- partial "translation_list.html" . -}}
       {{- partial "edit_post.html" . -}}
       {{- partial "post_canonical.html" . -}}
-      {{- /* 字号切换：放在元信息行尾，读者不必找侧栏 */ -}}
-      <span class="fs-switch" role="group" aria-label="{{ i18n "font_size_group" }}">
-        <button type="button" data-fs="dec" title="{{ i18n "font_size_dec" }}" aria-label="{{ i18n "font_size_dec" }}">A-</button>
-        <button type="button" data-fs="reset" title="{{ i18n "font_size_reset" }}" aria-label="{{ i18n "font_size_reset" }}">A</button>
-        <button type="button" data-fs="inc" title="{{ i18n "font_size_inc" }}" aria-label="{{ i18n "font_size_inc" }}">A+</button>
-      </span>
     </div>
     {{- end }}
   </header>
+
+  {{- /* 字号切换：从元信息行里挪出来，改为右下角浮动控件。
+        原因：元信息行原本已经有「日期 · 时长 · 字数 · 作者 | 编辑」四项，
+        再塞 A-/A/A+ 三个按钮就变成一条长龙——读者扫一眼分不清哪些是信息、
+        哪些是可点的操作。挪走后元信息只留下文字，浮动控件与「返回顶部」
+        按钮竖直排在同一角，两者都是阅读工具，分组合理。 */}}
+  <div class="fs-switch fs-switch-float" role="group" aria-label="{{ i18n "font_size_group" }}">
+    <button type="button" data-fs="dec" title="{{ i18n "font_size_dec" }}" aria-label="{{ i18n "font_size_dec" }}">A-</button>
+    <button type="button" data-fs="reset" title="{{ i18n "font_size_reset" }}" aria-label="{{ i18n "font_size_reset" }}">A</button>
+    <button type="button" data-fs="inc" title="{{ i18n "font_size_inc" }}" aria-label="{{ i18n "font_size_inc" }}">A+</button>
+  </div>
 
   {{- $isHidden := (.Param "cover.hiddenInSingle") | default (.Param "cover.hidden") | default false }}
   {{- partial "cover.html" (dict "cxt" . "IsSingle" true "isHidden" $isHidden) }}

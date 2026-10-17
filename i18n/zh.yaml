@@ -36,6 +36,8 @@
   translation: "最新文章"
 - id: sidebar_recent
   translation: "最近文章"
+- id: lead_kicker
+  translation: "最新"
 - id: sidebar_browse
   translation: "浏览"
 - id: sidebar_explore

@@ -132,6 +132,16 @@ def hello(name: str) -> str:
     return f"Hello, {name}"
 ```
 
+<!-- 代码块左上角会自动显示语言角标（带一个按语言配色的圆点），行号也自动加。
+     想把某几行标出来，在围栏的语言后面加 hl_lines，行号从 1 开始： -->
+
+```php {hl_lines=[2,4]}
+<?php
+$id = $_GET['id'];                               // ← 高亮行
+$conn = mysqli_connect("localhost", "root", "", "db");
+$sql = "SELECT name FROM users WHERE id = $id";  // ← 高亮行
+```
+
 | 列 A | 列 B |
 | ---- | ---- |
 | 值 1 | 值 2 |

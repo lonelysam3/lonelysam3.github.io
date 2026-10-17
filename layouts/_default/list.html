@@ -85,8 +85,13 @@
     {{- else if $term }}
     {{- $class = "post-entry tag-entry" }}
     {{- end }}
+    {{- /* 首页第一页的第一篇：头条。
+           与主题原本的 first-entry 是两回事——那个只在未配置首页简介区时
+           才会启用（本站启用了 homeInfoParams，所以它从不出现）。
+           头条只影响视觉重量：标题与日号放大一级，并加一个 kicker 标签。 */}}
+    {{- $isLead := and $.IsHome (eq $paginator.PageNumber 1) (eq $index 0) }}
 
-    <article class="{{ $class }}">
+    <article class="{{ $class }}{{ if $isLead }} lead-entry{{ end }}">
         {{- $isHidden := (.Param "cover.hiddenInList") | default (.Param "cover.hidden") | default false }}
         {{- partial "cover.html" (dict "cxt" . "IsSingle" false "isHidden" $isHidden) }}
 
@@ -100,6 +105,9 @@
 
         {{- /* 中：标题 + 摘要 + 标签 */}}
         <div class="entry-body">
+            {{- if $isLead }}
+            <span class="entry-kicker">{{ i18n "lead_kicker" }}</span>
+            {{- end }}
             <header class="entry-header">
                 <h2 class="entry-hint-parent">
                     {{- .Title }}

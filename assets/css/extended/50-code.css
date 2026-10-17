@@ -108,7 +108,12 @@ pre:not(.chroma) code {
     position: absolute;
     top: 0;
     inset-inline-start: var(--s-5);
-    padding: 1px 0.65em 3px;
+    /* 左端留出圆点的位置，并用径向渐变把点画在角标内部。
+       为什么不另加伪元素：角标本身就是 code[data-lang]::before，
+       伪元素里无法再嵌伪元素；画成背景图不必增加 DOM。
+       --lang-dot 由下面按语言给出的规则提供；未列出的语言保持
+       transparent，不会退化成一个孤立的小方块。 */
+    padding: 1px 0.65em 3px 1.35em;
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
     font-weight: var(--fw-semi);
@@ -116,7 +121,16 @@ pre:not(.chroma) code {
     line-height: 1.6;
     text-transform: uppercase;
     color: var(--c-accent);
-    background: var(--c-surface);
+    /* 【必须拆成 background-color + background-image】
+       原先这里是 background: var(--c-surface) 简写。简写会把
+       background-image / -repeat / -position / -size 一并重置为初始值，
+       所以无论前面怎么设，色点都会被这一行清掉——实测角标里确实没有圆点。
+       改用长写法，颜色与背景图各管各的。 */
+    background-color: var(--c-surface);
+    background-image: radial-gradient(circle, var(--lang-dot, transparent) 0 2.5px, transparent 2.5px);
+    background-repeat: no-repeat;
+    background-position: 0.6em 50%;
+    background-size: 6px 6px;
     border: 1px solid var(--c-border);
     border-top: none;
     border-radius: 0 0 var(--r-sm) var(--r-sm);
@@ -129,6 +143,27 @@ pre:not(.chroma) code {
 .highlight > pre > code[data-lang] > .line:first-child {
     padding-top: 1.3em;
 }
+/* 各语言的点色。
+   取该语言官方色的色相（oklch 的第三位），把饱和度压低到 0.05~0.15——
+   十个高饱和彩点会与站点的青抢注意力，压过之后只是「可辨识」，不喧哗。
+   只列本站实际会出现的语言；其余语言的角标不带点。 */
+.highlight > pre > code[data-lang="php"]::before        { --lang-dot: oklch(0.62 0.13 285); }
+.highlight > pre > code[data-lang="sql"]::before        { --lang-dot: oklch(0.66 0.11 240); }
+.highlight > pre > code[data-lang="python"]::before,
+.highlight > pre > code[data-lang="py"]::before         { --lang-dot: oklch(0.66 0.11 95); }
+.highlight > pre > code[data-lang="bash"]::before,
+.highlight > pre > code[data-lang="sh"]::before,
+.highlight > pre > code[data-lang="shell"]::before      { --lang-dot: oklch(0.62 0.10 150); }
+.highlight > pre > code[data-lang="go"]::before         { --lang-dot: oklch(0.70 0.12 200); }
+.highlight > pre > code[data-lang="javascript"]::before,
+.highlight > pre > code[data-lang="js"]::before         { --lang-dot: oklch(0.74 0.14 90); }
+.highlight > pre > code[data-lang="html"]::before       { --lang-dot: oklch(0.64 0.15 40); }
+.highlight > pre > code[data-lang="css"]::before        { --lang-dot: oklch(0.60 0.13 250); }
+.highlight > pre > code[data-lang="json"]::before       { --lang-dot: oklch(0.70 0.05 250); }
+.highlight > pre > code[data-lang="yaml"]::before,
+.highlight > pre > code[data-lang="yml"]::before        { --lang-dot: oklch(0.66 0.10 20); }
+.highlight > pre > code[data-lang="c"]::before          { --lang-dot: oklch(0.60 0.10 250); }
+.highlight > pre > code[data-lang="cpp"]::before        { --lang-dot: oklch(0.58 0.12 250); }
 
 /* --------------------------------------------------------------------------
    4. 行号
@@ -143,10 +178,27 @@ pre:not(.chroma) code {
     -webkit-user-select: none;
 }
 
+/* 【高亮行】
+   Chroma 对 {hl_lines=[...]} 标记的行输出 class="line hl"。原样式只给一层
+   极淡底色，与普通行几乎看不出差别。现在再加一条左侧色条：色条与底色同时
+   出现时，即使底色被屏幕亮度或投影压暗，也仍能定位到行。
+
+   用法（写在代码围栏的语言之后）：
+     ```php {hl_lines=[2,3]}
+     ```
+   Chroma 会为第 2、3 行加上 .hl。 */
 .chroma .line.hl,
 .chroma .hl {
     background: var(--c-accent-soft);
-    border-radius: var(--r-xs);
+    box-shadow: inset 2px 0 var(--c-accent);
+    border-radius: 0 var(--r-xs) var(--r-xs) 0;
+}
+
+/* 高亮行的行号也提一下色，否则色条与行号会脱节 */
+.chroma .line.hl .ln,
+.chroma .hl .ln {
+    color: var(--c-accent);
+    border-inline-end-color: var(--c-accent);
 }
 
 .chroma .lntable {

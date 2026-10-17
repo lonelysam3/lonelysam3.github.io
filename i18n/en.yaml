@@ -39,6 +39,8 @@
   translation: "Latest"
 - id: sidebar_recent
   translation: "Recent posts"
+- id: lead_kicker
+  translation: "Latest"
 - id: sidebar_browse
   translation: "Browse"
 - id: sidebar_explore

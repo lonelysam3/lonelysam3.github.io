@@ -466,6 +466,26 @@ body.lightbox-open {
     color: var(--c-on-accent);
     background: var(--c-accent);
 }
+/* 浮动版：文章页右下角，与「返回顶部」竖直排成一组 —— 两者都是阅读工具，
+   且都只在文章页出现。位置与 .top-link 同源（同一组令牌），
+   竖直方向让开它的高度再留一个间距。 */
+.fs-switch-float {
+    position: fixed;
+    right: var(--s-8);
+    bottom: calc(var(--s-8) + 2.75rem + var(--s-3));
+    z-index: 40;
+    background: var(--c-surface-raised);
+    border: 1px solid var(--c-border);
+    box-shadow: var(--sh-sm);
+}
+
+/* 窄屏不显示：移动端浏览器自带双指缩放，比点按钮更自然；
+   而且这一角要留给「返回顶部」，两个控件会互相挤压。 */
+@media (max-width: 45rem) {
+    .fs-switch-float {
+        display: none;
+    }
+}
 
 /* ==========================================================================
    9. 归档时间轴（C1）

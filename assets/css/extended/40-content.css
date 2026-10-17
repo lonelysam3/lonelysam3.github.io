@@ -274,6 +274,59 @@
     color: var(--c-text-muted);
 }
 
+/* --------------------------------------------------------------------------
+   头条（首页第一页的第一篇）
+   --------------------------------------------------------------------------
+   与主题原本的 .first-entry 是两回事：那个只在未配置首页简介区时才启用
+   （本站启用了 homeInfoParams，所以它从不出现）。头条只调视觉重量：
+
+     · 标题与日号各放大一级 —— 列表需要一处「版面重心」，否则每篇一样重，
+       读者没有进入点，扫下来全是同一档信息；
+     · 加一个 kicker 标签（短横线 + 小字），刊物常用的栏目提示手法；
+     · 摘要放宽到 3 行、限宽 40em，读起来像导语而不是被截断的列表项。
+   -------------------------------------------------------------------------- */
+.lead-entry {
+    padding-block: var(--s-8);
+}
+
+.lead-entry .entry-header h2 {
+    margin-bottom: var(--s-3);
+    font-size: var(--fs-2xl);
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-hero);
+}
+
+.lead-entry .stamp-d {
+    font-size: var(--fs-xl);
+}
+
+.lead-entry .entry-content {
+    -webkit-line-clamp: 3;
+    max-width: 40em;
+    font-size: var(--fs-base);
+}
+
+/* kicker：短横线 + 小字。横线用 currentColor，因此跟着强调色走 */
+.entry-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-bottom: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-caps);
+    text-transform: uppercase;
+    color: var(--c-accent);
+}
+
+.entry-kicker::before {
+    content: "";
+    width: 1.125rem;
+    height: 1px;
+    background: currentColor;
+}
+
 /* 整块点击热区（PaperMod 注入的覆盖链接） */
 .post-entry .entry-link:focus-visible {
     outline: 2px solid var(--c-accent-ring);
