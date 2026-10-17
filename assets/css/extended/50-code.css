@@ -147,23 +147,23 @@ pre:not(.chroma) code {
    取该语言官方色的色相（oklch 的第三位），把饱和度压低到 0.05~0.15——
    十个高饱和彩点会与站点的青抢注意力，压过之后只是「可辨识」，不喧哗。
    只列本站实际会出现的语言；其余语言的角标不带点。 */
-.highlight > pre > code[data-lang="php"]::before        { --lang-dot: oklch(0.62 0.13 285); }
-.highlight > pre > code[data-lang="sql"]::before        { --lang-dot: oklch(0.66 0.11 240); }
+.highlight > pre > code[data-lang="php"]::before        { --lang-dot: var(--lang-php); }
+.highlight > pre > code[data-lang="sql"]::before        { --lang-dot: var(--lang-sql); }
 .highlight > pre > code[data-lang="python"]::before,
-.highlight > pre > code[data-lang="py"]::before         { --lang-dot: oklch(0.66 0.11 95); }
+.highlight > pre > code[data-lang="py"]::before         { --lang-dot: var(--lang-python); }
 .highlight > pre > code[data-lang="bash"]::before,
 .highlight > pre > code[data-lang="sh"]::before,
-.highlight > pre > code[data-lang="shell"]::before      { --lang-dot: oklch(0.62 0.10 150); }
-.highlight > pre > code[data-lang="go"]::before         { --lang-dot: oklch(0.70 0.12 200); }
+.highlight > pre > code[data-lang="shell"]::before      { --lang-dot: var(--lang-shell); }
+.highlight > pre > code[data-lang="go"]::before         { --lang-dot: var(--lang-go); }
 .highlight > pre > code[data-lang="javascript"]::before,
-.highlight > pre > code[data-lang="js"]::before         { --lang-dot: oklch(0.74 0.14 90); }
-.highlight > pre > code[data-lang="html"]::before       { --lang-dot: oklch(0.64 0.15 40); }
-.highlight > pre > code[data-lang="css"]::before        { --lang-dot: oklch(0.60 0.13 250); }
-.highlight > pre > code[data-lang="json"]::before       { --lang-dot: oklch(0.70 0.05 250); }
+.highlight > pre > code[data-lang="js"]::before         { --lang-dot: var(--lang-js); }
+.highlight > pre > code[data-lang="html"]::before       { --lang-dot: var(--lang-html); }
+.highlight > pre > code[data-lang="css"]::before        { --lang-dot: var(--lang-css); }
+.highlight > pre > code[data-lang="json"]::before       { --lang-dot: var(--lang-json); }
 .highlight > pre > code[data-lang="yaml"]::before,
-.highlight > pre > code[data-lang="yml"]::before        { --lang-dot: oklch(0.66 0.10 20); }
-.highlight > pre > code[data-lang="c"]::before          { --lang-dot: oklch(0.60 0.10 250); }
-.highlight > pre > code[data-lang="cpp"]::before        { --lang-dot: oklch(0.58 0.12 250); }
+.highlight > pre > code[data-lang="yml"]::before        { --lang-dot: var(--lang-yaml); }
+.highlight > pre > code[data-lang="c"]::before          { --lang-dot: var(--lang-c); }
+.highlight > pre > code[data-lang="cpp"]::before        { --lang-dot: var(--lang-cpp); }
 
 /* --------------------------------------------------------------------------
    4. 行号

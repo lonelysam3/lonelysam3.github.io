@@ -17,8 +17,12 @@
    4. 【summary 去标签】summary 是 HTML，plainify 后更干净，也避免 Fuse 把
       标签名当成可匹配内容。
 
-   字段命名需与 assets/js/fastsearch.js 及 extend_footer.html 的命令面板一致：
-     title / permalink / summary / content / categories / tags
+   字段命名需与 assets/js/fastsearch.js、extend_footer.html 的命令面板，
+   以及 layouts/_default/search.html 的筛选器一致：
+     title / permalink / summary / content / categories / tags / date / year
+
+   5. 【补 date 与 year】搜索页要按年份筛选，快速搜索的结果里也要显示年份。
+      date 用 Unix 秒（便于排序），year 用四位字符串（便于做筛选项与比较）。
    ========================================================================== */ -}}
 {{- $.Scratch.Add "index" slice -}}
 {{- range where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) -}}
@@ -31,6 +35,8 @@
         "summary" (.Summary | plainify)
         "categories" (.Params.categories | default slice)
         "tags" (.Params.tags | default slice)
+        "date" .Date.Unix
+        "year" (.Date.Format "2006")
     ) -}}
     {{- end -}}
 {{- end -}}

@@ -1,0 +1,39 @@
+{{- /* ==========================================================================
+   series-ordered.html — 取某个系列的文章，按阅读顺序排好
+   --------------------------------------------------------------------------
+   入参：系列名（字符串）
+   返回：排好序的页面切片
+
+   为什么单独抽这个 partial：
+   series.html（文章页的系列导航）和 series.html 布局（/series/ 索引页）
+   都需要同一套排序规则。之前这套规则只写在 article 那个 partial 里，
+   索引页只能复制一份——两份规则一旦不同步，同一个系列在两个页面上的
+   顺序就会不一致，读者会看到「第 2 / 5 篇」和列表顺序对不上。
+
+   排序规则：
+     1. 有 seriesOrder 的按它升序；
+     2. 没有 seriesOrder 的按日期升序，接在前面那些之后。
+
+   为什么用「日期升序」而不是降序：系列是有阅读顺序的（第一章在前），
+   索引页和文章内导航都应该按写作顺序展开。原 series.html 里无序号的那批
+   没有排序（沿用了 site.RegularPages 的日期倒序），等于把系列读反了，
+   这里一并修正。
+   ========================================================================== */ -}}
+
+{{- $name := . -}}
+{{- $items := where site.RegularPages "Params.series" "intersect" (slice $name) -}}
+
+{{- $withOrder := where $items "Params.seriesOrder" "!=" nil -}}
+{{- $withoutOrder := where $items "Params.seriesOrder" nil -}}
+
+{{- $ordered := slice -}}
+{{- with $withOrder -}}
+  {{- $ordered = sort . "Params.seriesOrder" "asc" -}}
+{{- end -}}
+{{- with $withoutOrder -}}
+  {{- range sort . "Date" "asc" -}}
+    {{- $ordered = $ordered | append . -}}
+  {{- end -}}
+{{- end -}}
+
+{{- return $ordered -}}

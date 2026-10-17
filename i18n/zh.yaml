@@ -194,3 +194,61 @@
   translation: "信息"
 - id: details_default_title
   translation: "展开查看"
+- id: series_index_aria
+  translation: "全部系列"
+- id: series_index_count
+  translation: "{{ .Count }} 篇"
+- id: series_index_progress
+  translation: "已写 {{ .Count }} 篇，最近更新 {{ .Date }}"
+- id: series_index_empty
+  translation: "还没有系列。在文章 front matter 里加 series: [\"系列名\"] 即可。"
+- id: series_index_latest
+  translation: "最新"
+- id: search_page_hint
+  translation: "输入关键词，可用下面的筛选缩小范围。"
+- id: search_page_empty
+  translation: "没有匹配的文章。"
+- id: search_page_idle
+  translation: "开始输入以搜索全部文章。"
+- id: search_filter_all
+  translation: "全部"
+- id: search_filter_category
+  translation: "分类"
+- id: search_filter_tag
+  translation: "标签"
+- id: search_filter_year
+  translation: "年份"
+- id: search_clear
+  translation: "清除筛选"
+- id: search_count
+  translation: "{Count} 条结果"
+- id: code_expand
+  translation: "展开全部 {Count} 行"
+- id: code_collapse
+  translation: "收起"
+- id: line_link_hint
+  translation: "点击行号获取链接"
+- id: lightbox_label
+  translation: "图片查看"
+- id: lightbox_prev
+  translation: "上一张"
+- id: lightbox_next
+  translation: "下一张"
+- id: lightbox_close
+  translation: "关闭"
+- id: lightbox_zoom
+  translation: "缩放"
+- id: lightbox_counter
+  translation: "第 {Current} / {Total} 张"
+- id: toc_active_label
+  translation: "正在阅读"
+- id: mobile_nav_label
+  translation: "快捷导航"
+- id: mobile_nav_top
+  translation: "顶部"
+- id: nav_archive
+  translation: "归档"
+- id: footnote_ref_label
+  translation: "脚注 {Num}"
+- id: footnote_back_label
+  translation: "返回正文"

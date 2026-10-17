@@ -20,6 +20,46 @@
    ========================================================================== */ -}}
 
 {{- /* ---------------------------------------------------------------------
+   A-0. Front matter 构建期校验
+   ---------------------------------------------------------------------
+   纯 warnf，不产生输出。放在最前面是因为越早跑越早暴露问题。
+   内部用 site.Store 加锁，全站只执行一次——否则每个页面都会重复检查一遍，
+   同一个问题会刷出上百条重复 warn。
+   --------------------------------------------------------------------- */ -}}
+{{- partial "validate-frontmatter.html" . }}
+
+{{- /* ---------------------------------------------------------------------
+   A-2. 主题跟随时间
+   ---------------------------------------------------------------------
+   必须在样式生效前同步执行，否则会先闪一下浅色再跳深色。
+
+   执行顺序：主题自己的初始化脚本在 head.html 里、extend_head 之前，
+   它按 defaultTheme: auto 跟随系统设置了 data-theme。这里【覆盖】它。
+   只在读者从未手动切换过（localStorage 里没有 pref-theme）时覆盖，
+   手动选择永远优先。
+
+   为什么不做「系统深色 + 白天就保持深色」这种折中：规则一旦变成两个输入，
+   读者就无法预测下次打开会是什么颜色。单一输入（时间）虽然简单，但可预测。
+   --------------------------------------------------------------------- */ -}}
+{{- with site.Params.themeFollowTime }}
+{{- if .enabled }}
+<script>
+    (function () {
+        try {
+            if (localStorage.getItem('pref-theme')) { return; }
+        } catch (e) { return; }
+        var from = {{ .darkFrom | default 18 }};
+        var until = {{ .darkUntil | default 7 }};
+        var h = new Date().getHours();
+        /* 跨午夜区间：例如 18 → 7 表示 18,19,...,23,0,...,6 */
+        var dark = from <= until ? (h >= from && h < until) : (h >= from || h < until);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    })();
+</script>
+{{- end }}
+{{- end }}
+
+{{- /* ---------------------------------------------------------------------
    A-1. JS 能力标记：必须在样式生效前同步执行，避免导航样式跳变
    --------------------------------------------------------------------- */ -}}
 <script>document.documentElement.classList.add('js');</script>
@@ -117,6 +157,12 @@
     var t = e.target;
     if (t && t.id === 'searchInput') { inject(); }
   }, { once: true, capture: true });
+
+  /* 把加载函数暴露出去：搜索页（/search/）需要主动拉起 Fuse，
+     而它的脚本在 </body> 之前执行，此时 idle 注入多半还没发生。
+     没有这个钩子，搜索页要么自己重复写一份 src/integrity，要么得等 idle
+     超时——前者会与指纹机制脱节，后者让首次搜索慢约 1.5 秒。 */
+  window.__dshLoadSearch = inject;
 
   if ('requestIdleCallback' in window) {
     requestIdleCallback(inject, { timeout: 3000 });

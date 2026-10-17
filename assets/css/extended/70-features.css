@@ -1,0 +1,737 @@
+/* ==========================================================================
+   70-features.css — 本轮新增功能的样式
+   --------------------------------------------------------------------------
+   加载顺序在最末（00→70），因此这里可以安全地覆盖前面各层的同名规则。
+
+   包含：
+     1. 系列索引页（/series/）
+     2. 搜索页（/search/）
+     3. 移动端底部导航
+     4. 脚注
+     5. 目录当前章节高亮
+     6. 代码块折叠
+     7. 代码行号锚点
+     8. 灯箱翻页 / 缩放
+     9. 系列名链接修正
+
+   约束：只用 00-tokens.css 里的令牌，不写字面量颜色与魔法间距。
+   ========================================================================== */
+
+/* ==========================================================================
+   1. 系列索引页
+   --------------------------------------------------------------------------
+   每个系列一块：标题 + 篇数在左，篇目按阅读顺序在下列出。
+   编号用 CSS counter 画成小圆点，和文章内的 .series-list 保持同一形态。
+   ========================================================================== */
+
+/* 【宽度必须与 .page-header 一致】
+       .page-header 由主题的 `margin: 24px auto var(--content-gap)` 加上
+       max-width 居中。本页没有 .post-content 包裹（那会套上正文排版），
+       所以这里自己补上同样的约束——否则标题居中而正文通栏，两者对不齐。 */
+.series-index {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
+    max-width: var(--w-read);
+    margin-inline: auto;
+}
+
+.si-group {
+    padding-bottom: var(--s-6);
+    border-bottom: 1px solid var(--c-border);
+}
+
+.si-group:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.si-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-3);
+    margin-bottom: var(--s-3);
+}
+
+.si-name {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-head2);
+    letter-spacing: var(--ls-snug);
+    text-wrap: balance;
+}
+
+.si-count {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+.si-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: si;
+}
+
+.si-item {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    padding: var(--s-2) 0 var(--s-2) var(--s-6);
+    border-bottom: 1px solid var(--c-border);
+}
+
+.si-item:last-child {
+    border-bottom: none;
+}
+
+/* 序号圆点：与 .series-list li::before 同一种画法 */
+.si-item::before {
+    counter-increment: si;
+    content: counter(si);
+    position: absolute;
+    inset-inline-start: 0;
+    top: var(--s-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5em;
+    height: 1.5em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-faint);
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+}
+
+.si-date {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--c-text-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+.si-title {
+    font-size: var(--fs-sm);
+    color: var(--c-text-soft);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.si-item:hover .si-title,
+.si-title:hover {
+    color: var(--c-accent);
+}
+
+/* 序号已由 ::before 承担，这里隐藏模板里那份（供屏幕阅读器之外的冗余） */
+.si-idx {
+    display: none;
+}
+
+.si-empty {
+    padding: var(--s-6) 0;
+    font-size: var(--fs-sm);
+    color: var(--c-text-faint);
+}
+
+/* 窄屏：日期换到标题下方，避免挤压标题宽度 */
+@media (max-width: 45rem) {
+    .si-item {
+        flex-wrap: wrap;
+        gap: 0 var(--s-3);
+    }
+
+    .si-title {
+        flex: 1 1 100%;
+        order: 2;
+    }
+}
+
+/* ==========================================================================
+   2. 搜索页
+   --------------------------------------------------------------------------
+   结构：输入框 → 提示 → 三组筛选 chips → 计数 → 结果列表。
+   筛选 chips 用 aria-pressed 表达选中态，读屏器可识别。
+   ========================================================================== */
+
+.search-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    /* 同 .series-index：与 .page-header 用同一个宽度约束 */
+    max-width: var(--w-read);
+    margin-inline: auto;
+}
+
+.sp-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.sp-field-icon {
+    position: absolute;
+    inset-inline-start: var(--s-4);
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--c-text-faint);
+    pointer-events: none;
+}
+
+.sp-input {
+    width: 100%;
+    height: 3rem;
+    padding: 0 var(--s-10) 0 var(--s-10);
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    color: var(--c-text);
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    transition:
+        border-color var(--dur-fast) var(--ease),
+        box-shadow var(--dur-fast) var(--ease);
+}
+
+.sp-input:focus {
+    border-color: var(--c-accent);
+    box-shadow: var(--sh-sm);
+    outline: none;
+}
+
+.sp-reset {
+    position: absolute;
+    inset-inline-end: var(--s-3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: var(--fs-xs);
+    color: var(--c-text-muted);
+    background: var(--c-surface-muted);
+    border-radius: var(--r-full);
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.sp-reset:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+.sp-hint {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--c-text-faint);
+}
+
+.sp-filter {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+}
+
+.sp-filter-label {
+    flex: 0 0 auto;
+    min-width: 3.5em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-faint);
+}
+
+.sp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+}
+
+.sp-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25em;
+    padding: 0.2em 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-muted);
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-full);
+    cursor: pointer;
+    transition:
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.sp-chip sup {
+    font-size: 0.85em;
+    color: var(--c-text-faint);
+}
+
+.sp-chip:hover {
+    color: var(--c-accent);
+    border-color: var(--c-accent);
+}
+
+.sp-chip[aria-pressed="true"] {
+    color: var(--c-on-accent);
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+}
+
+.sp-chip[aria-pressed="true"] sup {
+    color: var(--c-on-accent);
+    opacity: 0.75;
+}
+
+.sp-count {
+    margin: 0;
+    padding-top: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-faint);
+    border-top: 1px solid var(--c-border);
+}
+
+.sp-count:empty {
+    display: none;
+}
+
+.sp-results {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-item {
+    border-bottom: 1px solid var(--c-border);
+}
+
+.sp-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: var(--s-1) var(--s-3);
+    padding: var(--s-4) var(--s-3);
+    margin-inline: calc(var(--s-3) * -1);
+    border-radius: var(--r-sm);
+    transition: background-color var(--dur-fast) var(--ease);
+}
+
+.sp-link:hover {
+    background: var(--c-accent-soft);
+}
+
+.sp-title {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-semi);
+    letter-spacing: var(--ls-snug);
+    color: var(--c-text);
+}
+
+.sp-link:hover .sp-title {
+    color: var(--c-accent);
+}
+
+.sp-cat,
+.sp-year {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-faint);
+}
+
+.sp-ex {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-base);
+    color: var(--c-text-muted);
+}
+
+.sp-empty {
+    padding: var(--s-6) 0;
+    font-size: var(--fs-sm);
+    color: var(--c-text-faint);
+}
+
+/* 窄屏：分类与年份换到摘要上方一行 */
+@media (max-width: 45rem) {
+    .sp-link {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .sp-filter {
+        flex-direction: column;
+        gap: var(--s-2);
+    }
+
+    .sp-filter-label {
+        min-width: 0;
+    }
+}
+
+/* ==========================================================================
+   3. 移动端底部导航
+   --------------------------------------------------------------------------
+   只在 ≤45rem 出现。桌面端 display:none，不参与布局。
+
+   层级 45：低于灯箱（200）与命令面板，高于正文。
+   底部需要给 body 补 padding，否则正文最后一行会被这条 bar 盖住。
+   ========================================================================== */
+
+.mobile-nav {
+    display: none;
+}
+
+@media (max-width: 45rem) {
+    .mobile-nav {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 45;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        align-items: stretch;
+        background: var(--c-surface-raised);
+        border-top: 1px solid var(--c-border);
+        /* 让开 iPhone 的 home indicator */
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    body {
+        padding-bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* 底部已有「顶部」按钮，右下角的返回顶部就重复了，且会与导航条重叠 */
+    .top-link {
+        display: none !important;
+    }
+}
+
+.mn-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15em;
+    padding: var(--s-2) 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-text-faint);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.mn-item.is-active {
+    color: var(--c-accent);
+}
+
+.mn-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.mn-label {
+    line-height: 1.2;
+}
+
+/* ==========================================================================
+   4. 脚注
+   --------------------------------------------------------------------------
+   Goldmark 实际输出的结构（实测得到，与文档里的写法不同）：
+
+     引用处：
+       <sup id="fnref:1"><a href="#fn:1" class="footnote-ref"
+                              role="doc-noteref">1</a></sup>
+
+     文末：
+       <div class="footnotes" role="doc-endnotes">
+         <hr>
+         <ol><li id="fn:1"><p>…&#160;<a href="#fnref:1"
+                  class="footnote-backref" role="doc-backlink">↩︎</a></p></li></ol>
+       </div>
+
+   关键点：.footnote-ref 挂在 <a> 上，【不在 <sup> 上】。第一版按
+   `sup.footnote-ref` 写，一条都匹配不到，引用处等于完全没有样式
+   （实测 refs=0 才发现的）。外层 <sup> 改用 [id^="fnref:"] 定位，
+   不依赖那个不存在的类名。
+   ========================================================================== */
+
+.post-content sup[id^="fnref:"] {
+    line-height: 0;
+}
+
+.post-content a.footnote-ref {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35em;
+    padding: 0 0.28em;
+    font-family: var(--font-mono);
+    font-size: 0.68em;
+    font-weight: var(--fw-medium);
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+    border-radius: var(--r-full);
+    text-decoration: none;
+    vertical-align: super;
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.post-content a.footnote-ref:hover {
+    color: var(--c-on-accent);
+    background: var(--c-accent);
+}
+
+.post-content .footnotes {
+    margin-top: var(--s-10);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--c-border);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-base);
+    color: var(--c-text-muted);
+}
+
+/* Goldmark 在 .footnotes 里又插了一条 <hr>，与上面的 border-top 重复 */
+.post-content .footnotes > hr {
+    display: none;
+}
+
+.post-content .footnotes ol {
+    margin: 0;
+    padding-inline-start: var(--s-6);
+}
+
+.post-content .footnotes li {
+    margin-bottom: var(--s-3);
+}
+
+/* 脚注条目里的段落不要额外留白，否则每条脚注之间会被拉开 */
+.post-content .footnotes li > p {
+    margin: 0;
+}
+
+.post-content .footnotes li:last-child {
+    margin-bottom: 0;
+}
+
+.post-content .footnote-backref {
+    margin-inline-start: 0.35em;
+    font-size: 0.9em;
+    color: var(--c-accent);
+    text-decoration: none;
+}
+
+/* 从脚注回跳时，被定位的那条脚注高亮一下 */
+.post-content .footnotes li:target {
+    background: var(--c-accent-soft);
+    border-radius: var(--r-xs);
+}
+
+/* ==========================================================================
+   5. 目录当前章节高亮
+   --------------------------------------------------------------------------
+   .is-active 由 extend_footer.html 的 IntersectionObserver 维护。
+   左边那条竖线是「进度感」的来源：读者能看出自己读到目录的哪个位置。
+   ========================================================================== */
+
+.sb-toc a {
+    position: relative;
+    padding-inline-start: var(--s-3);
+    border-inline-start: 2px solid transparent;
+    transition:
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
+}
+
+.sb-toc a.is-active {
+    color: var(--c-accent);
+    border-inline-start-color: var(--c-accent);
+}
+
+/* ==========================================================================
+   6. 代码块折叠
+   --------------------------------------------------------------------------
+   结构由 JS 生成：
+     <div class="highlight is-folded">…<button class="code-fold-btn">
+   .is-folded 时 pre 限高并淡出，按钮贴在底部。
+   ========================================================================== */
+
+.highlight {
+    position: relative;
+}
+
+.highlight.is-folded > pre {
+    max-height: 15rem;
+    overflow: hidden;
+}
+
+/* 淡出遮罩：表示「下面还有」 */
+.highlight.is-folded::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 2.25rem;
+    height: 4rem;
+    background: linear-gradient(to bottom, transparent, var(--c-code-bg));
+    pointer-events: none;
+    z-index: 3;
+}
+
+.code-fold-btn {
+    display: block;
+    width: 100%;
+    padding: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-accent);
+    background: var(--c-code-bg);
+    border: none;
+    border-top: 1px solid var(--c-border);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease);
+}
+
+.code-fold-btn:hover {
+    background: var(--c-accent-soft);
+}
+
+/* ==========================================================================
+   7. 代码行号锚点
+   --------------------------------------------------------------------------
+   行号变成可点区域（JS 加 .is-anchored-ln 类，避免影响没有 JS 时的观感）。
+   点一下把 #L12 写进地址栏并复制完整链接。
+   ========================================================================== */
+
+.chroma .ln.is-clickable {
+    cursor: pointer;
+    transition:
+        color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
+}
+
+.chroma .ln.is-clickable:hover {
+    color: var(--c-accent);
+    background: var(--c-accent-soft);
+}
+
+/* 通过 #L12 定位到的行 */
+.chroma .line.is-linked {
+    background: var(--c-accent-soft);
+    box-shadow: inset 2px 0 var(--c-accent);
+}
+
+/* 复制成功时行号短暂变绿提示（颜色仍取自令牌） */
+.chroma .ln.is-copied {
+    color: var(--c-accent);
+}
+
+/* ==========================================================================
+   8. 灯箱：翻页、计数、缩放
+   --------------------------------------------------------------------------
+   新增元素（由 JS 生成）：
+     .lightbox-nav.prev / .next   左右翻页
+     .lightbox-count              第 n / m 张
+   缩放由 .lightbox img 的 transform 处理，配合 .is-zoomed 切换。
+   ========================================================================== */
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.15rem;
+    color: var(--c-overlay-ink);
+    background: var(--c-overlay-btn);
+    border: 1px solid var(--c-overlay-line);
+    border-radius: var(--r-full);
+    transform: translateY(-50%);
+    transition:
+        background-color var(--dur-fast) var(--ease),
+        opacity var(--dur-fast) var(--ease);
+}
+
+.lightbox-nav:hover {
+    background: var(--c-overlay-btn-hi);
+}
+
+.lightbox-nav.prev {
+    inset-inline-start: var(--s-5);
+}
+
+.lightbox-nav.next {
+    inset-inline-end: var(--s-5);
+}
+
+/* 只有一张图时翻页按钮没有意义 */
+.lightbox-nav[hidden] {
+    display: none;
+}
+
+.lightbox-count {
+    position: absolute;
+    bottom: var(--s-6);
+    inset-inline: 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-overlay-ink);
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+/* 缩放态：光标改放大镜，图片允许超出容器并可用拖拽平移 */
+.lightbox img {
+    cursor: zoom-in;
+}
+
+.lightbox img.is-zoomed {
+    cursor: grab;
+    max-width: none;
+    max-height: none;
+    width: auto;
+}
+
+.lightbox img.is-dragging {
+    cursor: grabbing;
+}
+
+/* ==========================================================================
+   9. 系列名链接修正
+   --------------------------------------------------------------------------
+   .series-name 原本是 <span>，现在改成指向 /series/ 的 <a>（读者从文章里
+   就能跳到系列总览）。补上链接态的样式，并压掉正文链接的下划线。
+   ========================================================================== */
+
+.post-content .series-name,
+a.series-name {
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease);
+}
+
+a.series-name:hover {
+    color: var(--c-accent);
+}

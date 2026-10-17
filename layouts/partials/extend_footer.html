@@ -4,16 +4,27 @@
    本文件承担全部运行时交互。按块组织，每块都先判断目标元素是否存在，
    不存在的页面直接跳过，不产生额外开销。
 
+     0. 移动端底部导航（HTML，由 CSS 在桌面端隐藏）
      1. 导航滚动提示（IntersectionObserver）
      2. 分栏版面开关
      3. 侧栏实时时钟
      4. 阅读进度条（B1）
      5. 锚点点击高亮（B2）
      6. 字号切换（B3）
-     7. 图片灯箱（B5）
+     7. 图片灯箱（B5，本轮升级为可翻页/可缩放）
      8. 键盘快捷键（B6）
      9. 命令面板（A1）
+    10. 写作热力图（C2）
+    11. 随机文章（C4）
+    12. 目录跟随高亮
+    13. 代码块折叠
+    14. 行号锚点
+    15. 移动端底部导航 · 回顶
    ========================================================================== */ -}}
+
+{{- /* 0. 移动端底部导航。放在这里而不是 baseof，是为了不必整份覆盖主题的
+        footer.html —— 那会把主题的版本绑死在本地，升级主题时容易漏掉改动。 */ -}}
+{{- partial "mobile-nav.html" . -}}
 
 <script>
     (function () {
@@ -221,28 +232,105 @@
         /* ==================================================================
            7. 图片灯箱（B5）
            ------------------------------------------------------------------
+           本轮升级：
+             · 可左右翻页（按钮 + 键盘 ←/→），带「第 n / m 张」计数
+             · 点图放大到 2 倍，再点还原；放大后可用鼠标拖拽平移
+             · 文案全部走 i18n —— 原版的 aria-label 写死「图片查看」，
+               英文站读屏器会念出中文
+
            只处理正文图片；带 .no-zoom 的跳过（徽章、图标之类）。
            关闭时把焦点还给原图，键盘用户不会丢失位置。
            ================================================================== */
         var zoomables = postContent ? postContent.querySelectorAll('img:not(.no-zoom)') : [];
         if (zoomables.length) {
+            var LB = {
+                label: {{ i18n "lightbox_label" | jsonify | safeJS }},
+                close: {{ i18n "lightbox_close" | jsonify | safeJS }},
+                prev: {{ i18n "lightbox_prev" | jsonify | safeJS }},
+                next: {{ i18n "lightbox_next" | jsonify | safeJS }},
+                zoom: {{ i18n "lightbox_zoom" | jsonify | safeJS }},
+                counter: {{ i18n "lightbox_counter" | jsonify | safeJS }}
+            };
+
             var lb = doc.createElement('div');
             lb.className = 'lightbox';
             lb.setAttribute('role', 'dialog');
             lb.setAttribute('aria-modal', 'true');
-            lb.setAttribute('aria-label', '图片查看');
+            lb.setAttribute('aria-label', LB.label);
             lb.dataset.open = 'false';
-            lb.innerHTML = '<button type="button" class="lightbox-close" aria-label="关闭">✕</button><img alt="">';
+
+            var lbImg = doc.createElement('img');
+            lbImg.alt = '';
+            lbImg.draggable = false;
+
+            var lbClose = doc.createElement('button');
+            lbClose.type = 'button';
+            lbClose.className = 'lightbox-close';
+            lbClose.setAttribute('aria-label', LB.close);
+            lbClose.textContent = '✕';
+
+            var lbPrev = doc.createElement('button');
+            lbPrev.type = 'button';
+            lbPrev.className = 'lightbox-nav prev';
+            lbPrev.setAttribute('aria-label', LB.prev);
+            lbPrev.textContent = '‹';
+
+            var lbNext = doc.createElement('button');
+            lbNext.type = 'button';
+            lbNext.className = 'lightbox-nav next';
+            lbNext.setAttribute('aria-label', LB.next);
+            lbNext.textContent = '›';
+
+            var lbCount = doc.createElement('p');
+            lbCount.className = 'lightbox-count';
+
+            lb.appendChild(lbImg);
+            lb.appendChild(lbClose);
+            lb.appendChild(lbPrev);
+            lb.appendChild(lbNext);
+            lb.appendChild(lbCount);
             doc.body.appendChild(lb);
 
-            var lbImg = lb.querySelector('img');
-            var lbClose = lb.querySelector('.lightbox-close');
             var lastFocus = null;
+            var cur = 0;
+            var zoomed = false;
+            var panX = 0, panY = 0;
+            var dragging = false, dragStartX = 0, dragStartY = 0, baseX = 0, baseY = 0;
 
-            var openLb = function (src, alt) {
+            var applyTransform = function () {
+                if (!zoomed) {
+                    lbImg.style.transform = '';
+                    lbImg.classList.remove('is-zoomed');
+                    return;
+                }
+                lbImg.classList.add('is-zoomed');
+                lbImg.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(2)';
+            };
+
+            var resetZoom = function () {
+                zoomed = false; panX = 0; panY = 0;
+                applyTransform();
+            };
+
+            var showAt = function (i) {
+                var total = zoomables.length;
+                cur = ((i % total) + total) % total;     /* 循环取模 */
+                var el = zoomables[cur];
+                lbImg.src = el.currentSrc || el.src;
+                lbImg.alt = el.alt || '';
+                resetZoom();
+                var multi = total > 1;
+                lbPrev.hidden = !multi;
+                lbNext.hidden = !multi;
+                lbCount.textContent = multi
+                    ? LB.counter.replace('{Current}', String(cur + 1)).replace('{Total}', String(total))
+                    : '';
+                lbCount.hidden = !multi;
+            };
+
+            var openLb = function (i) {
                 lastFocus = doc.activeElement;
-                lbImg.src = src;
-                lbImg.alt = alt || '';
+                showAt(i);
                 lb.dataset.open = 'true';
                 doc.body.classList.add('lightbox-open');
                 lbClose.focus();
@@ -251,27 +339,69 @@
             var closeLb = function () {
                 lb.dataset.open = 'false';
                 doc.body.classList.remove('lightbox-open');
+                resetZoom();
                 /* 延迟清空 src，避免关闭动画期间图片突然消失 */
                 window.setTimeout(function () { lbImg.removeAttribute('src'); }, 220);
                 if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
             };
 
             for (var zi = 0; zi < zoomables.length; zi++) {
-                zoomables[zi].addEventListener('click', function () {
-                    openLb(this.currentSrc || this.src, this.alt);
-                });
+                (function (index) {
+                    zoomables[index].addEventListener('click', function () { openLb(index); });
+                })(zi);
             }
 
             lbClose.addEventListener('click', closeLb);
+            lbPrev.addEventListener('click', function (e) { e.stopPropagation(); showAt(cur - 1); });
+            lbNext.addEventListener('click', function (e) { e.stopPropagation(); showAt(cur + 1); });
+
             lb.addEventListener('click', function (e) {
-                if (e.target === lb) { closeLb(); }   /* 点背景关闭 */
+                /* 点背景或图片本身：背景关闭，图片切换缩放 */
+                if (e.target === lb) { closeLb(); return; }
+                if (e.target === lbImg) {
+                    if (dragging) { return; }          /* 拖拽结束时不要误触发缩放 */
+                    zoomed = !zoomed;
+                    panX = 0; panY = 0;
+                    applyTransform();
+                }
             });
 
-            /* 捕获阶段处理 Esc，阻止传播以免同一次按键又被搜索框处理 */
+            /* 放大后拖拽平移 */
+            lbImg.addEventListener('pointerdown', function (e) {
+                if (!zoomed) { return; }
+                dragging = false;
+                dragStartX = e.clientX; dragStartY = e.clientY;
+                baseX = panX; baseY = panY;
+                lbImg.setPointerCapture(e.pointerId);
+            });
+            lbImg.addEventListener('pointermove', function (e) {
+                if (!zoomed || !e.buttons) { return; }
+                var dx = e.clientX - dragStartX;
+                var dy = e.clientY - dragStartY;
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) { dragging = true; }
+                panX = baseX + dx;
+                panY = baseY + dy;
+                applyTransform();
+            });
+            lbImg.addEventListener('pointerup', function () {
+                /* 把 dragging 留到 click 之后复位，否则 click 先于 pointerup 之后的复位 */
+                window.setTimeout(function () { dragging = false; }, 0);
+            });
+
+            /* 捕获阶段处理键盘，阻止传播以免同一次按键又被其他处理器消费 */
             doc.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && lb.dataset.open === 'true') {
+                if (lb.dataset.open !== 'true') { return; }
+                if (e.key === 'Escape') {
                     e.stopPropagation();
                     closeLb();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showAt(cur - 1);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showAt(cur + 1);
                 }
             }, true);
         }
@@ -624,6 +754,196 @@
                     pickRandom();
                 });
             }
+        }
+
+        /* ==================================================================
+           12. 目录跟随高亮
+           ------------------------------------------------------------------
+           侧栏 TOC 里的链接随滚动高亮当前章节。
+
+           为什么用 scroll 而不是 IntersectionObserver：
+           IO 在「多个标题同时可见」「快速滚动跳过某节」时给出的 entry 顺序
+           不可靠，还要自己维护可见集合。这里只是「找出最后一个已经滚过视口
+           上沿的标题」，一次线性扫描就够，且行为完全可预测。
+
+           节流复用第 4 节的「rAF + 32ms 兜底」双通道，理由同那里：
+           纯 rAF 在后台标签页/无头环境可能不回调，标志位会永久锁死。
+           ================================================================== */
+        var tocLinks = doc.querySelectorAll('.sb-toc nav a[href^="#"], .sb-toc a[href^="#"]');
+        var postHeadings = postContent ? postContent.querySelectorAll('h2[id], h3[id], h4[id]') : [];
+
+        if (tocLinks.length && postHeadings.length) {
+            var tocMap = {};
+            for (var tl = 0; tl < tocLinks.length; tl++) {
+                var href = tocLinks[tl].getAttribute('href');
+                if (!href || href.length < 2) { continue; }
+                var key = decodeURIComponent(href.slice(1));
+                if (!tocMap[key]) { tocMap[key] = []; }
+                tocMap[key].push(tocLinks[tl]);
+            }
+
+            var activeLinks = [];
+            var tocScheduled = false, tocRaf = null, tocTimer = null;
+
+            var updateToc = function () {
+                tocScheduled = false;
+                if (tocRaf !== null) { window.cancelAnimationFrame(tocRaf); tocRaf = null; }
+                if (tocTimer !== null) { window.clearTimeout(tocTimer); tocTimer = null; }
+
+                /* 以视口上沿 +60px 为判定线：标题滚过这条线算「正在读」 */
+                var line = 60;
+                var currentId = null;
+                for (var i = 0; i < postHeadings.length; i++) {
+                    if (postHeadings[i].getBoundingClientRect().top <= line) {
+                        currentId = postHeadings[i].id;
+                    } else {
+                        break;
+                    }
+                }
+
+                var next = currentId && tocMap[currentId] ? tocMap[currentId] : [];
+                if (next === activeLinks) { return; }
+
+                for (var a = 0; a < activeLinks.length; a++) {
+                    activeLinks[a].classList.remove('is-active');
+                    activeLinks[a].removeAttribute('aria-current');
+                }
+                for (var b = 0; b < next.length; b++) {
+                    next[b].classList.add('is-active');
+                    next[b].setAttribute('aria-current', 'true');
+                }
+                activeLinks = next;
+            };
+
+            var scheduleToc = function () {
+                if (tocScheduled) { return; }
+                tocScheduled = true;
+                tocRaf = window.requestAnimationFrame(updateToc);
+                tocTimer = window.setTimeout(updateToc, 32);
+            };
+
+            window.addEventListener('scroll', scheduleToc, { passive: true });
+            window.addEventListener('resize', scheduleToc, { passive: true });
+            updateToc();
+        }
+
+        /* ==================================================================
+           13. 代码块折叠
+           ------------------------------------------------------------------
+           超过 FOLD_LIMIT 行的代码块默认收起，只显示前十几行 + 淡出遮罩。
+
+           为什么用 JS 加而不是模板生成：
+           Hugo 的代码块渲染由 Chroma 接管，模板层拿不到行数；在 JS 里数
+           .line 元素最直接，也不会为了折叠而改变生成的 HTML 结构（复制按钮、
+           语言角标、行号锚点都依赖现有结构）。
+           ================================================================== */
+        var FOLD_LIMIT = 24;
+        var FOLD_PEEK = 15;      /* 约等于 15rem 的可视高度，见 70-features.css */
+
+        var codeBlocks = postContent ? postContent.querySelectorAll('.highlight') : [];
+        for (var cb = 0; cb < codeBlocks.length; cb++) {
+            (function (block) {
+                var lines = block.querySelectorAll('.chroma .line');
+                if (lines.length <= FOLD_LIMIT) { return; }
+
+                block.classList.add('is-folded');
+
+                var btn = doc.createElement('button');
+                btn.type = 'button';
+                btn.className = 'code-fold-btn';
+                var labelExpand = {{ i18n "code_expand" | jsonify | safeJS }}.replace('{Count}', String(lines.length));
+                var labelFold = {{ i18n "code_collapse" | jsonify | safeJS }};
+                btn.textContent = labelExpand;
+                btn.setAttribute('aria-expanded', 'false');
+
+                btn.addEventListener('click', function () {
+                    var folded = block.classList.toggle('is-folded');
+                    btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
+                    btn.textContent = folded ? labelExpand : labelFold;
+                });
+
+                block.appendChild(btn);
+            })(codeBlocks[cb]);
+        }
+
+        /* ==================================================================
+           14. 行号锚点
+           ------------------------------------------------------------------
+           点行号 → 地址栏写入 #L{n} 并复制完整链接，同时高亮该行。
+           打开带 #L{n} 的链接时自动定位。
+
+           为什么锚点放在行号而不是整行：整行可点会和文本选择冲突，
+           读者想复制代码却触发了跳转。行号是空白区域，点它没有歧义。
+           ================================================================== */
+        var codeLines = postContent ? postContent.querySelectorAll('.chroma .ln') : [];
+        if (codeLines.length) {
+            var copyText = function (text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text).catch(function () {});
+                }
+                return Promise.resolve();
+            };
+
+            var lineIndexOf = function (lnEl) {
+                var lineEl = lnEl.parentNode;
+                var siblings = lineEl.parentNode.querySelectorAll('.line');
+                for (var i = 0; i < siblings.length; i++) {
+                    if (siblings[i] === lineEl) { return parseInt(lnEl.textContent, 10) || (i + 1); }
+                }
+                return parseInt(lnEl.textContent, 10) || 1;
+            };
+
+            for (var li = 0; li < codeLines.length; li++) {
+                codeLines[li].classList.add('is-clickable');
+                codeLines[li].setAttribute('title', {{ i18n "line_link_hint" | jsonify | safeJS }});
+            }
+
+            postContent.addEventListener('click', function (e) {
+                var ln = e.target.closest && e.target.closest('.chroma .ln.is-clickable');
+                if (!ln) { return; }
+                var n = lineIndexOf(ln);
+                var url = window.location.origin + window.location.pathname + '#L' + n;
+
+                copyText(url).then(function () {
+                    ln.classList.add('is-copied');
+                    window.setTimeout(function () { ln.classList.remove('is-copied'); }, 1200);
+                });
+
+                /* 不改历史记录：只是选行，不应产生一条可后退的浏览记录 */
+                if (window.history && history.replaceState) {
+                    history.replaceState(null, '', '#L' + n);
+                }
+            });
+
+            /* 打开带 #L12 的链接时定位并高亮 */
+            var jumpToLine = function () {
+                var m = /^#L(\d+)$/.exec(window.location.hash || '');
+                if (!m) { return; }
+                var target = null;
+                for (var i = 0; i < codeLines.length; i++) {
+                    if (parseInt(codeLines[i].textContent, 10) === parseInt(m[1], 10)) {
+                        target = codeLines[i];
+                        break;
+                    }
+                }
+                if (!target) { return; }
+                var lineEl = target.parentNode;
+                lineEl.classList.add('is-linked');
+                var rect = lineEl.getBoundingClientRect();
+                window.scrollTo({ top: rect.top + window.scrollY - 120, behavior: 'smooth' });
+            };
+            jumpToLine();
+            window.addEventListener('hashchange', jumpToLine);
+        }
+
+        /* ==================================================================
+           15. 移动端底部导航 · 回顶
+           ================================================================== */
+        var mobileTopBtn = doc.querySelector('[data-mobile-top]');
+        if (mobileTopBtn) {
+            mobileTopBtn.addEventListener('click', function () {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         }
     })();
 </script>

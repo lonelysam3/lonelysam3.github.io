@@ -10,40 +10,16 @@
    设计取舍：
    · 只在文章属于某个系列时渲染，普通文章不产生任何多余 DOM。
    · 用 aria-current="true" 标记当前篇，配合 CSS 高亮，屏幕阅读器也能识别。
-   · 系列内排序：优先 seriesOrder，缺失时按日期。这样即使后来补写中间篇目，
-     只要标注序号就能插进正确位置。
+   · 排序规则抽到 partials/series-ordered.html，与 /series/ 索引页共用，
+     避免两处规则漂移导致顺序不一致。
    ========================================================================== */ -}}
 
 {{- with .Params.series -}}
 {{- $name := index . 0 -}}
 {{- $current := $ -}}
+{{- $ordered := partial "series-ordered.html" $name -}}
 
-{{- /* 收集同系列文章 */ -}}
-{{- $items := slice -}}
-{{- range where site.RegularPages "Params.series" "intersect" (slice $name) -}}
-{{- $items = $items | append . -}}
-{{- end -}}
-
-{{- if gt (len $items) 1 -}}
-{{- /* 排序：seriesOrder 优先（缺失视为极大，排在最后），其次日期 */ -}}
-{{- $sorted := sort $items "Params.seriesOrder" "asc" -}}
-{{- $byDate := sort $items "Date" "asc" -}}
-
-{{- /* Hugo 的 sort 对缺失字段的处理不稳定，这里手动构建最终顺序：
-       有 seriesOrder 的按其值，无的按日期插入其后。 */ -}}
-{{- $ordered := slice -}}
-{{- $withOrder := where $items "Params.seriesOrder" "!=" nil -}}
-{{- $withoutOrder := where $items "Params.seriesOrder" nil -}}
-{{- if $withOrder -}}
-{{- $ordered = sort $withOrder "Params.seriesOrder" "asc" -}}
-{{- end -}}
-{{- range $withoutOrder -}}
-{{- $ordered = $ordered | append . -}}
-{{- end -}}
-{{- if eq (len $ordered) 0 -}}
-{{- $ordered = $byDate -}}
-{{- end -}}
-
+{{- if gt (len $ordered) 1 -}}
 {{- $total := len $ordered -}}
 {{- $idx := 0 -}}
 {{- range $i, $p := $ordered -}}
@@ -53,7 +29,7 @@
 <section class="series" aria-label="{{ i18n "series_aria" }}">
     <div class="series-head">
         <span class="series-label">{{ i18n "series_label" }}</span>
-        <span class="series-name">{{ $name }}</span>
+        <a class="series-name" href="{{ "series/" | relLangURL }}">{{ $name }}</a>
         {{- if gt $idx 0 }}
         <span class="series-progress">{{ i18n "series_progress" (dict "Current" $idx "Total" $total) }}</span>
         {{- end }}

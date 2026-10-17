@@ -37,8 +37,12 @@
     {{- /* 文章目录：仅当该文开启 ShowToc。默认折叠以避免长目录挤压正文视线 */ -}}
     {{- if .Param "ShowToc" }}
     {{- with .TableOfContents }}
+    {{- /* 【默认展开】
+           原来这里是折叠的。折叠状态下「当前章节高亮」（extend_footer.html 的
+           TOC 跟随）没有任何意义——读者看不到它。侧栏 TOC 本来就只占侧栏
+           宽度，不像正文内 TOC 那样会把正文推下去，展开是安全的。 */}}
     <div class="sb-block sb-toc">
-        <details>
+        <details open>
             <summary class="sb-title">{{ i18n "sidebar_toc" }}</summary>
             {{ . }}
         </details>
@@ -76,19 +80,14 @@
            本站文章数少时，「同标签的相关文章」往往恰好就是「最新的几篇」，
            两块并排会把同一批链接列两遍——这正是要避免的重复。
            有相关文章就只给相关，没有才回退到最新。 */ -}}
-    {{- $related := slice }}
-    {{- with .GetTerms "tags" }}
-    {{- range $i, $t := . }}
-    {{- if lt $i 3 }}
-    {{- range first 4 $t.Pages }}
-    {{- if ne .Permalink $ }}
-    {{- $related = $related | append . }}
-    {{- end }}
-    {{- end }}
-    {{- end }}
-    {{- end }}
-    {{- end }}
-    {{- $related = uniq (where $related "Permalink" "!=" .Permalink) }}
+    {{- /* 【改为按共同标签数加权】
+           原来的做法是：取前 3 个标签，各取该标签下最新的 4 篇，堆在一起去重。
+           问题是不区分「共同标签数量」——只共用一个标签的文章，和共用三个
+           标签的文章排在一起，读者看到的相关性忽高忽低。
+
+           现在的评分见 partials/related-posts.html：共同标签 ×3 + 共同分类 ×1，
+           且要求至少有一个共同标签。 */}}
+    {{- $related := partial "related-posts.html" (dict "page" . "limit" 5) }}
 
     {{- if $related }}
     <div class="sb-block">
@@ -192,6 +191,8 @@
         <div class="sb-actions">
             <button type="button" class="sb-btn" data-random-post>{{ i18n "action_random" }}</button>
             <a class="sb-btn" href="{{ "stats/" | relLangURL }}">{{ i18n "action_stats" }}</a>
+            <a class="sb-btn" href="{{ "series/" | relLangURL }}">{{ i18n "series_label" }}</a>
+            <a class="sb-btn" href="{{ "search/" | relLangURL }}">{{ i18n "search_label" }}</a>
         </div>
     </div>
 

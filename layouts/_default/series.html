@@ -1,0 +1,65 @@
+{{- /* ==========================================================================
+   series.html（布局）— 系列索引页 /series/
+   --------------------------------------------------------------------------
+   把全站所有系列列出来，每个系列内按阅读顺序展开全部篇目。
+
+   为什么需要这个页面：
+   文章页里的系列导航只在「当前这篇文章属于某系列」时出现，读者从首页进来
+   根本不知道站上有哪些系列。这个页面是系列的入口，也是补完一篇之后回头
+   看进度的位置。
+
+   数据来源：
+   · 系列名从所有文章的 front matter `series` 字段收集（同一篇可属多个系列）。
+   · site.RegularPages 是【按语言隔离】的，所以中英两个索引页各看各的。
+   · 排序复用 partials/series-ordered.html，与文章内导航完全一致。
+   ========================================================================== */ -}}
+
+{{- define "main" }}
+
+<header class="page-header">
+    <h1>{{ .Title }}</h1>
+    {{- with .Description }}
+    <div class="post-description">{{ . }}</div>
+    {{- end }}
+</header>
+
+{{- /* 收集所有系列名。同一系列名在多篇文章里重复出现，uniq 去重。 */ -}}
+{{- $names := slice -}}
+{{- range where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) -}}
+{{- with .Params.series -}}
+{{- range . -}}
+{{- $names = $names | append . -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $names = uniq $names -}}
+
+{{- if $names }}
+<div class="series-index" aria-label="{{ i18n "series_index_aria" }}">
+    {{- range $names }}
+    {{- $name := . }}
+    {{- $ordered := partial "series-ordered.html" $name }}
+    {{- if $ordered }}
+    <section class="si-group">
+        <div class="si-head">
+            <h2 class="si-name">{{ $name }}</h2>
+            <span class="si-count">{{ i18n "series_index_count" (dict "Count" (len $ordered)) }}</span>
+        </div>
+        <ol class="si-list">
+            {{- range $i, $p := $ordered }}
+            <li class="si-item">
+                <span class="si-date">{{ $p.Date.Format "2006-01" }}</span>
+                <a class="si-title" href="{{ $p.RelPermalink }}">{{ $p.LinkTitle }}</a>
+                <span class="si-idx" aria-hidden="true">{{ add $i 1 }}</span>
+            </li>
+            {{- end }}
+        </ol>
+    </section>
+    {{- end }}
+    {{- end }}
+</div>
+{{- else }}
+<p class="si-empty">{{ i18n "series_index_empty" }}</p>
+{{- end }}
+
+{{- end }}{{/* end main */}}

@@ -1,0 +1,48 @@
+{{- /* ==========================================================================
+   related-posts.html — 相关文章（按共同标签数加权）
+   --------------------------------------------------------------------------
+   入参：dict "page" 当前页 "limit" 最多几篇（默认 5）
+   返回：排好序的页面切片（可能为空）
+
+   为什么不用 Hugo 内置的 .Related：
+   内置相关度算法给每个 tag / category 各自计分，但【不区分标签与分类的
+   强弱关系】，也不做阈值过滤。本站文章少，结果是：只共用了一个分类的文章
+   也会被当成「相关」，而真正同标签的文章反而排在后面。
+
+   这里的评分：
+     共同标签 × 3  +  共同分类 × 1
+   并要求总分 ≥ 3，也就是【至少有一个共同标签】才算相关。
+   分类是粗粒度栏目（日记 / 教程），只共用分类不构成「相关」。
+
+   同分时按日期倒序，让较新的文章排前面。
+
+   注意：site.RegularPages 是语言隔离的，英文站不会冒出中文文章。
+   ========================================================================== */ -}}
+
+{{- $page := .page -}}
+{{- $limit := .limit | default 5 -}}
+{{- $myTags := $page.Params.tags | default slice -}}
+{{- $myCats := $page.Params.categories | default slice -}}
+
+{{- $scored := slice -}}
+{{- range where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) -}}
+  {{- if ne .Permalink $page.Permalink -}}
+    {{- $sharedTags := intersect $myTags (.Params.tags | default slice) -}}
+    {{- $sharedCats := intersect $myCats (.Params.categories | default slice) -}}
+    {{- $score := add (mul (len $sharedTags) 3) (len $sharedCats) -}}
+    {{- if ge $score 3 -}}
+      {{- $scored = $scored | append (dict "page" . "score" $score) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $pages := slice -}}
+{{- if $scored -}}
+  {{- /* 主排序：分数降序。同分时再按日期降序。 */ -}}
+  {{- $sorted := sort $scored "score" "desc" -}}
+  {{- range first $limit $sorted -}}
+    {{- $pages = $pages | append .page -}}
+  {{- end -}}
+{{- end -}}
+
+{{- return $pages -}}

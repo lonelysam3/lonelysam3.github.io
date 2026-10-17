@@ -1,0 +1,84 @@
+{{- /* ==========================================================================
+   validate-frontmatter.html — 构建期检查文章 front matter
+   --------------------------------------------------------------------------
+   在 head 里调用一次（用 site.Store 加锁，只跑一次）。只输出 warnf，
+   不产生任何 HTML。
+
+   为什么要在构建期做：
+   本站踩过的坑几乎都是 front matter 写错却不报错，只是「页面悄悄不对」：
+
+     · summary 写成空字符串 ""   → 列表页出现一段空白而不是自动截取
+     · content/en/ 里写了 url:    → 中英两版写到同一路径，英文版直接消失
+     · categories 写了两个        → 分类计数与侧栏对不上
+     · date 写坏                 → 排序错乱且没有任何提示
+
+   这些都不会让构建失败，所以只能靠主动检查。Hugo 没有内置的 schema 校验，
+   这里用模板做一遍。
+
+   检查的是 site.RegularPages（语言隔离），所以中英各查一次。
+   ========================================================================== */ -}}
+
+{{- if not (site.Store.Get "fmValidated") -}}
+{{- site.Store.Set "fmValidated" true -}}
+
+{{- $posts := where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) -}}
+
+{{- range $posts -}}
+{{- $where := "" -}}
+{{- with .File -}}{{- $where = .Path -}}{{- end -}}
+{{- if not $where -}}{{- $where = .RelPermalink -}}{{- end -}}
+
+{{- /* 1. 标题 */ -}}
+{{- if not .Title -}}
+  {{- warnf "front matter [%s]: 缺少 title" $where -}}
+{{- else if ne .Title (strings.TrimSpace .Title) -}}
+  {{- warnf "front matter [%s]: title 首尾有空白字符" $where -}}
+{{- end -}}
+
+{{- /* 2. 日期 */ -}}
+{{- if .Date.IsZero -}}
+  {{- warnf "front matter [%s]: 缺少 date，排序会落到最后" $where -}}
+{{- end -}}
+
+{{- /* 3. 分类：必须恰好一个 */ -}}
+{{- $cats := .Params.categories -}}
+{{- if not $cats -}}
+  {{- warnf "front matter [%s]: 缺少 categories" $where -}}
+{{- else if gt (len $cats) 1 -}}
+  {{- warnf "front matter [%s]: categories 有 %d 个，应只填一个" $where (len $cats) -}}
+{{- end -}}
+
+{{- /* 4. 标签：必须有，且必须是列表 */ -}}
+{{- $tags := .Params.tags -}}
+{{- if not $tags -}}
+  {{- warnf "front matter [%s]: 缺少 tags" $where -}}
+{{- else if not (reflect.IsSlice $tags) -}}
+  {{- warnf "front matter [%s]: tags 不是列表，应写成 [\"a\", \"b\"]" $where -}}
+{{- end -}}
+
+{{- /* 5. summary 为空字符串 —— 会被当成「已设置但为空」 */ -}}
+{{- if and (isset .Params "summary") (eq .Params.summary "") -}}
+  {{- warnf "front matter [%s]: summary 是空字符串，会让列表页出现空白；不填就整行删掉" $where -}}
+{{- end -}}
+
+{{- /* 6. content/en/ 下不能写 url —— 会与中文版撞路径 */ -}}
+{{- if and .File (hasPrefix .File.Path "en/") (isset .Params "url") -}}
+  {{- warnf "front matter [%s]: content/en/ 下不要写 url（不带语言前缀，会覆盖中文版）；删掉即可" $where -}}
+{{- end -}}
+
+{{- /* 7. 系列里有 series 却没写 seriesOrder */ -}}
+{{- if and .Params.series (not (isset .Params "seriesorder")) -}}
+  {{- $name := index .Params.series 0 -}}
+  {{- $siblings := where $posts "Params.series" "intersect" (slice $name) -}}
+  {{- if gt (len $siblings) 1 -}}
+    {{- warnf "front matter [%s]: 系列「%s」有 %d 篇，建议加 seriesOrder 明确顺序（当前按日期排）" $where $name (len $siblings) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* 8. 草稿但日期已过 —— 常见于写完忘了改 draft */ -}}
+{{- if and .Draft (lt .Date.Unix now.Unix) -}}
+  {{- warnf "front matter [%s]: 已过日期仍是 draft: true" $where -}}
+{{- end -}}
+
+{{- end -}}
+{{- end -}}

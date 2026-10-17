@@ -1,0 +1,286 @@
+{{- /* ==========================================================================
+   search.html（布局）— 带筛选的搜索页 /search/
+   --------------------------------------------------------------------------
+   与顶部快速搜索的分工：
+     顶部搜索框 → 输入即出下拉结果，只做「快速跳转」；
+     本页       → 可以先筛后搜，也能先搜再筛，适合「我想找 2026 年写的所有
+                  教程类文章」这种结构性查找。
+
+   筛选项为什么由模板生成而不是 JS 拉取：
+   分类、标签、年份在构建时就是已知的（site.Taxonomies + 文章日期），
+   直接渲染成按钮可以：无 JS 时筛选器仍然可见（只是不生效），也不必等
+   index.json 到手才出现界面跳动。
+
+   分类与标签必须走 partials/lang-terms.html 过滤：Hugo 的 taxonomy 词表
+   是【跨语言全局】的，不过滤的话英文站会冒出中文分类。
+   ========================================================================== */ -}}
+
+{{- define "main" }}
+
+<header class="page-header">
+    <h1>{{ .Title }}</h1>
+    {{- with .Description }}
+    <div class="post-description">{{ . }}</div>
+    {{- end }}
+</header>
+
+{{- $posts := where site.RegularPages "Type" "in" (site.Params.mainSections | default (slice "posts")) -}}
+
+{{- /* 年份：收集去重后倒序 */ -}}
+{{- $years := slice -}}
+{{- range $posts -}}
+{{- $years = $years | append (.Date.Format "2006") -}}
+{{- end -}}
+{{- $years = sort (uniq $years) "value" "desc" -}}
+
+<div class="search-page" id="searchPage"
+     data-idle="{{ i18n "search_page_idle" }}"
+     data-empty="{{ i18n "search_page_empty" }}"
+     data-count="{{ i18n "search_count" }}">
+
+    <div class="sp-field">
+        <svg class="sp-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16.5 16.5 4 4" />
+        </svg>
+        <input class="sp-input" id="spInput" type="search" autocomplete="off" spellcheck="false"
+               placeholder="{{ i18n "search_placeholder" }}" aria-label="{{ i18n "search_label" }}">
+        <button class="sp-reset" id="spReset" type="button" aria-label="{{ i18n "search_clear" }}" hidden>✕</button>
+    </div>
+
+    <p class="sp-hint" id="spHint">{{ i18n "search_page_hint" }}</p>
+
+    {{- $cats := partial "param-terms.html" (dict "param" "categories" "pages" $posts) -}}
+    {{- $tags := partial "param-terms.html" (dict "param" "tags" "pages" $posts) -}}
+
+    {{- if $cats }}
+    <div class="sp-filter" data-filter="categories">
+        <span class="sp-filter-label">{{ i18n "search_filter_category" }}</span>
+        <div class="sp-chips">
+            {{- range $cats }}
+            <button type="button" class="sp-chip" data-value="{{ .value }}" aria-pressed="false">
+                {{ .value }}<sup>{{ .count }}</sup>
+            </button>
+            {{- end }}
+        </div>
+    </div>
+    {{- end }}
+
+    {{- if $tags }}
+    <div class="sp-filter" data-filter="tags">
+        <span class="sp-filter-label">{{ i18n "search_filter_tag" }}</span>
+        <div class="sp-chips">
+            {{- range $tags }}
+            <button type="button" class="sp-chip" data-value="{{ .value }}" aria-pressed="false">
+                {{ .value }}<sup>{{ .count }}</sup>
+            </button>
+            {{- end }}
+        </div>
+    </div>
+    {{- end }}
+
+    {{- if $years }}
+    <div class="sp-filter" data-filter="year">
+        <span class="sp-filter-label">{{ i18n "search_filter_year" }}</span>
+        <div class="sp-chips">
+            {{- range $years }}
+            <button type="button" class="sp-chip" data-value="{{ . }}" aria-pressed="false">{{ . }}</button>
+            {{- end }}
+        </div>
+    </div>
+    {{- end }}
+
+    <p class="sp-count" id="spCount" aria-live="polite"></p>
+    <ul class="sp-results" id="spResults"></ul>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+        var root = document.getElementById('searchPage');
+        if (!root) { return; }
+
+        var input = document.getElementById('spInput');
+        var reset = document.getElementById('spReset');
+        var hint = document.getElementById('spHint');
+        var countEl = document.getElementById('spCount');
+        var listEl = document.getElementById('spResults');
+
+        var IDLE = root.getAttribute('data-idle') || '';
+        var EMPTY = root.getAttribute('data-empty') || '';
+        var COUNT = root.getAttribute('data-count') || '{Count}';
+
+        var all = [];            /* index.json 原文 */
+        var fuse = null;         /* Fuse 实例，索引到手后建一次 */
+        var loaded = false;
+        var loading = false;
+
+        var active = { categories: null, tags: null, year: null };
+
+        /* Fuse 是全局懒加载的（见 extend_head.html 的 idle 注入）。
+           本页需要主动把它拉起来：先看有没有已经加载，没有就调用暴露出来的
+           加载钩子，然后轮询等待。轮询上限 8s，超时静默降级为纯筛选
+           （没有 Fuse 时按标题/摘要做子串匹配，仍可用）。 */
+        function ensureFuse(cb) {
+            if (window.Fuse) { cb(); return; }
+            if (typeof window.__dshLoadSearch === 'function') { window.__dshLoadSearch(); }
+            var waited = 0;
+            var t = setInterval(function () {
+                waited += 80;
+                if (window.Fuse) { clearInterval(t); cb(); }
+                else if (waited > 8000) { clearInterval(t); cb(); }
+            }, 80);
+        }
+
+        function loadIndex(cb) {
+            if (loaded) { cb(); return; }
+            if (loading) { return; }
+            loading = true;
+            fetch('/index.json', { cache: 'force-cache' })
+                .then(function (r) { return r.ok ? r.json() : []; })
+                .then(function (j) {
+                    all = Array.isArray(j) ? j : [];
+                    loaded = true;
+                    loading = false;
+                    cb();
+                })
+                .catch(function () { all = []; loaded = true; loading = false; cb(); });
+        }
+
+        /* ---- 筛选 ---- */
+        function passFilters(it) {
+            if (active.categories) {
+                var cats = it.categories || [];
+                if (cats.indexOf(active.categories) < 0) { return false; }
+            }
+            if (active.tags) {
+                var tags = it.tags || [];
+                if (tags.indexOf(active.tags) < 0) { return false; }
+            }
+            if (active.year) {
+                if (String(it.year || '') !== active.year) { return false; }
+            }
+            return true;
+        }
+
+        function hasFilter() {
+            return !!(active.categories || active.tags || active.year);
+        }
+
+        /* ---- 渲染 ---- */
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function render(items) {
+            var q = input.value.trim();
+
+            if (!q && !hasFilter()) {
+                listEl.innerHTML = '';
+                countEl.textContent = '';
+                hint.textContent = IDLE;
+                hint.hidden = false;
+                return;
+            }
+            hint.hidden = true;
+
+            var out = items.slice(0, 60).map(function (it) {
+                var cats = (it.categories || []).join(' / ');
+                var year = it.year ? '<span class="sp-year">' + esc(it.year) + '</span>' : '';
+                var ex = it.summary ? '<p class="sp-ex">' + esc(it.summary.slice(0, 150)) + '</p>' : '';
+                return '<li class="sp-item">' +
+                    '<a class="sp-link" href="' + esc(it.permalink) + '">' +
+                    '<span class="sp-title">' + esc(it.title) + '</span>' +
+                    (cats ? '<span class="sp-cat">' + esc(cats) + '</span>' : '') +
+                    year +
+                    ex +
+                    '</a></li>';
+            }).join('');
+
+            listEl.innerHTML = out;
+            countEl.textContent = COUNT.replace('{Count}', String(items.length));
+            if (!items.length) {
+                listEl.innerHTML = '<li class="sp-empty">' + esc(EMPTY) + '</li>';
+            }
+        }
+
+        function run() {
+            loadIndex(function () {
+                var q = input.value.trim();
+                var base = all;
+
+                if (q && window.Fuse) {
+                    if (!fuse) {
+                        fuse = new window.Fuse(all, {
+                            keys: [
+                                { name: 'title', weight: 0.45 },
+                                { name: 'tags', weight: 0.2 },
+                                { name: 'categories', weight: 0.15 },
+                                { name: 'summary', weight: 0.15 },
+                                { name: 'content', weight: 0.05 }
+                            ],
+                            includeScore: true,
+                            threshold: 0.35,
+                            ignoreLocation: true,
+                            minMatchCharLength: 1
+                        });
+                    }
+                    base = fuse.search(q).map(function (r) { return r.item; });
+                } else if (q) {
+                    /* 无 Fuse 时的兜底：标题 / 摘要 / 标签子串匹配 */
+                    var lq = q.toLowerCase();
+                    base = all.filter(function (it) {
+                        return (it.title || '').toLowerCase().indexOf(lq) >= 0 ||
+                               (it.summary || '').toLowerCase().indexOf(lq) >= 0 ||
+                               (it.tags || []).join(' ').toLowerCase().indexOf(lq) >= 0;
+                    });
+                }
+
+                render(base.filter(passFilters));
+            });
+        }
+
+        /* ---- 事件 ---- */
+        var timer = null;
+        input.addEventListener('input', function () {
+            reset.hidden = !input.value;
+            window.clearTimeout(timer);
+            timer = window.setTimeout(run, 120);
+        });
+
+        reset.addEventListener('click', function () {
+            input.value = '';
+            reset.hidden = true;
+            input.focus();
+            run();
+        });
+
+        /* 筛选按钮：同一组内单选，再点一次取消 */
+        root.addEventListener('click', function (e) {
+            var chip = e.target.closest && e.target.closest('.sp-chip');
+            if (!chip) { return; }
+            var group = chip.closest('.sp-filter').getAttribute('data-filter');
+            var value = chip.getAttribute('data-value');
+            var chips = root.querySelectorAll('.sp-filter[data-filter="' + group + '"] .sp-chip');
+
+            var turningOn = active[group] !== value;
+            for (var i = 0; i < chips.length; i++) { chips[i].setAttribute('aria-pressed', 'false'); }
+            active[group] = turningOn ? value : null;
+            if (turningOn) { chip.setAttribute('aria-pressed', 'true'); }
+
+            run();
+        });
+
+        /* 从地址栏读初始查询：/search/?q=sql，方便分享搜索结果 */
+        var params = new URLSearchParams(window.location.search);
+        var q0 = params.get('q');
+        if (q0) { input.value = q0; reset.hidden = false; }
+
+        ensureFuse(function () { loadIndex(function () { run(); }); });
+    })();
+</script>
+
+{{- end }}{{/* end main */}}

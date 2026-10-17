@@ -1,0 +1,37 @@
+{{- /* ==========================================================================
+   param-terms.html — 从文章 front matter 参数统计「去重后的取值 + 出现次数」
+   --------------------------------------------------------------------------
+   入参：dict "param" 字段名 "pages" 页面集合
+   返回：slice of dict，每项 { value, count }，按次数降序
+
+   为什么不复用 lang-terms.html：
+   那个返回的是 taxonomy 词条（.Page / .Key / .Count）。而搜索页的筛选是拿
+   文章参数里的【原始字符串】去比对 index.json 里的值，用词条键（Hugo 会把
+   它做 URL 化处理）去比会匹配不上，表现为「点了筛选结果永远是 0」。
+
+   这里直接从每篇文章的参数收集，值与 index.json 里存的完全同源，
+   且顺带天然按语言隔离（pages 传的就是当前语言的文章）。
+   ========================================================================== */ -}}
+
+{{- $key := .param -}}
+{{- $posts := .pages -}}
+
+{{- $counts := dict -}}
+{{- range $posts -}}
+  {{- $vals := index .Params $key -}}
+  {{- with $vals -}}
+    {{- range . -}}
+      {{- $v := printf "%v" . -}}
+      {{- $n := index $counts $v | default 0 -}}
+      {{- $counts = merge $counts (dict $v (add $n 1)) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $out := slice -}}
+{{- range $k, $v := $counts -}}
+  {{- $out = $out | append (dict "value" $k "count" $v) -}}
+{{- end -}}
+{{- $out = sort $out "count" "desc" -}}
+
+{{- return $out -}}

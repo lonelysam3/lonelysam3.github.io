@@ -177,6 +177,20 @@ params:
   defaultTheme: auto # dark, light
   # 是否禁用主题切换按钮
   disableThemeToggle: false
+  # 主题跟随时间（本轮新增）
+  # ---------------------------------------------------------------------------
+  # 没有手动切换过主题时，按当地时间自动选深浅色：入夜转深色，早上转浅色。
+  # 一旦读者点过右上角的切换按钮，localStorage 会写入 pref-theme，
+  # 此后不再自动改变——手动选择永远优先。
+  #
+  # 为什么不干脆跟随系统（defaultTheme: auto）：本站主要阅读时段在晚上，
+  # 而很多人的系统是全天浅色。按时间切换更贴合实际场景，也不依赖系统设置。
+  #
+  # 不想要就把 enabled 改成 false。
+  themeFollowTime:
+    enabled: true
+    darkFrom: 18   # 18:00 起深色
+    darkUntil: 7   # 次日 7:00 前仍是深色
 
   # 是否启用阅读时间展示
   ShowReadingTime: true

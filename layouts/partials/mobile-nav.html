@@ -1,0 +1,63 @@
+{{- /* ==========================================================================
+   mobile-nav.html — 移动端底部导航条
+   --------------------------------------------------------------------------
+   为什么需要它：
+   顶部导航在手机上只有 140~226px 可用宽度，5 个入口必须横向滚动才能看全
+   （见 30-header.css 的说明）。读者想跳到「归档」得先知道那里能滚——这不是
+   好的移动端体验。底部固定条把最常用的几个入口放在拇指够得到的位置。
+
+   为什么是这五项：
+   首页 / 归档 / 浏览 / 系列 / 顶部
+   前四个是「找内容」的路径；「顶部」不是链接而是回顶操作，长文里最常用。
+
+   为什么用 <a> 而不是 <button>（除回顶外）：
+   导航项本质是链接，应该能被选中、在新标签打开、被搜索引擎识别。
+   回顶是纯客户端操作，用 button 并 aria-label。
+
+   桌面端由 CSS 隐藏，不产生布局影响。
+   ========================================================================== */ -}}
+
+<nav class="mobile-nav" aria-label="{{ i18n "mobile_nav_label" }}">
+    <a class="mn-item{{ if .IsHome }} is-active{{ end }}" href="{{ "" | relLangURL }}">
+        <svg class="mn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5.5 9.5V20h13V9.5" />
+        </svg>
+        <span class="mn-label">{{ i18n "home" | default "Home" }}</span>
+    </a>
+    <a class="mn-item{{ if eq .Section "posts" }} is-active{{ end }}" href="{{ "archives/" | relLangURL }}">
+        <svg class="mn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h10" />
+        </svg>
+        <span class="mn-label">{{ i18n "nav_archive" }}</span>
+    </a>
+    <a class="mn-item" href="{{ "browse/" | relLangURL }}">
+        <svg class="mn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+            <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+            <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+            <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+        </svg>
+        <span class="mn-label">{{ i18n "sidebar_browse" }}</span>
+    </a>
+    <a class="mn-item" href="{{ "series/" | relLangURL }}">
+        <svg class="mn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 4.5h9.5a2 2 0 0 1 2 2V20H7a2 2 0 0 1-2-2z" />
+            <path d="M5 17.5h11.5" />
+            <path d="M8.5 8.5h5" />
+        </svg>
+        <span class="mn-label">{{ i18n "series_label" }}</span>
+    </a>
+    <button class="mn-item" type="button" data-mobile-top aria-label="{{ i18n "mobile_nav_top" }}">
+        <svg class="mn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5" />
+            <path d="m5.5 11.5 6.5-6.5 6.5 6.5" />
+        </svg>
+        <span class="mn-label">{{ i18n "mobile_nav_top" }}</span>
+    </button>
+</nav>

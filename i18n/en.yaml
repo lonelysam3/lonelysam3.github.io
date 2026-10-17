@@ -199,3 +199,61 @@
   translation: "Info"
 - id: details_default_title
   translation: "Show more"
+- id: series_index_aria
+  translation: "All series"
+- id: series_index_count
+  translation: "{{ .Count }} posts"
+- id: series_index_progress
+  translation: "{{ .Count }} posts, last updated {{ .Date }}"
+- id: series_index_empty
+  translation: "No series yet. Add series: [\"Name\"] to a post's front matter."
+- id: series_index_latest
+  translation: "Latest"
+- id: search_page_hint
+  translation: "Type a keyword, then narrow it with the filters below."
+- id: search_page_empty
+  translation: "No matching posts."
+- id: search_page_idle
+  translation: "Start typing to search all posts."
+- id: search_filter_all
+  translation: "All"
+- id: search_filter_category
+  translation: "Category"
+- id: search_filter_tag
+  translation: "Tag"
+- id: search_filter_year
+  translation: "Year"
+- id: search_clear
+  translation: "Clear filters"
+- id: search_count
+  translation: "{Count} results"
+- id: code_expand
+  translation: "Show all {Count} lines"
+- id: code_collapse
+  translation: "Collapse"
+- id: line_link_hint
+  translation: "Click a line number to get a link"
+- id: lightbox_label
+  translation: "Image viewer"
+- id: lightbox_prev
+  translation: "Previous image"
+- id: lightbox_next
+  translation: "Next image"
+- id: lightbox_close
+  translation: "Close"
+- id: lightbox_zoom
+  translation: "Zoom"
+- id: lightbox_counter
+  translation: "{Current} of {Total}"
+- id: toc_active_label
+  translation: "Now reading"
+- id: mobile_nav_label
+  translation: "Quick navigation"
+- id: mobile_nav_top
+  translation: "Top"
+- id: nav_archive
+  translation: "Archive"
+- id: footnote_ref_label
+  translation: "Footnote {Num}"
+- id: footnote_back_label
+  translation: "Back to text"
