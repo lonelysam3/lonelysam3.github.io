@@ -252,3 +252,5 @@
   translation: "脚注 {Num}"
 - id: footnote_back_label
   translation: "返回正文"
+- id: search_all_results
+  translation: "查看全部结果"

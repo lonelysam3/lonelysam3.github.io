@@ -232,6 +232,30 @@ html.js .nav.is-scrolled {
     flex: 0 0 auto;
 }
 
+
+/* 下拉底部的「查看全部结果」。用一条分隔线把它与结果项分开，
+   让它读起来是「入口」而不是「又一条结果」。
+
+   注意 border-radius 必须清零：结果项本身带 --r-md 圆角，直接加 border-top
+   会让分隔线顺着圆角弯起来，看起来像个描了边的胶囊，而不是一条分隔线。 */
+.nav #searchbox.top-search #searchResults li.sr-all {
+    margin-top: var(--s-1);
+    padding-top: var(--s-2);
+    border-top: 1px solid var(--c-border);
+    border-radius: 0;
+}
+
+.nav #searchbox.top-search #searchResults li.sr-all a {
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-meta);
+    color: var(--c-accent);
+}
+
+.nav #searchbox.top-search #searchResults li.sr-all a::after {
+    content: "\2192";   /* → */
+}
 .nav #searchbox.top-search #searchResults li:hover,
 .nav #searchbox.top-search #searchResults li.focus {
     background: var(--c-accent-soft);

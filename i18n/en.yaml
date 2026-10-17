@@ -257,3 +257,5 @@
   translation: "Footnote {Num}"
 - id: footnote_back_label
   translation: "Back to text"
+- id: search_all_results
+  translation: "See all results"

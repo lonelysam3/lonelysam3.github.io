@@ -112,7 +112,13 @@
    这样更清晰也更稳定，不会被上游实现细节变化打断。
    --------------------------------------------------------------------- */ -}}
 <link crossorigin="anonymous" rel="preload" as="fetch" href="{{ "index.json" | absURL }}">
-{{- $fastsearch := resources.Get "js/fastsearch.js" | js.Build (dict "params" (dict "fuseOpts" site.Params.fuseOpts)) | resources.Minify }}
+{{- $fastsearch := resources.Get "js/fastsearch.js" | js.Build (dict "params" (dict
+    "fuseOpts" site.Params.fuseOpts
+    "searchPage" (dict
+      "url" ("search/" | relLangURL)
+      "label" (i18n "search_all_results")
+    )
+  )) | resources.Minify }}
 {{- $fusejs := resources.Get "js/fuse.basic.min.js" }}
 {{- $license_js := resources.Get "js/license.js" }}
 {{- /* 注：concat 的各分片必须已 minify。未 minify 的 js.Build 结果通常

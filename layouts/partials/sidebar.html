@@ -183,18 +183,9 @@
     </div>
     {{- end }}
 
-    {{- /* 探索入口：主内容区没有的随机跳转与统计页。
-           随机按钮由 extend_footer.html 按 [data-random-post] 绑定点击，
-           所有页面都可用，因此这里不做页面类型判断。 */ -}}
-    <div class="sb-block">
-        <h2 class="sb-title">{{ i18n "sidebar_explore" }}</h2>
-        <div class="sb-actions">
-            <button type="button" class="sb-btn" data-random-post>{{ i18n "action_random" }}</button>
-            <a class="sb-btn" href="{{ "stats/" | relLangURL }}">{{ i18n "action_stats" }}</a>
-            <a class="sb-btn" href="{{ "series/" | relLangURL }}">{{ i18n "series_label" }}</a>
-            <a class="sb-btn" href="{{ "search/" | relLangURL }}">{{ i18n "search_label" }}</a>
-        </div>
-    </div>
+    {{- /* 原先这里还有一个「探索」区块（随便看看 / 统计 / 系列 / 搜索）。
+           按使用者反馈删除：没人会点，且统计在顶部导航、系列在移动端导航、
+           搜索在顶部下拉的「查看全部结果」里，四个入口都有替代路径。 */}}
 
     {{- end }}
 

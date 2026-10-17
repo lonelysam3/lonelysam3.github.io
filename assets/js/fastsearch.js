@@ -142,6 +142,22 @@ if (sInput) {
                         '</a></li>';
                 }
 
+                /* 【下拉底部的「查看全部结果」】
+                   顶部下拉最宽只有 26rem（416px），放不下分类/标签/年份筛选，
+                   所以筛选留在 /search/ 页。但两处不能彼此不通——否则读者
+                   根本不知道还有个能筛的搜索页。这里补一条带关键词的跳转，
+                   顺带把「结果只有前 N 条」这件事显式化。
+
+                   last 指向这条底栏，键盘 ↓ 才能走到它；↑ 则回到最后一条结果。 */
+                const more = params.searchPage;
+                if (more && more.url) {
+                    const q = this.value.trim();
+                    const href = more.url.replace(/\/$/, '/') +
+                        (q ? '?q=' + encodeURIComponent(q) : '');
+                    resultSet += '<li class="sr-all"><a href="' + href + '">' +
+                        escapeHtml(more.label) + '</a></li>';
+                }
+
                 resList.innerHTML = resultSet;
                 resultsAvailable = true;
                 first = resList.firstChild;
